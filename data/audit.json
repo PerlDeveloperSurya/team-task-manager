@@ -1,0 +1,22 @@
+[
+  {
+    "id": "AUD-4FAB2F1D",
+    "action": "DELETE_TASK",
+    "deletedBy": "admin",
+    "deletedByName": "Admin",
+    "deletedAt": "2026-11-18T09:26:32.644Z",
+    "task": {
+      "id": "T-DEMO8",
+      "title": "Unit Tests – Auth Module",
+      "type": "Task",
+      "status": "Upcoming",
+      "priority": "Medium",
+      "assignee": "person2",
+      "due": "2026-11-27",
+      "planned": 4,
+      "desc": "Write Jest tests for auth",
+      "createdBy": "admin",
+      "createdAt": "2026-11-17"
+    }
+  }
+]

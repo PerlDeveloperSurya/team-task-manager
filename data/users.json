@@ -1,0 +1,29 @@
+[
+  {
+    "id": "admin",
+    "name": "Admin",
+    "role": "admin",
+    "password": "admin123",
+    "color": "#9c27b0",
+    "emoji": "👑",
+    "createdAt": "2026-11-18"
+  },
+  {
+    "id": "person1",
+    "name": "Person 1",
+    "role": "member",
+    "password": "person1",
+    "color": "#1a73e8",
+    "emoji": "👤",
+    "createdAt": "2026-11-18"
+  },
+  {
+    "id": "person2",
+    "name": "Person 2",
+    "role": "member",
+    "password": "person2",
+    "color": "#34a853",
+    "emoji": "👤",
+    "createdAt": "2026-11-18"
+  }
+]

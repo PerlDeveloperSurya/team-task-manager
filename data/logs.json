@@ -1,0 +1,74 @@
+[
+  {
+    "id": "L002",
+    "taskId": "T-DEMO1",
+    "user": "person1",
+    "date": "2026-11-14",
+    "hours": 2,
+    "desc": "Stakeholder review session",
+    "blocker": "Client feedback pending"
+  },
+  {
+    "id": "L003",
+    "taskId": "T-DEMO2",
+    "user": "person2",
+    "date": "2026-11-11",
+    "hours": 2.5,
+    "desc": "User and product tables",
+    "blocker": ""
+  },
+  {
+    "id": "L004",
+    "taskId": "T-DEMO2",
+    "user": "person2",
+    "date": "2026-11-12",
+    "hours": 3.5,
+    "desc": "Migration scripts written",
+    "blocker": ""
+  },
+  {
+    "id": "L005",
+    "taskId": "T-DEMO3",
+    "user": "person2",
+    "date": "2026-11-15",
+    "hours": 4,
+    "desc": "User auth endpoints done",
+    "blocker": ""
+  },
+  {
+    "id": "L006",
+    "taskId": "T-DEMO3",
+    "user": "person2",
+    "date": "2026-11-16",
+    "hours": 3,
+    "desc": "Product listing endpoints",
+    "blocker": ""
+  },
+  {
+    "id": "L007",
+    "taskId": "T-DEMO6",
+    "user": "person1",
+    "date": "2026-11-16",
+    "hours": 1,
+    "desc": "Investigated session bug",
+    "blocker": "Need backend fix"
+  },
+  {
+    "id": "L008",
+    "taskId": "T-DEMO1",
+    "user": "person1",
+    "date": "2026-11-18",
+    "hours": 3,
+    "desc": "Refined homepage hero section",
+    "blocker": ""
+  },
+  {
+    "id": "L009",
+    "taskId": "T-DEMO3",
+    "user": "person2",
+    "date": "2026-11-18",
+    "hours": 3,
+    "desc": "Order management endpoints",
+    "blocker": ""
+  }
+]

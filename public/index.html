@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Team Task Manager</title>
+<style>
+:root{
+  --primary:#1a73e8;--primary-dark:#1557b0;--accent:#34a853;
+  --warn:#f9ab00;--danger:#ea4335;--purple:#9c27b0;--teal:#00897b;
+  --bg:#f0f4f8;--card:#fff;--border:#e0e0e0;--text:#202124;--muted:#6b7280;
+  --shadow:0 2px 10px rgba(0,0,0,.08);--radius:12px;--radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* LOGIN */
+#login-page{min-height:100vh;background:linear-gradient(135deg,#1a73e8 0%,#0d47a1 50%,#1a237e 100%);display:flex;align-items:center;justify-content:center;}
+.login-box{background:#fff;border-radius:20px;padding:48px 40px;width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center;}
+.login-logo{font-size:48px;margin-bottom:8px;}
+.login-title{font-size:24px;font-weight:700;margin-bottom:4px;}
+.login-sub{color:var(--muted);margin-bottom:28px;font-size:14px;}
+.user-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px;margin-bottom:24px;max-height:200px;overflow-y:auto;}
+.user-card{padding:12px 8px;border:2px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all .2s;text-align:center;}
+.user-card:hover,.user-card.selected{border-color:var(--primary);background:#e8f0fe;}
+.uc-avatar{font-size:26px;}
+.uc-name{font-size:11px;font-weight:700;margin-top:4px;}
+.uc-role{font-size:10px;color:var(--muted);}
+.form-group{margin-bottom:16px;text-align:left;}
+.form-label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;}
+.form-control{width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:14px;outline:none;transition:border-color .2s;font-family:inherit;}
+.form-control:focus{border-color:var(--primary);}
+textarea.form-control{resize:vertical;min-height:70px;}
+.btn{padding:10px 20px;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:7px;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-dark);}
+.btn-primary:disabled{background:#90caf9;cursor:not-allowed;}
+.btn-success{background:var(--accent);color:#fff;}
+.btn-success:hover{background:#2d9348;}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-danger:hover{background:#c62828;}
+.btn-outline{background:transparent;border:2px solid var(--primary);color:var(--primary);}
+.btn-outline:hover{background:var(--primary);color:#fff;}
+.btn-warn{background:var(--warn);color:#fff;}
+.btn-sm{padding:5px 12px;font-size:12px;}
+.btn-full{width:100%;justify-content:center;}
+.err-msg{color:#ea4335;font-size:13px;margin-bottom:12px;display:none;}
+
+/* APP SHELL */
+#app{display:none;}
+.topbar{background:var(--primary);color:#fff;padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(26,115,232,.4);position:sticky;top:0;z-index:100;}
+.topbar-brand{font-size:17px;font-weight:700;display:flex;align-items:center;gap:10px;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;}
+.user-info .uname{font-weight:600;font-size:14px;}
+.user-info .urole{font-size:11px;opacity:.8;}
+.btn-logout{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:7px 14px;font-size:13px;border-radius:6px;cursor:pointer;}
+.btn-logout:hover{background:rgba(255,255,255,.3);}
+
+/* LAYOUT */
+.layout{display:flex;min-height:calc(100vh - 60px);}
+.sidebar{width:220px;background:#fff;border-right:1px solid var(--border);padding:20px 0;flex-shrink:0;overflow-y:auto;}
+.sidebar-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;padding:0 20px;margin:16px 0 6px;letter-spacing:.5px;}
+.sidebar-label:first-child{margin-top:0;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--muted);transition:all .15s;border-left:3px solid transparent;}
+.nav-item:hover{background:#f1f3f4;color:var(--text);}
+.nav-item.active{background:#e8f0fe;color:var(--primary);border-left-color:var(--primary);font-weight:600;}
+.nav-icon{font-size:17px;width:22px;}
+.content{flex:1;padding:24px;overflow-y:auto;}
+
+/* CARDS */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+.section-title{font-size:20px;font-weight:700;}
+.section-sub{font-size:13px;color:var(--muted);margin-top:2px;}
+.card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:20px;}
+.card-title{font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:22px;}
+.kpi-card{background:#fff;border-radius:var(--radius);padding:18px 14px;box-shadow:var(--shadow);border-top:4px solid;text-align:center;transition:transform .2s;}
+.kpi-card:hover{transform:translateY(-2px);}
+.kpi-icon{font-size:26px;margin-bottom:6px;}
+.kpi-val{font-size:30px;font-weight:800;line-height:1;}
+.kpi-label{font-size:11px;color:var(--muted);margin-top:5px;font-weight:600;}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:var(--radius-sm);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{background:#f8f9fa;padding:11px 13px;text-align:left;font-weight:700;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid var(--border);white-space:nowrap;}
+tbody tr{border-bottom:1px solid #f0f0f0;transition:background .15s;}
+tbody tr:hover{background:#fafbff;}
+tbody td{padding:11px 13px;vertical-align:middle;}
+.no-data{text-align:center;padding:36px;color:var(--muted);font-size:14px;}
+
+/* BADGES */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;}
+.b-completed{background:#e6f4ea;color:#1e7e34;}
+.b-inprogress{background:#e8f0fe;color:#1557b0;}
+.b-pending{background:#fff8e1;color:#e65100;}
+.b-upcoming{background:#f3e5f5;color:#7b1fa2;}
+.b-blocked{background:#fce8e8;color:#c62828;}
+.b-review{background:#e0f7fa;color:#006064;}
+.b-task{background:#e3f2fd;color:#1565c0;}
+.b-requirement{background:#f3e5f5;color:#6a1b9a;}
+.b-enhancement{background:#e8f5e9;color:#2e7d32;}
+.b-bug{background:#fce8e8;color:#b71c1c;}
+.b-high{background:#fce8e8;color:#c62828;}
+.b-medium{background:#fff8e1;color:#f57f17;}
+.b-low{background:#f1f8e9;color:#558b2f;}
+
+/* PROGRESS */
+.progress-wrap{background:#e9ecef;border-radius:10px;height:7px;overflow:hidden;min-width:70px;}
+.progress-bar{height:100%;border-radius:10px;}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:16px;padding:28px;width:540px;max-width:95vw;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:modalIn .2s ease;}
+@keyframes modalIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+.modal-title{font-size:17px;font-weight:700;}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);}
+.modal-close:hover{color:var(--danger);}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+/* FILTER BAR */
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.filter-select,.search-input{padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;outline:none;background:#fff;transition:border-color .2s;}
+.filter-select:focus,.search-input:focus{border-color:var(--primary);}
+.search-input{min-width:200px;font-weight:400;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;z-index:9999;padding:13px 20px;border-radius:10px;font-size:14px;font-weight:500;box-shadow:0 8px 30px rgba(0,0,0,.2);animation:toastIn .3s ease;display:flex;align-items:center;gap:10px;color:#fff;max-width:300px;}
+@keyframes toastIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* PERSON CARDS */
+.person-stat{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.2);}
+.person-stat:last-child{border-bottom:none;}
+.ps-label{font-size:12px;opacity:.85;}
+.ps-val{font-size:17px;font-weight:800;}
+
+/* LOG ENTRY */
+.log-entry{display:flex;align-items:center;gap:12px;padding:11px;border-radius:8px;border:1px solid var(--border);margin-bottom:8px;}
+.log-info{flex:1;}
+.log-task{font-weight:600;font-size:13px;}
+.log-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.log-hours{font-size:20px;font-weight:800;color:var(--primary);}
+
+/* TABS */
+.tab-buttons{display:flex;gap:4px;background:#f1f3f4;padding:4px;border-radius:10px;margin-bottom:18px;}
+.tab-btn{flex:1;padding:8px;border:none;background:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .2s;}
+.tab-btn.active{background:#fff;color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,.1);}
+
+/* ONLINE DOT */
+.online-dot{width:9px;height:9px;border-radius:50%;background:#34a853;display:inline-block;margin-right:4px;box-shadow:0 0 0 2px #e6f4ea;}
+
+.hidden{display:none!important;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:700px){.two-col{grid-template-columns:1fr;}.form-row{grid-template-columns:1fr;}.sidebar{width:60px;}.nav-item span:not(.nav-icon){display:none;}.sidebar-label{display:none;}}
+
+/* USER MANAGEMENT */
+.user-row-card{display:flex;align-items:center;gap:14px;padding:14px;border-radius:10px;border:1px solid var(--border);margin-bottom:10px;background:#fff;}
+.user-row-actions{display:flex;gap:8px;margin-left:auto;}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="login-page">
+  <div class="login-box">
+    <div class="login-logo">🗂️</div>
+    <div class="login-title">Team Task Manager</div>
+    <div class="login-sub">Enter your username and password to sign in</div>
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input type="text" class="form-control" id="login-user" placeholder="e.g. admin, person1" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" class="form-control" id="login-pass" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div class="err-msg" id="login-err">❌ Invalid username or password. Please try again.</div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">🔐 Sign In</button>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-brand">🗂️ Team Task Manager</div>
+    <div class="topbar-right">
+      <div class="user-info" style="text-align:right">
+        <div class="uname" id="tb-name"></div>
+        <div class="urole" id="tb-role"></div>
+      </div>
+      <div class="avatar" id="tb-avatar"></div>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+  <div class="layout">
+    <div class="sidebar" id="sidebar"></div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<!-- ══ TASK MODAL ══ -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="task-modal-title">➕ Add Task</div>
+      <button class="modal-close" onclick="closeModal('task-modal')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Title *</label>
+        <input class="form-control" id="t-title" placeholder="Task name"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type *</label>
+        <select class="form-control" id="t-type">
+          <option value="Task">📌 Task</option>
+          <option value="Requirement">📄 Requirement</option>
+          <option value="Enhancement">✨ Enhancement</option>
+          <option value="Bug">🐛 Bug Fix</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-control" id="t-desc" placeholder="Describe this task..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Priority</label>
+        <select class="form-control" id="t-priority">
+          <option value="High">🔴 High</option>
+          <option value="Medium" selected>🟡 Medium</option>
+          <option value="Low">🟢 Low</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-control" id="t-status">
+          <option value="Upcoming">📅 Upcoming</option>
+          <option value="Pending" selected>⏳ Pending</option>
+          <option value="In Progress">🔄 In Progress</option>
+          <option value="Review">🔍 In Review</option>
+          <option value="Completed">✅ Completed</option>
+          <option value="Blocked">🚫 Blocked</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Start Date</label>
+        <input type="date" class="form-control" id="t-start"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Due Date</label>
+        <input type="date" class="form-control" id="t-due"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Hours Planned</label>
+        <input type="number" class="form-control" id="t-planned" placeholder="0" min="0" step="0.5"/>
+      </div>
+      <div class="form-group" id="assign-group">
+        <label class="form-label">Assign To</label>
+        <select class="form-control" id="t-assign"></select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <input class="form-control" id="t-notes" placeholder="Additional notes..."/>
+    </div>
+    <input type="hidden" id="t-edit-id"/>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('task-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTask()">💾 Save Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOG HOURS MODAL ══ -->
+<div class="modal-overlay" id="log-modal">
+  <div class="modal" style="width:460px">
+    <div class="modal-header">
+      <div class="modal-title">⏱ Log Work Hours</div>
+      <button class="modal-close" onclick="closeModal('log-modal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Task</label>
+      <select class="form-control" id="log-task-id"></select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-control" id="log-date"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hours Worked</label>
+        <input type="number" class="form-control" id="log-hours" placeholder="0.0" min="0" max="24" step="0.5"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Work Description</label>
+      <textarea class="form-control" id="log-desc" placeholder="What did you work on?"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Blockers / Issues</label>
+      <input class="form-control" id="log-blocker" placeholder="Any blockers? Leave blank if none."/>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('log-modal')">Cancel</button>
+      <button class="btn btn-success" onclick="saveLog()">✅ Save Log</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADD USER MODAL ══ -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal" style="width:420px">
+    <div class="modal-header">
+      <div class="modal-title">👤 Add Team Member</div>
+      <button class="modal-close" onclick="closeModal('user-modal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Full Name *</label>
+      <input class="form-control" id="u-name" placeholder="e.g. John Smith"/>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Login ID will be auto-generated from name (no spaces)</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Password *</label>
+        <input type="password" class="form-control" id="u-pass" placeholder="Set a password"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select class="form-control" id="u-role">
+          <option value="member">👤 Member</option>
+          <option value="admin">👑 Admin</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Avatar Emoji</label>
+        <input class="form-control" id="u-emoji" placeholder="👤" maxlength="2"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Color</label>
+        <input type="color" class="form-control" id="u-color" value="#1a73e8" style="height:42px;cursor:pointer;"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('user-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveUser()">➕ Add User</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let ME = null;        // current user object
+let ALL_USERS = [];   // cached user list
+let CURRENT_VIEW = '';
+
+const today = () => new Date().toISOString().split('T')[0];
+const fmtDate = d => {
+  if (!d) return '—';
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
+};
+const daysLeft = d => {
+  if (!d) return null;
+  return Math.ceil((new Date(d) - new Date(today())) / 86400000);
+};
+
+// ══════════════════════════════════════════════════════
+// API HELPER
+// ══════════════════════════════════════════════════════
+async function api(method, url, body) {
+  const opts = { method, credentials:'include', headers:{'Content-Type':'application/json'} };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(url, opts);
+  if (r.status === 401) { showLogin(); return null; }
+  return r.json();
+}
+const GET  = url        => api('GET', url);
+const POST = (url, b)   => api('POST', url, b);
+const PUT  = (url, b)   => api('PUT', url, b);
+const DEL  = url        => api('DELETE', url);
+
+// ══════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════
+function sBadge(s) {
+  const m = {Completed:'completed','In Progress':'inprogress',Pending:'pending',Upcoming:'upcoming',Blocked:'blocked',Review:'review'};
+  const i = {Completed:'✅','In Progress':'🔄',Pending:'⏳',Upcoming:'📅',Blocked:'🚫',Review:'🔍'};
+  return `<span class="badge b-${m[s]||'pending'}">${i[s]||''} ${s}</span>`;
+}
+function tBadge(t) {
+  const m = {Task:'task',Requirement:'requirement',Enhancement:'enhancement',Bug:'bug'};
+  const i = {Task:'📌',Requirement:'📄',Enhancement:'✨',Bug:'🐛'};
+  return `<span class="badge b-${m[t]||'task'}">${i[t]||''} ${t}</span>`;
+}
+function pBadge(p) {
+  return `<span class="badge b-${(p||'medium').toLowerCase()}">${p}</span>`;
+}
+function bar(pct, col='#1a73e8') {
+  return `<div class="progress-wrap"><div class="progress-bar" style="width:${pct}%;background:${col}"></div></div>`;
+}
+function userName(uid) {
+  const u = ALL_USERS.find(x=>x.id===uid);
+  return u ? u.name : uid;
+}
+function userColor(uid) {
+  const u = ALL_USERS.find(x=>x.id===uid);
+  return u ? u.color : '#607d8b';
+}
+function hoursForTask(logs, taskId) {
+  return logs.filter(l=>l.taskId===taskId).reduce((a,l)=>a+(l.hours||0),0);
+}
+function pct(task, logs) {
+  if (task.status==='Completed') return 100;
+  const spent = hoursForTask(logs, task.id);
+  if (!task.planned) return task.status==='In Progress'?50:0;
+  return Math.min(100, Math.round(spent/task.planned*100));
+}
+function dlBadge(due) {
+  const dl = daysLeft(due);
+  if (dl===null) return '—';
+  if (dl<0)  return `<span style="color:#c62828;font-weight:700">⚠️ ${Math.abs(dl)}d late</span>`;
+  if (dl===0) return `<span style="color:#e65100;font-weight:700">🔥 Due Today</span>`;
+  if (dl<=2)  return `<span style="color:#f57c00;font-weight:700">⚡ ${dl}d left</span>`;
+  return `<span style="color:var(--muted)">${dl}d left</span>`;
+}
+function showToast(msg, col='#202124') {
+  const t = document.createElement('div');
+  t.className='toast'; t.style.background=col; t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function setContent(html) { document.getElementById('content').innerHTML=html; }
+
+// ══════════════════════════════════════════════════════
+// LOGIN / LOGOUT
+// ══════════════════════════════════════════════════════
+async function doLogin() {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  if (!user) { showToast('Please enter your username', '#f57c00'); return; }
+  if (!pass) { showToast('Please enter your password', '#f57c00'); return; }
+  const data = await POST('/api/login', { username: user, password: pass });
+  if (!data || data.error) {
+    document.getElementById('login-err').style.display = 'block';
+    return;
+  }
+  document.getElementById('login-err').style.display = 'none';
+  ME = data;
+  enterApp();
+}
+
+async function doLogout() {
+  await POST('/api/logout');
+  ME = null;
+  showLogin();
+}
+
+function showLogin() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-page').style.display = 'flex';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-err').style.display = 'none';
+}
+
+async function enterApp() {
+  ALL_USERS = await GET('/api/users') || [];
+  document.getElementById('login-page').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('tb-name').textContent = ME.name;
+  document.getElementById('tb-role').textContent = ME.role==='admin'?'Manager':'Team Member';
+  const av = document.getElementById('tb-avatar');
+  av.textContent = ME.emoji||'👤';
+  av.style.background = ME.color||'#607d8b';
+  buildSidebar();
+  if (ME.role==='admin') showView('dashboard');
+  else showView('my-dashboard');
+}
+
+// ══════════════════════════════════════════════════════
+// SIDEBAR
+// ══════════════════════════════════════════════════════
+function buildSidebar() {
+  const isAdmin = ME.role==='admin';
+  const navs = isAdmin ? [
+    { view:'dashboard',    icon:'📊', label:'Dashboard' },
+    { view:'all-tasks',    icon:'📋', label:'All Tasks' },
+    { view:'hours',        icon:'⏱',  label:'Hours Report' },
+    { view:'pending',      icon:'🔜', label:'Pending & Upcoming' },
+    { view:'activity',     icon:'📝', label:'Activity Log' },
+    { view:'users',        icon:'👥', label:'Manage Users' },
+    { view:'deleted',      icon:'🗑', label:'Deleted Tasks' },
+  ] : [
+    { view:'my-dashboard', icon:'🏠', label:'My Dashboard' },
+    { view:'my-tasks',     icon:'📋', label:'My Tasks' },
+    { view:'log-hours',    icon:'⏱',  label:'Log Hours' },
+    { view:'my-history',   icon:'📅', label:'My History' },
+  ];
+  document.getElementById('sidebar').innerHTML = `
+    <div class="sidebar-label">Menu</div>
+    ${navs.map(n=>`<div class="nav-item" data-view="${n.view}" onclick="showView('${n.view}')">
+      <span class="nav-icon">${n.icon}</span>${n.label}
+    </div>`).join('')}`;
+}
+
+function showView(view) {
+  CURRENT_VIEW = view;
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    el.classList.toggle('active', el.dataset.view===view);
+  });
+  const views = {
+    'dashboard':    renderAdminDashboard,
+    'all-tasks':    renderAllTasks,
+    'hours':        renderHoursReport,
+    'pending':      renderPending,
+    'activity':     renderActivity,
+    'users':        renderUsers,
+    'deleted':      renderDeletedTasks,
+    'my-dashboard': renderMyDashboard,
+    'my-tasks':     renderMyTasks,
+    'log-hours':    renderLogHoursPage,
+    'my-history':   renderMyHistory,
+  };
+  if (views[view]) views[view]();
+}
+
+// ══════════════════════════════════════════════════════
+// ADMIN — DASHBOARD
+// ══════════════════════════════════════════════════════
+async function renderAdminDashboard() {
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">📊 Loading dashboard...</div>');
+  const [stats, tasks, logs] = await Promise.all([
+    GET('/api/stats'), GET('/api/tasks'), GET('/api/logs')
+  ]);
+  if (!stats) return;
+
+  const kpis = [
+    { icon:'📋', val:stats.totalTasks,                label:'Total Tasks',    col:'#1a73e8' },
+    { icon:'✅', val:stats.byStatus['Completed']||0,   label:'Completed',      col:'#34a853' },
+    { icon:'🔄', val:stats.byStatus['In Progress']||0, label:'In Progress',    col:'#1565c0' },
+    { icon:'⏳', val:stats.byStatus['Pending']||0,      label:'Pending',        col:'#e65100' },
+    { icon:'🚫', val:stats.byStatus['Blocked']||0,     label:'Blocked',        col:'#c62828' },
+    { icon:'⏱', val:stats.totalHrs+'h',               label:'Hours Logged',   col:'#9c27b0' },
+    { icon:'📅', val:stats.plannedHrs+'h',             label:'Hrs Planned',    col:'#00897b' },
+    { icon:'📈', val:stats.totalTasks?Math.round((stats.byStatus['Completed']||0)/stats.totalTasks*100)+'%':'0%', label:'Completion', col:'#f57c00' },
+  ];
+
+  const recentTasks = [...tasks].sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).slice(0,6);
+
+  setContent(`
+    <div class="section-header">
+      <div><div class="section-title">📊 Admin Dashboard</div><div class="section-sub">Live overview of your team's work</div></div>
+      <button class="btn btn-primary btn-sm" onclick="openAddTask()">➕ Add Task</button>
+    </div>
+    <div class="kpi-grid">${kpis.map(k=>`
+      <div class="kpi-card" style="border-top-color:${k.col}">
+        <div class="kpi-icon">${k.icon}</div>
+        <div class="kpi-val" style="color:${k.col}">${k.val}</div>
+        <div class="kpi-label">${k.label}</div>
+      </div>`).join('')}</div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">👥 Team Members</div>
+        ${stats.perPerson.map(p=>`
+          <div style="border:2px solid ${p.color}22;border-radius:10px;padding:14px;margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div class="avatar" style="background:${p.color}">${ALL_USERS.find(u=>u.id===p.id)?.emoji||'👤'}</div>
+              <div><div style="font-weight:700">${p.name}</div>
+              <div style="font-size:12px;color:var(--muted)"><span class="online-dot"></span>Active</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;text-align:center">
+              ${[['Total',p.total,'#607d8b'],['Done',p.completed,'#34a853'],['Active',p.inProgress,'#1a73e8'],['Blocked',p.blocked,'#ea4335']].map(([l,v,c])=>`
+                <div style="background:#f8f9fa;border-radius:8px;padding:8px"><div style="font-size:18px;font-weight:800;color:${c}">${v}</div><div style="font-size:10px;color:var(--muted)">${l}</div></div>`).join('')}
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:13px">
+              <span style="color:var(--muted)">⏱ ${p.hoursLogged}h logged / ${p.hoursPlanned}h planned</span>
+              <span style="color:var(--accent);font-weight:700">📅 Today: ${p.todayHours}h</span>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-title">📌 By Task Type</div>
+          ${Object.entries(stats.byType).map(([type,count])=>{
+            const p2 = Math.round(count/stats.totalTasks*100);
+            const cm = {Task:'#1a73e8',Requirement:'#9c27b0',Enhancement:'#34a853',Bug:'#ea4335'};
+            return `<div style="margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px">
+                ${tBadge(type)} <span style="color:var(--muted)">${count} (${p2}%)</span>
+              </div>${bar(p2, cm[type]||'#607d8b')}</div>`;
+          }).join('')}
+        </div>
+        <div class="card">
+          <div class="card-title">📆 Daily Hours (Last 7 Days)</div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Date</th>${stats.perPerson.map(p=>`<th style="color:${p.color}">${p.name}</th>`).join('')}<th>Total</th></tr></thead>
+            <tbody>${stats.dailyHours.map(d=>{
+              const dt = new Date(d.date+'T00:00:00');
+              const label = dt.toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short'});
+              const total = stats.perPerson.reduce((a,p)=>a+(d[p.id]||0),0);
+              return `<tr>
+                <td style="font-weight:600;white-space:nowrap">${label}</td>
+                ${stats.perPerson.map(p=>`<td style="text-align:center;color:${p.color};font-weight:700">${d[p.id]||0}h</td>`).join('')}
+                <td style="text-align:center;font-weight:700">${total.toFixed(1)}h</td>
+              </tr>`;
+            }).join('')}</tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🕐 Recently Added Tasks</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Task</th><th>Type</th><th>Assigned To</th><th>Status</th><th>Priority</th><th>Hrs Spent/Planned</th></tr></thead>
+        <tbody>${recentTasks.map(t=>{
+          const spent = hoursForTask(logs,t.id);
+          const uc = userColor(t.assignee);
+          return `<tr>
+            <td><b style="color:var(--primary)">${t.id}</b></td>
+            <td style="font-weight:600">${t.title}</td>
+            <td>${tBadge(t.type)}</td>
+            <td><span style="color:${uc};font-weight:600">${userName(t.assignee)}</span></td>
+            <td>${sBadge(t.status)}</td>
+            <td>${pBadge(t.priority)}</td>
+            <td><b>${spent}h</b>/${t.planned||0}h</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>
+    </div>
+  `);
+}
+
+// ══════════════════════════════════════════════════════
+// ADMIN — ALL TASKS
+// ══════════════════════════════════════════════════════
+let _taskFilters = { status:'', type:'', assignee:'', search:'' };
+async function renderAllTasks(fs) {
+  if (fs) _taskFilters = { ...fs };
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">📋 Loading tasks...</div>');
+  const params = new URLSearchParams();
+  if (_taskFilters.status)   params.set('status',   _taskFilters.status);
+  if (_taskFilters.type)     params.set('type',     _taskFilters.type);
+  if (_taskFilters.assignee) params.set('assignee', _taskFilters.assignee);
+  if (_taskFilters.search)   params.set('search',   _taskFilters.search);
+  const [tasks, logs] = await Promise.all([GET('/api/tasks?'+params), GET('/api/logs')]);
+  if (!tasks) return;
+
+  const rows = tasks.map(t=>{
+    const spent = hoursForTask(logs,t.id);
+    const pp = pct(t,logs);
+    const uc = userColor(t.assignee);
+    return `<tr>
+      <td><b style="color:var(--primary)">${t.id}</b></td>
+      <td><div style="font-weight:600">${t.title}</div>${t.desc?`<div style="font-size:11px;color:var(--muted)">${t.desc.substring(0,50)}</div>`:''}</td>
+      <td>${tBadge(t.type)}</td>
+      <td><span style="color:${uc};font-weight:600">${userName(t.assignee)}</span></td>
+      <td>${sBadge(t.status)}</td>
+      <td>${pBadge(t.priority)}</td>
+      <td>${fmtDate(t.due)}<br><small>${dlBadge(t.due)}</small></td>
+      <td><b>${spent}h</b>/${t.planned||0}h<br>${bar(pp)}</td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-sm btn-outline" onclick="editTask('${t.id}')">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const memberOptions = ALL_USERS.filter(u=>u.role!=='admin')
+    .map(u=>`<option value="${u.id}" ${_taskFilters.assignee===u.id?'selected':''}>${u.name}</option>`).join('');
+
+  setContent(`
+    <div class="section-header">
+      <div><div class="section-title">📋 All Tasks</div><div class="section-sub">${tasks.length} tasks</div></div>
+      <button class="btn btn-primary btn-sm" onclick="openAddTask()">➕ Add Task</button>
+    </div>
+    <div class="filter-bar">
+      <input class="search-input" placeholder="🔍 Search..." value="${_taskFilters.search}"
+        oninput="_taskFilters.search=this.value;renderAllTasks()"/>
+      <select class="filter-select" onchange="_taskFilters.status=this.value;renderAllTasks()">
+        <option value="">All Status</option>
+        ${['In Progress','Pending','Completed','Upcoming','Blocked','Review'].map(s=>`<option ${_taskFilters.status===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+      <select class="filter-select" onchange="_taskFilters.type=this.value;renderAllTasks()">
+        <option value="">All Types</option>
+        ${['Task','Requirement','Enhancement','Bug'].map(t=>`<option ${_taskFilters.type===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+      <select class="filter-select" onchange="_taskFilters.assignee=this.value;renderAllTasks()">
+        <option value="">All Members</option>${memberOptions}
+      </select>
+    </div>
+    <div class="card">
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Task</th><th>Type</th><th>Assigned To</th><th>Status</th><th>Priority</th><th>Due</th><th>Hours</th><th>Actions</th></tr></thead>
+        <tbody>${rows||`<tr><td colspan="9"><div class="no-data">📭 No tasks found</div></td></tr>`}</tbody>
+      </table></div>
+    </div>`);
+}
+
+// ══════════════════════════════════════════════════════
+// ADMIN — HOURS REPORT
+// ══════════════════════════════════════════════════════
+async function renderHoursReport() {
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">⏱ Loading hours report...</div>');
+  const [tasks, logs, stats] = await Promise.all([GET('/api/tasks'), GET('/api/logs'), GET('/api/stats')]);
+  if (!tasks) return;
+
+  const members = ALL_USERS.filter(u=>u.role!=='admin');
+
+  function taskHrsTable(uid, color) {
+    const myTasks = tasks.filter(t=>t.assignee===uid);
+    return myTasks.map(t=>{
+      const tLogs = logs.filter(l=>l.taskId===t.id && l.user===uid);
+      const spent = tLogs.reduce((a,l)=>a+(l.hours||0),0);
+      const pp = pct(t, logs);
+      const variance = spent && t.planned
+        ? (spent>t.planned
+            ? `<span style="color:#c62828">+${(spent-t.planned).toFixed(1)}h over</span>`
+            : `<span style="color:#34a853">${(t.planned-spent).toFixed(1)}h left</span>`)
+        : '—';
+      return `<tr>
+        <td><b>${t.id}</b></td>
+        <td style="font-weight:600">${t.title}</td>
+        <td>${tBadge(t.type)}</td>
+        <td>${sBadge(t.status)}</td>
+        <td style="text-align:center"><b style="color:#9c27b0;font-size:16px">${spent}h</b></td>
+        <td style="text-align:center">${t.planned||0}h</td>
+        <td style="text-align:center">${variance}</td>
+        <td style="min-width:90px">${bar(pp, color)}<span style="font-size:11px;color:var(--muted)">${pp}%</span></td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="8"><div class="no-data">No tasks</div></td></tr>`;
+  }
+
+  const tabs = members.map((m,i)=>`<button class="tab-btn ${i===0?'active':''}" onclick="switchTab('hr-${m.id}',this)">${m.emoji||'👤'} ${m.name}</button>`).join('');
+  const panels = members.map((m,i)=>`
+    <div id="hr-${m.id}" class="${i>0?'hidden':''}">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-title" style="color:${m.color}">⏱ ${m.name} — Task Hours Breakdown</div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>ID</th><th>Task</th><th>Type</th><th>Status</th><th style="text-align:center">Spent</th><th style="text-align:center">Planned</th><th style="text-align:center">Variance</th><th>Progress</th></tr></thead>
+          <tbody>${taskHrsTable(m.id, m.color)}</tbody>
+        </table></div>
+      </div>
+    </div>`).join('');
+
+  setContent(`
+    <div class="section-header">
+      <div><div class="section-title">⏱ Hours Report</div><div class="section-sub">Time tracking and analysis</div></div>
+    </div>
+    <div class="two-col" style="margin-bottom:20px">
+      ${members.map(m=>{
+        const p = stats.perPerson.find(x=>x.id===m.id)||{};
+        return `<div class="card" style="background:linear-gradient(135deg,${m.color},${m.color}bb);color:#fff">
+          <div style="font-size:14px;font-weight:700;margin-bottom:14px;opacity:.9">${m.emoji||'👤'} ${m.name}</div>
+          <div class="person-stat"><span class="ps-label">Total Hours Logged</span><span class="ps-val">${p.hoursLogged||0}h</span></div>
+          <div class="person-stat"><span class="ps-label">Total Hours Planned</span><span class="ps-val">${p.hoursPlanned||0}h</span></div>
+          <div class="person-stat"><span class="ps-label">Today's Hours</span><span class="ps-val">${p.todayHours||0}h</span></div>
+          <div class="person-stat"><span class="ps-label">Tasks Done</span><span class="ps-val">${p.completed||0} / ${p.total||0}</span></div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title">📆 Daily Hours — Last 7 Days</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Date</th>${members.map(m=>`<th style="text-align:center;color:${m.color}">${m.name}</th>`).join('')}<th style="text-align:center">Total</th></tr></thead>
+        <tbody>${stats.dailyHours.map(d=>{
+          const dt = new Date(d.date+'T00:00:00');
+          const lbl = dt.toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short'});
+          const tot = members.reduce((a,m)=>a+(d[m.id]||0),0);
+          return `<tr><td style="font-weight:600">${lbl}</td>
+            ${members.map(m=>`<td style="text-align:center;color:${m.color};font-weight:700">${d[m.id]||0}h</td>`).join('')}
+            <td style="text-align:center;font-weight:700">${tot.toFixed(1)}h</td></tr>`;
+        }).join('')}</tbody>
+      </table></div>
+    </div>
+    <div class="tab-buttons">${tabs}</div>
+    ${panels}
+  `);
+}
+
+function switchTab(id, el) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const allPanels = el.closest('.content').querySelectorAll('[id^="hr-"]');
+  allPanels.forEach(p=>p.classList.toggle('hidden', p.id!==id));
+}
+
+// ══════════════════════════════════════════════════════
+// ADMIN — PENDING & UPCOMING
+// ══════════════════════════════════════════════════════
+async function renderPending() {
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">🔜 Loading...</div>');
+  const [tasks, logs] = await Promise.all([GET('/api/tasks'), GET('/api/logs')]);
+  if (!tasks) return;
+  const filtered = tasks.filter(t=>['Pending','Upcoming','Blocked','Review'].includes(t.status))
+                        .sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999'));
+
+  const rows = filtered.map(t=>{
+    const spent = hoursForTask(logs,t.id);
+    const dl = daysLeft(t.due);
+    const uc = userColor(t.assignee);
+    let action='';
+    if (t.status==='Blocked') action='<span style="color:#c62828;font-weight:700">🚨 Resolve blocker!</span>';
+    else if (dl===null) action='📌 No due date';
+    else if (dl<0)  action=`<span style="color:#c62828">⚠️ OVERDUE ${Math.abs(dl)}d</span>`;
+    else if (dl===0) action='<span style="color:#e65100">🔥 Due TODAY</span>';
+    else if (dl<=2)  action=`<span style="color:#f57c00">⚡ ${dl}d — start NOW</span>`;
+    else if (dl<=5)  action=`📌 ${dl}d — prepare`;
+    else action=`📅 ${dl} days away`;
+    return `<tr>
+      <td><b style="color:var(--primary)">${t.id}</b></td>
+      <td style="font-weight:600">${t.title}</td>
+      <td>${tBadge(t.type)}</td>
+      <td><span style="color:${uc};font-weight:600">${userName(t.assignee)}</span></td>
+      <td>${sBadge(t.status)}</td>
+      <td>${pBadge(t.priority)}</td>
+      <td>${fmtDate(t.due)}</td>
+      <td>${action}</td>
+      <td><b>${spent}h</b>/${t.planned||0}h</td>
+    </tr>`;
+  }).join('');
+
+  setContent(`
+    <div class="section-header">
+      <div><div class="section-title">🔜 Pending & Upcoming</div><div class="section-sub">${filtered.length} tasks need attention</div></div>
+    </div>
+    <div class="card">
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Task</th><th>Type</th><th>Person</th><th>Status</th><th>Priority</th><th>Due</th><th>Action Needed</th><th>Hours</th></tr></thead>
+        <tbody>${rows||`<tr><td colspan="9"><div class="no-data">🎉 No pending tasks!</div></td></tr>`}</tbody>
+      </table></div>
+    </div>`);
+}
+
+// ══════════════════════════════════════════════════════
+// ADMIN — ACTIVITY LOG
+// ══════════════════════════════════════════════════════
+async function renderActivity() {
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">📝 Loading activity...</div>');
+  const activity = await GET('/api/activity');
+  if (!activity) return;
+
+  const rows = activity.map(l=>`<tr>
+    <td style="font-weight:600;white-space:nowrap">${l.date}</td>
+    <td><span class="avatar" style="background:${l.userColor||'#607d8b'};width:28px;height:28px;font-size:12px;display:inline-flex;align-items:center;justify-content:center;color:#fff;border-radius:50%;margin-right:6px">${ALL_USERS.find(u=>u.id===l.user)?.emoji||'👤'}</span><span style="font-weight:700;color:${l.userColor}">${l.userName}</span></td>
+    <td><b>${l.taskId}</b></td>
+    <td style="font-weight:600">${l.taskTitle}</td>
+    <td>${l.taskType!=='—'?tBadge(l.taskType):'—'}</td>
+    <td style="text-align:center"><b style="font-size:16px;color:#9c27b0">${l.hours}h</b></td>
+    <td>${l.desc||'—'}</td>
+    <td>${l.blocker?`<span style="color:#c62828">⚠️ ${l.blocker}</span>`:'<span style="color:#34a853">✅ None</span>'}</td>
+  </tr>`).join('');
+
+  setContent(`
+    <div class="section-header">
+      <div><div class="section-title">📝 Activity Log</div><div class="section-sub">Every logged work entry from all team members</div></div>
+    </div>
+    <div class="card">
+      <div class="table-wrap"><table>
+        <thead><tr><th>Date</th><th>Person</th><th>Task ID</th><th>Task</th><th>Type</th><th style="text-align:center">Hours</th><th>Description</th><th>Blockers</th></tr></thead>
+        <tbody>${rows||`<tr><td colspan="8"><div class="no-data">📭 No logs yet</div></td></tr>`}</tbody>
+      </table></div>
+    </div>`);
+}
+
+// ══════════════════════════════════════════════════════
+// ADMIN — MANAGE USERS
+// ══════════════════════════════════════════════════════
+async function renderUsers() {
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">👥 Loading users...</div>');
+  const users = await GET('/api/users');
+  ALL_USERS = users || [];
+  if (!users) return;
+
+  const cards = users.map(u=>`
+    <div class="user-row-card">
+      <div class="avatar" style="background:${u.color};width:44px;height:44px;font-size:18px">${u.emoji||'👤'}</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:15px">${u.name}</div>
+        <div style="font-size:12px;color:var(--muted)">ID: <code>${u.id}</code> &nbsp;•&nbsp; ${u.role==='admin'?'👑 Manager':'👤 Member'}</div>
+        <div style="font-size:12px;color:var(--muted)">Joined: ${u.createdAt||'—'}</div>
+      </div>
+      <div class="user-row-actions">
+        ${u.id!=='admin'?`<button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}','${u.name}')">🗑 Remove</button>`:'<span style="font-size:12px;color:var(--muted)">System Admin</span>'}
+      </div>
+    </div>`).join('');
+
+  setContent(`
+    <div class="section-header">
+      <div><div class="section-title">👥 Manage Users</div><div class="section-sub">${users.length} users registered</div></div>
+      <button class="btn btn-primary btn-sm" onclick="openModal('user-modal')">➕ Add User</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Team Members</div>
+      ${cards}
+      <div style="margin-top:16px;padding:12px;background:#fff8e1;border-radius:8px;font-size:13px;color:#e65100">
+        💡 <b>Tip:</b> Share your server address with team members so they can log in from their own devices.
+        Your network IP is shown in the server console when you start the server.
+      </div>
+    </div>`);
+}
+
+async function saveUser() {
+  const name  = document.getElementById('u-name').value.trim();
+  const pass  = document.getElementById('u-pass').value;
+  const role  = document.getElementById('u-role').value;
+  const emoji = document.getElementById('u-emoji').value||'👤';
+  const color = document.getElementById('u-color').value;
+  if (!name||!pass) { showToast('Name and password required','#f57c00'); return; }
+  const result = await POST('/api/users', { name, password:pass, role, emoji, color });
+  if (!result||result.error) { showToast('❌ '+(result?.error||'Error'),'#ea4335'); return; }
+  showToast('✅ User added!','#34a853');
+  closeModal('user-modal');
+  ALL_USERS = await GET('/api/users')||[];
+  renderUsers();
+}
+
+async function deleteUser(id, name) {
+  if (!confirm(`Remove user "${name}"? Their tasks and logs will remain.`)) return;
+  const r = await DEL('/api/users/'+id);
+  if (!r||r.error) { showToast('❌ '+(r?.error||'Error'),'#ea4335'); return; }
+  showToast('🗑 User removed','#ea4335');
+  ALL_USERS = await GET('/api/users')||[];
+  renderUsers();
+}
+
+// ══════════════════════════════════════════════════════
+// MEMBER — MY DASHBOARD
+// ══════════════════════════════════════════════════════
+async function renderMyDashboard() {
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">🏠 Loading...</div>');
+  const [tasks, logs] = await Promise.all([GET('/api/tasks'), GET('/api/logs')]);
+  if (!tasks) return;
+  const color = ME.color||'#1a73e8';
+  const todayHrs = logs.filter(l=>l.date===today()).reduce((a,l)=>a+(l.hours||0),0);
+  const totalHrs = logs.reduce((a,l)=>a+(l.hours||0),0);
+  const done=tasks.filter(t=>t.status==='Completed').length;
+  const inprog=tasks.filter(t=>t.status==='In Progress').length;
+  const pending=tasks.filter(t=>t.status==='Pending').length;
+  const blocked=tasks.filter(t=>t.status==='Blocked').length;
+
+  const kpis=[
+    {icon:'📋',val:tasks.length,label:'My Tasks',col:color},
+    {icon:'✅',val:done,label:'Completed',col:'#34a853'},
+    {icon:'🔄',val:inprog,label:'In Progress',col:'#1565c0'},
+    {icon:'⏳',val:pending,label:'Pending',col:'#e65100'},
+    {icon:'🚫',val:blocked,label:'Blocked',col:'#c62828'},
+    {icon:'⏱',val:totalHrs+'h',label:'Total Hours',col:'#9c27b0'},
+    {icon:'📅',val:todayHrs+'h',label:"Today's Hours",col:'#00897b'},
+  ];
+
+  const urgent = tasks.filter(t=>{
+    if(t.status==='Completed') return false;
+    const dl=daysLeft(t.due); return dl!==null && dl<=3;
+  }).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
+
+  const recentLogs = [...logs].sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt||'')).slice(0,4);
+
+  setContent(`
+    <div class="section-header">
+      <div><div class="section-title">🏠 My Dashboard</div><div class="section-sub">Welcome, ${ME.name}!</div></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-outline btn-sm" onclick="openLogModal()">⏱ Log Hours</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddTask()">➕ Add Task</button>
+      </div>
+    </div>
+    <div class="kpi-grid">${kpis.map(k=>`
+      <div class="kpi-card" style="border-top-color:${k.col}">
+        <div class="kpi-icon">${k.icon}</div>
+        <div class="kpi-val" style="color:${k.col}">${k.val}</div>
+        <div class="kpi-label">${k.label}</div>
+      </div>`).join('')}</div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">⚡ Urgent Tasks</div>
+        ${urgent.length ? urgent.map(t=>{
+          const dl=daysLeft(t.due); const spent=hoursForTask(logs,t.id);
+          return `<div style="border:2px solid ${dl<0?'#fce8e8':'#fff3e0'};border-radius:10px;padding:12px;margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <div><div style="font-weight:700">${t.title}</div><div style="margin-top:4px">${tBadge(t.type)} ${sBadge(t.status)}</div></div>
+              <div style="text-align:right"><div style="color:#c62828;font-weight:800">${dl<0?'OVERDUE':'⚡ '+dl+'d left'}</div><div style="font-size:11px;color:var(--muted)">Due ${fmtDate(t.due)}</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">${bar(pct(t,logs),color)}<span style="font-size:11px;color:var(--muted)">${spent}h/${t.planned||0}h</span></div>
+          </div>`;
+        }).join(''):'<div class="no-data">🎉 No urgent tasks!</div>'}
+      </div>
+      <div class="card">
+        <div class="card-title">📝 Recent Work Logs</div>
+        ${recentLogs.length ? recentLogs.map(l=>{
+          const task=tasks.find(t=>t.id===l.taskId)||{};
+          return `<div class="log-entry">
+            <div class="avatar" style="background:${color}22;color:${color};width:36px;height:36px">${l.hours}h</div>
+            <div class="log-info">
+              <div class="log-task">${task.title||l.taskId}</div>
+              <div class="log-meta">${l.date} • ${l.desc||'—'}</div>
+              ${l.blocker?`<div style="font-size:11px;color:#c62828">⚠️ ${l.blocker}</div>`:''}
+            </div>
+            <div class="log-hours" style="color:${color}">${l.hours}h</div>
+          </div>`;
+        }).join(''):'<div class="no-data">📋 Start logging your work!</div>'}
+      </div>
+    </div>`);
+}
+
+// ══════════════════════════════════════════════════════
+// MEMBER — MY TASKS
+// ══════════════════════════════════════════════════════
+let _myFilters = { status:'', type:'' };
+async function renderMyTasks(fs) {
+  if (fs) _myFilters = { ...fs };
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">📋 Loading...</div>');
+  const params = new URLSearchParams();
+  if (_myFilters.status) params.set('status',_myFilters.status);
+  if (_myFilters.type)   params.set('type',_myFilters.type);
+  const [tasks, logs] = await Promise.all([GET('/api/tasks?'+params), GET('/api/logs')]);
+  if (!tasks) return;
+  const color = ME.color||'#1a73e8';
+
+  const rows = tasks.map(t=>{
+    const spent=hoursForTask(logs,t.id); const pp=pct(t,logs);
+    return `<tr>
+      <td><b style="color:var(--primary)">${t.id}</b></td>
+      <td style="font-weight:600">${t.title}</td>
+      <td>${tBadge(t.type)}</td>
+      <td>${sBadge(t.status)}</td>
+      <td>${pBadge(t.priority)}</td>
+      <td>${fmtDate(t.due)}<br><small>${dlBadge(t.due)}</small></td>
+      <td><b>${spent}h</b>/${t.planned||0}h<br>${bar(pp,color)}</td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-sm btn-outline" onclick="editTask('${t.id}')">✏️</button>
+          <button class="btn btn-sm btn-success" onclick="quickLog('${t.id}')">⏱</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  setContent(`
+    <div class="section-header">
+      <div><div class="section-title">📋 My Tasks</div><div class="section-sub">${tasks.length} tasks</div></div>
+      <button class="btn btn-primary btn-sm" onclick="openAddTask()">➕ Add Task</button>
+    </div>
+    <div class="filter-bar">
+      <select class="filter-select" onchange="_myFilters.status=this.value;renderMyTasks()">
+        <option value="">All Status</option>
+        ${['In Progress','Pending','Completed','Upcoming','Blocked','Review'].map(s=>`<option ${_myFilters.status===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+      <select class="filter-select" onchange="_myFilters.type=this.value;renderMyTasks()">
+        <option value="">All Types</option>
+        ${['Task','Requirement','Enhancement','Bug'].map(t=>`<option ${_myFilters.type===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+    </div>
+    <div class="card">
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Task</th><th>Type</th><th>Status</th><th>Priority</th><th>Due</th><th>Hours</th><th>Actions</th></tr></thead>
+        <tbody>${rows||`<tr><td colspan="8"><div class="no-data">📭 No tasks yet</div></td></tr>`}</tbody>
+      </table></div>
+    </div>`);
+}
+
+// ══════════════════════════════════════════════════════
+// MEMBER — LOG HOURS PAGE
+// ══════════════════════════════════════════════════════
+async function renderLogHoursPage() {
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">⏱ Loading...</div>');
+  const [tasks, logs] = await Promise.all([GET('/api/tasks'), GET('/api/logs')]);
+  if (!tasks) return;
+  const color = ME.color||'#1a73e8';
+  const todayLogs = logs.filter(l=>l.date===today());
+  const todayHrs  = todayLogs.reduce((a,l)=>a+(l.hours||0),0);
+  const totalHrs  = logs.reduce((a,l)=>a+(l.hours||0),0);
+  const weekHrs   = logs.filter(l=>new Date(l.date)>=new Date(new Date()-7*86400000)).reduce((a,l)=>a+(l.hours||0),0);
+  const activeTasks = tasks.filter(t=>t.status!=='Completed');
+
+  setContent(`
+    <div class="section-header">
+      <div><div class="section-title">⏱ Log Hours</div><div class="section-sub">Track your daily work time</div></div>
+      <button class="btn btn-success" onclick="openLogModal()">➕ Log Time</button>
+    </div>
+    <div class="two-col">
+      <div>
+        <div class="card">
+          <div class="card-title">📅 Today — ${new Date().toLocaleDateString('en-IN',{weekday:'long',day:'2-digit',month:'long'})}</div>
+          <div style="font-size:40px;font-weight:800;color:${color};margin-bottom:16px">${todayHrs}h <span style="font-size:14px;color:var(--muted);font-weight:400">logged today</span></div>
+          ${todayLogs.length ? todayLogs.map(l=>{
+            const task=tasks.find(t=>t.id===l.taskId)||{};
+            return `<div class="log-entry">
+              <div class="avatar" style="background:${color}22;color:${color};width:36px;height:36px">⏱</div>
+              <div class="log-info">
+                <div class="log-task">${task.title||l.taskId}</div>
+                <div class="log-meta">${task.type?tBadge(task.type):''} ${l.desc||'—'}</div>
+                ${l.blocker?`<div style="font-size:11px;color:#c62828">⚠️ ${l.blocker}</div>`:''}
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="log-hours" style="color:${color}">${l.hours}h</div>
+                <button class="btn btn-sm btn-danger" onclick="deleteLog('${l.id}')">🗑</button>
+              </div>
+            </div>`;
+          }).join(''):'<div class="no-data" style="padding:20px">⏳ No logs today. Add one!</div>'}
+        </div>
+      </div>
+      <div>
+        <div class="card" style="background:linear-gradient(135deg,${color},${color}bb);color:#fff">
+          <div style="font-size:13px;opacity:.85;margin-bottom:12px">📊 My Stats</div>
+          <div class="person-stat"><span class="ps-label">Total Hours Logged</span><span class="ps-val">${totalHrs}h</span></div>
+          <div class="person-stat"><span class="ps-label">This Week</span><span class="ps-val">${weekHrs.toFixed(1)}h</span></div>
+          <div class="person-stat"><span class="ps-label">Today</span><span class="ps-val">${todayHrs}h</span></div>
+          <div class="person-stat"><span class="ps-label">Log Entries</span><span class="ps-val">${logs.length}</span></div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-title">⚡ Quick Log</div>
+          ${activeTasks.slice(0,5).map(t=>`
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f0f0f0">
+              <div><div style="font-size:13px;font-weight:600">${t.title.substring(0,28)}${t.title.length>28?'…':''}</div>
+              <div style="font-size:11px;color:var(--muted)">${sBadge(t.status)}</div></div>
+              <button class="btn btn-sm btn-outline" onclick="quickLog('${t.id}')">⏱ Log</button>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`);
+}
+
+async function deleteLog(id) {
+  if (!confirm('Delete this log entry?')) return;
+  await DEL('/api/logs/'+id);
+  showToast('🗑 Log deleted','#ea4335');
+  renderLogHoursPage();
+}
+
+// ══════════════════════════════════════════════════════
+// MEMBER — MY HISTORY
+// ══════════════════════════════════════════════════════
+async function renderMyHistory() {
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">📅 Loading history...</div>');
+  const [tasks, logs] = await Promise.all([GET('/api/tasks'), GET('/api/logs')]);
+  if (!tasks) return;
+  const color = ME.color||'#1a73e8';
+
+  const rows = logs.map(l=>{
+    const task=tasks.find(t=>t.id===l.taskId)||{};
+    return `<tr>
+      <td style="font-weight:600">${l.date}</td>
+      <td><b>${l.taskId}</b></td>
+      <td style="font-weight:600">${task.title||'—'}</td>
+      <td>${task.type?tBadge(task.type):'—'}</td>
+      <td style="text-align:center"><b style="font-size:16px;color:${color}">${l.hours}h</b></td>
+      <td>${l.desc||'—'}</td>
+      <td>${l.blocker?`<span style="color:#c62828">⚠️ ${l.blocker}</span>`:'<span style="color:#34a853">✅ None</span>'}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="deleteLog('${l.id}')">🗑</button></td>
+    </tr>`;
+  }).join('');
+
+  setContent(`
+    <div class="section-header">
+      <div><div class="section-title">📅 My Work History</div><div class="section-sub">${logs.length} log entries • Total: ${logs.reduce((a,l)=>a+(l.hours||0),0)}h logged</div></div>
+    </div>
+    <div class="card">
+      <div class="table-wrap"><table>
+        <thead><tr><th>Date</th><th>Task ID</th><th>Task</th><th>Type</th><th style="text-align:center">Hours</th><th>Description</th><th>Blockers</th><th></th></tr></thead>
+        <tbody>${rows||`<tr><td colspan="8"><div class="no-data">📭 No history yet. Start logging!</div></td></tr>`}</tbody>
+      </table></div>
+    </div>`);
+}
+
+// ══════════════════════════════════════════════════════
+// ADMIN — DELETED TASKS AUDIT LOG
+// ══════════════════════════════════════════════════════
+async function renderDeletedTasks() {
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">🗑 Loading deletion log...</div>');
+  const audit = await GET('/api/audit');
+  if (!audit) return;
+
+  const statCards = [
+    { icon:'🗑', val: audit.length,                                              label:'Total Deletions',      col:'#ea4335' },
+    { icon:'👥', val: [...new Set(audit.map(a=>a.deletedBy))].length,            label:'Users Who Deleted',    col:'#f57c00' },
+    { icon:'📌', val: audit.filter(a=>a.task?.type==='Task').length,             label:'Tasks Deleted',        col:'#1a73e8' },
+    { icon:'📄', val: audit.filter(a=>a.task?.type==='Requirement').length,      label:'Requirements Deleted', col:'#9c27b0' },
+    { icon:'✨', val: audit.filter(a=>a.task?.type==='Enhancement').length,      label:'Enhancements Deleted', col:'#34a853' },
+    { icon:'🐛', val: audit.filter(a=>a.task?.type==='Bug').length,              label:'Bugs Deleted',         col:'#c62828' },
+  ];
+
+  const auditRows = audit.map(a => {
+    const dt     = new Date(a.deletedAt);
+    const dtStr  = dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})
+                 + ' ' + dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    const isSelf = a.task?.assignee === a.deletedBy;
+    const rowBg  = !isSelf ? 'background:#fff5f5' : '';
+    const delLabel = isSelf
+      ? `<span style="color:#f57c00;font-weight:600">Own task</span>`
+      : `<span style="color:#c62828;font-weight:700">⚠️ Other's task</span>`;
+    return `<tr style="${rowBg}">
+      <td style="font-size:11px;white-space:nowrap;color:var(--muted)">${dtStr}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:7px">
+          <div class="avatar" style="background:${a.deletedByColor};width:26px;height:26px;font-size:11px">${a.deletedByEmoji||'👤'}</div>
+          <span style="font-weight:700;color:${a.deletedByColor}">${a.deletedByName}</span>
+        </div>
+      </td>
+      <td><b style="color:#ea4335">${a.task?.id||'—'}</b></td>
+      <td>
+        <div style="font-weight:600">${a.task?.title||'—'}</div>
+        ${a.task?.desc?`<div style="font-size:11px;color:var(--muted)">${a.task.desc.substring(0,50)}${a.task.desc.length>50?'…':''}</div>`:''}
+      </td>
+      <td>${a.task?.type ? tBadge(a.task.type) : '—'}</td>
+      <td>${a.task?.status ? sBadge(a.task.status) : '—'}</td>
+      <td>${a.task?.priority ? pBadge(a.task.priority) : '—'}</td>
+      <td><span style="color:${a.task?.assigneeColor||'#607d8b'};font-weight:600">${a.task?.assigneeName||'—'}</span></td>
+      <td style="font-size:12px;color:var(--muted)">${a.task?.createdByName||'—'}</td>
+      <td>${delLabel}</td>
+    </tr>`;
+  }).join('');
+
+  setContent(`
+    <div class="section-header">
+      <div>
+        <div class="section-title">🗑 Deleted Tasks Log</div>
+        <div class="section-sub">Full audit trail — every task deleted by any user is recorded here</div>
+      </div>
+      ${audit.length?`<button class="btn btn-danger btn-sm" onclick="clearAuditLog()">🗑 Clear Log</button>`:''}
+    </div>
+
+    <div class="kpi-grid">
+      ${statCards.map(k=>`
+        <div class="kpi-card" style="border-top-color:${k.col}">
+          <div class="kpi-icon">${k.icon}</div>
+          <div class="kpi-val" style="color:${k.col}">${k.val}</div>
+          <div class="kpi-label">${k.label}</div>
+        </div>`).join('')}
+    </div>
+
+    ${audit.length ? `
+    <div class="card" style="border-left:4px solid #ea4335">
+      <div class="card-title" style="color:#ea4335">
+        📋 Deletion History
+        <span style="font-size:12px;font-weight:400;color:var(--muted);margin-left:10px">
+          Rows in <span style="background:#fff5f5;padding:1px 6px;border-radius:4px;color:#c62828">red</span> = user deleted someone else's task
+        </span>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr>
+          <th>Deleted At</th><th>Deleted By</th><th>Task ID</th><th>Task Title</th>
+          <th>Type</th><th>Was Status</th><th>Priority</th>
+          <th>Assigned To</th><th>Created By</th><th>Ownership</th>
+        </tr></thead>
+        <tbody>${auditRows}</tbody>
+      </table></div>
+    </div>` : `
+    <div class="card">
+      <div class="no-data" style="padding:60px">
+        <div style="font-size:52px;margin-bottom:14px">🎉</div>
+        <div style="font-size:16px;font-weight:700">No tasks have been deleted yet!</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:8px">
+          Every deletion by any user will be automatically recorded here.
+        </div>
+      </div>
+    </div>`}
+  `);
+}
+
+async function clearAuditLog() {
+  if (!confirm('Clear the entire deletion audit log? This cannot be undone.')) return;
+  const r = await DEL('/api/audit');
+  if (!r || r.error) { showToast('❌ Failed to clear log','#ea4335'); return; }
+  showToast('🗑 Audit log cleared','#607d8b');
+  renderDeletedTasks();
+}
+
+// ══════════════════════════════════════════════════════
+// TASK CRUD
+// ══════════════════════════════════════════════════════
+async function openAddTask() {
+  document.getElementById('task-modal-title').textContent='➕ Add New Task';
+  ['t-title','t-desc','t-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('t-type').value='Task';
+  document.getElementById('t-priority').value='Medium';
+  document.getElementById('t-status').value='Pending';
+  document.getElementById('t-start').value=today();
+  document.getElementById('t-due').value='';
+  document.getElementById('t-planned').value='';
+  document.getElementById('t-edit-id').value='';
+  const ag=document.getElementById('assign-group');
+  if (ME.role==='admin') {
+    ag.style.display='block';
+    const sel=document.getElementById('t-assign');
+    const members=ALL_USERS.filter(u=>u.role!=='admin');
+    sel.innerHTML=members.map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+  } else {
+    ag.style.display='none';
+  }
+  openModal('task-modal');
+}
+
+async function editTask(id) {
+  const tasks=await GET('/api/tasks'); if(!tasks) return;
+  const t=tasks.find(x=>x.id===id); if(!t) return;
+  document.getElementById('task-modal-title').textContent='✏️ Edit Task';
+  document.getElementById('t-title').value=t.title;
+  document.getElementById('t-type').value=t.type;
+  document.getElementById('t-desc').value=t.desc||'';
+  document.getElementById('t-priority').value=t.priority;
+  document.getElementById('t-status').value=t.status;
+  document.getElementById('t-start').value=t.start||'';
+  document.getElementById('t-due').value=t.due||'';
+  document.getElementById('t-planned').value=t.planned||'';
+  document.getElementById('t-notes').value=t.notes||'';
+  document.getElementById('t-edit-id').value=id;
+  const ag=document.getElementById('assign-group');
+  if (ME.role==='admin') {
+    ag.style.display='block';
+    const sel=document.getElementById('t-assign');
+    const members=ALL_USERS.filter(u=>u.role!=='admin');
+    sel.innerHTML=members.map(u=>`<option value="${u.id}" ${u.id===t.assignee?'selected':''}>${u.name}</option>`).join('');
+  } else ag.style.display='none';
+  openModal('task-modal');
+}
+
+async function saveTask() {
+  const title=document.getElementById('t-title').value.trim();
+  if(!title){showToast('Title is required','#f57c00');return;}
+  const editId=document.getElementById('t-edit-id').value;
+  const body={
+    title, type:document.getElementById('t-type').value,
+    desc:document.getElementById('t-desc').value,
+    priority:document.getElementById('t-priority').value,
+    status:document.getElementById('t-status').value,
+    start:document.getElementById('t-start').value,
+    due:document.getElementById('t-due').value,
+    planned:parseFloat(document.getElementById('t-planned').value)||0,
+    notes:document.getElementById('t-notes').value,
+  };
+  if (ME.role==='admin') body.assignee=document.getElementById('t-assign').value;
+  const r = editId ? await PUT('/api/tasks/'+editId,body) : await POST('/api/tasks',body);
+  if(!r||r.error){showToast('❌ '+(r?.error||'Error'),'#ea4335');return;}
+  showToast(editId?'✅ Task updated!':'✅ Task added!','#34a853');
+  closeModal('task-modal');
+  if(ME.role==='admin') renderAllTasks(); else renderMyTasks();
+}
+
+async function deleteTask(id) {
+  if(!confirm('Delete this task?')) return;
+  const r=await DEL('/api/tasks/'+id);
+  if(!r||r.error){showToast('❌ '+(r?.error||'Error'),'#ea4335');return;}
+  showToast('🗑 Deleted','#ea4335');
+  if(ME.role==='admin') renderAllTasks(); else renderMyTasks();
+}
+
+// ══════════════════════════════════════════════════════
+// HOUR LOG
+// ══════════════════════════════════════════════════════
+async function openLogModal(preTaskId) {
+  const tasks=await GET('/api/tasks'); if(!tasks) return;
+  const sel=document.getElementById('log-task-id');
+  sel.innerHTML=tasks.map(t=>`<option value="${t.id}" ${t.id===preTaskId?'selected':''}>${t.id} — ${t.title}</option>`).join('');
+  document.getElementById('log-date').value=today();
+  document.getElementById('log-hours').value='';
+  document.getElementById('log-desc').value='';
+  document.getElementById('log-blocker').value='';
+  openModal('log-modal');
+}
+function quickLog(taskId){ openLogModal(taskId); }
+
+async function saveLog() {
+  const taskId=document.getElementById('log-task-id').value;
+  const hours=parseFloat(document.getElementById('log-hours').value);
+  if(!taskId){showToast('Select a task','#f57c00');return;}
+  if(isNaN(hours)||hours<0){showToast('Enter valid hours','#f57c00');return;}
+  const r=await POST('/api/logs',{
+    taskId, hours,
+    date:document.getElementById('log-date').value,
+    desc:document.getElementById('log-desc').value,
+    blocker:document.getElementById('log-blocker').value,
+  });
+  if(!r||r.error){showToast('❌ '+(r?.error||'Error'),'#ea4335');return;}
+  showToast(`✅ ${hours}h logged!`,'#34a853');
+  closeModal('log-modal');
+  if(CURRENT_VIEW==='log-hours'||CURRENT_VIEW==='my-dashboard') {
+    if(ME.role==='admin') renderAdminDashboard(); else
+      CURRENT_VIEW==='log-hours'?renderLogHoursPage():renderMyDashboard();
+  }
+}
+
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});
+});
+
+// ══════════════════════════════════════════════════════
+// CHECK SESSION ON LOAD
+// ══════════════════════════════════════════════════════
+(async function init() {
+  const me = await GET('/api/me');
+  if (me && !me.error) { ME = me; enterApp(); }
+})();
+</script>
+</body>
+</html>
