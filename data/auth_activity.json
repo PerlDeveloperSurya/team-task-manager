@@ -1,0 +1,35 @@
+[
+  {
+    "id": "ACT-MWURXWW7-TJPA",
+    "action": "LOGIN",
+    "userId": "admin",
+    "userName": "Admin",
+    "userRole": "admin",
+    "userColor": "#2563eb",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-11-24T14:12:42.055Z",
+    "date": "2026-11-24"
+  },
+  {
+    "id": "ACT-MWURXWY4-T77T",
+    "action": "LOGOUT",
+    "userId": "admin",
+    "userName": "Admin",
+    "userRole": "admin",
+    "userColor": "#2563eb",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-11-24T14:12:42.124Z",
+    "date": "2026-11-24"
+  },
+  {
+    "id": "ACT-MWURXWYB-DLLV",
+    "action": "LOGIN",
+    "userId": "admin",
+    "userName": "Admin",
+    "userRole": "admin",
+    "userColor": "#2563eb",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-11-24T14:12:42.131Z",
+    "date": "2026-11-24"
+  }
+]

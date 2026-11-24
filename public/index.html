@@ -1002,6 +1002,36 @@ tbody td{padding:12px 14px;vertical-align:middle;}
 .person-stat:last-child{border-bottom:none;}
 .ps-label{font-weight:500;opacity:0.95;}
 .ps-val{font-weight:800;font-size:14px;letter-spacing:0.3px;}
+
+/* LIVE TIMER PULSE & PILLS */
+.live-pulse {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulse-green 1.8s infinite;
+  flex-shrink: 0;
+}
+@keyframes pulse-green {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+.live-session-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
 </style>
 </head>
 <body>
@@ -1810,21 +1840,61 @@ function startTimerTicker() {
 }
 
 function updateTimerDigits() {
-  if (!TIMER_STATE) {
-    if (TIMER_INTERVAL) clearInterval(TIMER_INTERVAL);
-    return;
+  if (TIMER_STATE) {
+    const totalMs = getTimerElapsedMs();
+    const totalSecs = Math.floor(totalMs / 1000);
+    const formatted = formatHMS(totalSecs);
+
+    const el = document.getElementById('tb-timer-digits');
+    if (el) el.textContent = formatted;
+
+    // Update any live timers shown inside task table rows for personal timer
+    document.querySelectorAll(`.live-timer-for-${TIMER_STATE.taskId}`).forEach(node => {
+      node.textContent = formatted;
+    });
   }
-  const totalMs = getTimerElapsedMs();
-  const totalSecs = Math.floor(totalMs / 1000);
-  const formatted = formatHMS(totalSecs);
 
-  const el = document.getElementById('tb-timer-digits');
-  if (el) el.textContent = formatted;
-
-  // Update any live timers shown inside task table rows
-  document.querySelectorAll(`.live-timer-for-${TIMER_STATE.taskId}`).forEach(node => {
-    node.textContent = formatted;
+  // Live real-time ticking for all remote active timers displayed across the app
+  document.querySelectorAll('[class*="live-timer-for-user-"]').forEach(el => {
+    const isPaused = el.dataset.paused === '1';
+    if (isPaused) return;
+    const started = parseInt(el.dataset.started, 10);
+    const acc = parseInt(el.dataset.acc || '0', 10);
+    if (!started) return;
+    const elapsedMs = (Date.now() - started) + acc;
+    const totalSecs = Math.max(0, Math.floor(elapsedMs / 1000));
+    el.textContent = formatHMS(totalSecs);
   });
+}
+
+let LIVE_POLL_INTERVAL = null;
+let GLOBAL_TICK_INTERVAL = null;
+
+function startLiveSyncPoll() {
+  if (!GLOBAL_TICK_INTERVAL) {
+    GLOBAL_TICK_INTERVAL = setInterval(updateTimerDigits, 1000);
+  }
+  if (LIVE_POLL_INTERVAL) clearInterval(LIVE_POLL_INTERVAL);
+  LIVE_POLL_INTERVAL = setInterval(async () => {
+    if (!ME || ME.role !== 'admin') return;
+    if (CURRENT_VIEW !== 'dashboard' && CURRENT_VIEW !== 'all-tasks') return;
+    if (document.querySelector('.modal.open')) return;
+    try {
+      const liveTimers = await GET('/api/timers/live');
+      if (!Array.isArray(liveTimers)) return;
+      const currentUsers = Array.from(document.querySelectorAll('[class*="live-timer-for-user-"]'))
+        .map(el => {
+          const m = el.className.match(/live-timer-for-user-([^\s]+)/);
+          return m ? m[1] : '';
+        }).filter(Boolean).sort().join(',');
+      const newUsers = liveTimers.map(lt => lt.userId).sort().join(',');
+
+      if (currentUsers !== newUsers) {
+        if (CURRENT_VIEW === 'dashboard') renderAdminDashboard();
+        else if (CURRENT_VIEW === 'all-tasks') renderAllTasks();
+      }
+    } catch (e) {}
+  }, 5000);
 }
 
 function renderTimerBar() {
@@ -2110,6 +2180,7 @@ async function enterApp(isCached = false) {
   }
   buildSidebar();
   renderTimerBar();
+  startLiveSyncPoll();
 
   if (localStorage.getItem('ttm_sidebar_collapsed') === 'true') {
     const sb = document.getElementById('sidebar');
@@ -2251,8 +2322,8 @@ function onDashboardMemberChange(userId) {
 
 async function renderAdminDashboard() {
   setContent('<div style="text-align:center;padding:40px;color:var(--muted)">Loading dashboard overview...</div>');
-  const [stats, tasks, logs, resets] = await Promise.all([
-    GET('/api/stats'), GET('/api/tasks'), GET('/api/logs'), GET('/api/resets')
+  const [stats, tasks, logs, resets, liveTimers] = await Promise.all([
+    GET('/api/stats'), GET('/api/tasks'), GET('/api/logs'), GET('/api/resets'), GET('/api/timers/live')
   ]);
   if (!stats) return;
 
@@ -2263,6 +2334,43 @@ async function renderAdminDashboard() {
   const allTasks = tasks || [];
   const allLogs = logs || [];
   const pendingResets = Array.isArray(resets) ? resets : [];
+  const activeTimers = Array.isArray(liveTimers) ? liveTimers : [];
+
+  const liveSessionsHtml = activeTimers.length > 0 ? `
+    <div class="card" style="border:1.5px solid #10b981;background:#f0fdf4;margin-bottom:20px;border-radius:14px;box-shadow:var(--shadow-xs)">
+      <div class="card-title" style="color:#065f46;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="live-pulse"></span>
+          <span style="font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:0.5px">Active Live Work Sessions (${activeTimers.length})</span>
+        </div>
+        <span style="font-size:12px;color:#047857;font-weight:600">Syncing live from member timers</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:10px">
+        ${activeTimers.map(lt => `
+          <div style="background:#ffffff;border:1px solid #bbf7d0;border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <div style="display:flex;align-items:center;gap:10px">
+              ${userAvatarHtml(lt.userId, 32)}
+              <div>
+                <div style="font-weight:700;font-size:13.5px;color:var(--text)">${lt.userName}</div>
+                <div style="font-size:11.5px;color:var(--muted);margin-top:1px">
+                  <b style="font-family:'JetBrains Mono',monospace;color:var(--primary)">${lt.taskId}</b> &bull; ${lt.taskTitle || 'Task'}
+                </div>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div class="live-session-pill">
+                <span class="live-pulse"></span>
+                <span class="live-timer-for-user-${lt.userId}" data-started="${lt.startedAt}" data-acc="${lt.accumulatedMs || 0}" data-paused="${lt.isPaused ? 1 : 0}">${lt.formattedHMS}</span>
+              </div>
+              <div style="font-size:10.5px;color:${lt.isPaused?'#d97706':'#059669'};font-weight:700;margin-top:3px">
+                ${lt.isPaused ? 'Paused' : 'Tracking Now'}
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  ` : '';
   
   const resetBanner = pendingResets.length > 0 ? `
     <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:var(--shadow-xs)">
@@ -2345,6 +2453,7 @@ async function renderAdminDashboard() {
       </div>
       ${resetBanner}
       ${filterBarHtml}
+      ${liveSessionsHtml}
 
       <!-- Spotlight Member Profile Card -->
       <div class="dash-member-card">
@@ -2464,6 +2573,7 @@ async function renderAdminDashboard() {
     </div>
     ${resetBanner}
     ${filterBarHtml}
+    ${liveSessionsHtml}
 
     <div class="kpi-grid">
       ${kpis.map(k=>`
@@ -2570,7 +2680,7 @@ async function renderAllTasks(fs) {
   if (_taskFilters.type)     params.set('type',     _taskFilters.type);
   if (_taskFilters.assignee) params.set('assignee', _taskFilters.assignee);
   if (_taskFilters.search)   params.set('search',   _taskFilters.search);
-  const [tasks, logs] = await Promise.all([GET('/api/tasks?'+params), GET('/api/logs')]);
+  const [tasks, logs, liveTimers] = await Promise.all([GET('/api/tasks?'+params), GET('/api/logs'), GET('/api/timers/live')]);
   if (!tasks) return;
 
   const rows = tasks.map(t=>{
@@ -2579,11 +2689,17 @@ async function renderAllTasks(fs) {
     const uc = userColor(t.assignee);
     const isRunning = TIMER_STATE && TIMER_STATE.taskId === t.id;
     const cleanTitle = (t.title||'').replace(/'/g, "\\'");
+    const activeRemoteTimer = (Array.isArray(liveTimers) ? liveTimers : []).find(lt => lt.taskId === t.id);
     return `<tr>
       <td><b style="color:var(--primary);font-family:'JetBrains Mono',monospace">${t.id}</b></td>
       <td>
         <div style="font-weight:600;color:var(--text)">${t.title}</div>
         ${t.desc?`<div style="font-size:11px;color:var(--muted);margin-top:2px">${t.desc.substring(0,55)}${t.desc.length>55?'...':''}</div>`:''}
+        ${activeRemoteTimer ? `
+          <div class="live-session-pill" style="margin-top:4px">
+            <span class="live-pulse"></span>
+            <span>${activeRemoteTimer.userName} tracking: <b class="live-timer-for-user-${activeRemoteTimer.userId}" data-started="${activeRemoteTimer.startedAt}" data-acc="${activeRemoteTimer.accumulatedMs||0}" data-paused="${activeRemoteTimer.isPaused?1:0}">${activeRemoteTimer.formattedHMS}</b></span>
+          </div>` : ''}
       </td>
       <td>${tBadge(t.type)}</td>
       <td>
@@ -2644,96 +2760,265 @@ async function renderAllTasks(fs) {
 }
 
 // ══════════════════════════════════════════════════════
-// ADMIN — HOURS REPORT
+// ADMIN — HOURS REPORT (Dropdown-based Member Selection)
 // ══════════════════════════════════════════════════════
+let HOURS_MEMBER_FILTER = 'all';
+
+function onHoursMemberChange(userId) {
+  HOURS_MEMBER_FILTER = userId;
+  renderHoursReport();
+}
+
 async function renderHoursReport() {
   setContent('<div style="text-align:center;padding:40px;color:var(--muted)">Loading hours report...</div>');
   const [tasks, logs, stats] = await Promise.all([GET('/api/tasks'), GET('/api/logs'), GET('/api/stats')]);
-  if (!tasks) return;
+  if (!tasks || !stats) {
+    setContent('<div class="card" style="text-align:center;padding:30px;color:#dc2626">Failed to load hours report. Please try again.</div>');
+    return;
+  }
 
-  const members = ALL_USERS;
+  const allMembers = ALL_USERS;
+  const allLogs = logs || [];
+  const allTasks = tasks || [];
 
+  // Dropdown selector filter bar
+  const filterBarHtml = `
+    <div class="dash-filter-bar">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">
+          ${ICON('filter', 14)} Select Member:
+        </div>
+        <div class="dash-selector-wrap">
+          ${ICON('users', 16, '', '#2563eb')}
+          <select class="dash-member-select" id="hours-member-select" onchange="onHoursMemberChange(this.value)">
+            <option value="all" ${HOURS_MEMBER_FILTER==='all'?'selected':''}>Full Organization (All Members)</option>
+            <optgroup label="Team Members">
+              ${allMembers.filter(u=>u.role!=='admin').map(u=>`<option value="${u.id}" ${HOURS_MEMBER_FILTER===u.id?'selected':''}>${u.name} (${u.designation||u.id})</option>`).join('')}
+            </optgroup>
+            <optgroup label="Workspace Managers">
+              ${allMembers.filter(u=>u.role==='admin').map(u=>`<option value="${u.id}" ${HOURS_MEMBER_FILTER===u.id?'selected':''}>${u.name} (Manager)</option>`).join('')}
+            </optgroup>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        ${HOURS_MEMBER_FILTER !== 'all' ? `<button class="btn btn-outline btn-sm" onclick="onHoursMemberChange('all')">Reset to All Members</button>` : ''}
+        <button class="btn btn-primary btn-sm" onclick="showView('all-tasks')">${ICON('tasks', 14)} View All Tasks</button>
+      </div>
+    </div>
+  `;
+
+  // Task rows generator for a given user
   function taskHrsTable(uid, color) {
-    const myTasks = tasks.filter(t=>t.assignee===uid);
-    return myTasks.map(t=>{
-      const tLogs = logs.filter(l=>l.taskId===t.id && l.user===uid);
-      const spent = Math.round(tLogs.reduce((a,l)=>a+(parseFloat(l.hours)||0),0) * 10) / 10;
-      const pp = pct(t, logs);
+    const myTasks = allTasks.filter(t => t.assignee === uid);
+    return myTasks.map(t => {
+      const tLogs = allLogs.filter(l => l.taskId === t.id && l.user === uid);
+      const spent = Math.round(tLogs.reduce((a, l) => a + (parseFloat(l.hours) || 0), 0) * 10) / 10;
+      const pp = pct(t, allLogs);
       const variance = spent && t.planned
-        ? (spent>t.planned
-            ? `<span style="color:#dc2626;font-weight:700">+${(spent-t.planned).toFixed(1)}h over</span>`
-            : `<span style="color:#10b981;font-weight:700">${(t.planned-spent).toFixed(1)}h left</span>`)
+        ? (spent > t.planned
+            ? `<span style="color:#dc2626;font-weight:700">+${(spent - t.planned).toFixed(1)}h over</span>`
+            : `<span style="color:#10b981;font-weight:700">${(t.planned - spent).toFixed(1)}h left</span>`)
         : '—';
       return `<tr>
-        <td><b style="font-family:'JetBrains Mono',monospace">${t.id}</b></td>
+        <td><b style="font-family:'JetBrains Mono',monospace;color:var(--primary)">${t.id}</b></td>
         <td style="font-weight:600">${t.title}</td>
         <td>${tBadge(t.type)}</td>
         <td>${sBadge(t.status)}</td>
-        <td style="text-align:center"><b style="color:#8b5cf6;font-size:15px">${spent}h</b></td>
-        <td style="text-align:center">${t.planned||0}h</td>
+        <td>${pBadge(t.priority)}</td>
+        <td style="text-align:center"><b style="color:#8b5cf6;font-size:14px">${spent}h</b></td>
+        <td style="text-align:center">${t.planned || 0}h</td>
         <td style="text-align:center">${variance}</td>
-        <td style="min-width:90px">${bar(pp, color)}<span style="font-size:11px;color:var(--muted)">${pp}%</span></td>
+        <td style="min-width:100px">${bar(pp, color)}<span style="font-size:11px;color:var(--muted)">${pp}%</span></td>
       </tr>`;
-    }).join('') || `<tr><td colspan="8"><div class="no-data">No tasks assigned to this member.</div></td></tr>`;
+    }).join('') || `<tr><td colspan="9"><div class="no-data">No tasks assigned to this team member yet.</div></td></tr>`;
   }
 
-  const tabs = members.map((m,i)=>`<button class="tab-btn ${i===0?'active':''}" onclick="switchTab('hr-${m.id}',this)"><span style="display:inline-flex;align-items:center;gap:6px">${userAvatarHtml(m, 20)} ${m.name}</span></button>`).join('');
-  const panels = members.map((m,i)=>`
-    <div id="hr-${m.id}" class="${i>0?'hidden':''}">
-      <div class="card" style="margin-bottom:0">
-        <div class="card-title" style="color:${m.color}">${m.name} — Task Hours Breakdown</div>
+  // Branch 1: Single Member Selected
+  if (HOURS_MEMBER_FILTER !== 'all') {
+    const member = allMembers.find(u => u.id === HOURS_MEMBER_FILTER) || { id: HOURS_MEMBER_FILTER, name: HOURS_MEMBER_FILTER, role: 'member' };
+    const p = (stats.perPerson || []).find(x => x.id === member.id) || {};
+    const mTasks = allTasks.filter(t => t.assignee === member.id);
+    const mLogs = allLogs.filter(l => l.user === member.id);
+    const mSpent = Math.round(mLogs.reduce((a, l) => a + (parseFloat(l.hours) || 0), 0) * 10) / 10;
+    const mPlanned = Math.round(mTasks.reduce((a, t) => a + (parseFloat(t.planned) || 0), 0) * 10) / 10;
+    const mToday = Math.round(mLogs.filter(l => l.date === today()).reduce((a, l) => a + (parseFloat(l.hours) || 0), 0) * 10) / 10;
+    const mCompleted = mTasks.filter(t => t.status === 'Completed').length;
+    const varianceDiff = Math.round((mPlanned - mSpent) * 10) / 10;
+    const varianceHtml = mPlanned > 0
+      ? (varianceDiff >= 0
+          ? `<span style="color:#10b981;font-weight:700">${varianceDiff.toFixed(1)}h remaining</span>`
+          : `<span style="color:#dc2626;font-weight:700">+${Math.abs(varianceDiff).toFixed(1)}h over budget</span>`)
+      : '—';
+
+    // Daily hours for this specific member in the last 7 days
+    const dailyRows = (stats.dailyHours || []).map(d => {
+      const dt = new Date(d.date + 'T00:00:00');
+      const lbl = dt.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short' });
+      const hrs = d[member.id] || 0;
+      return `<tr>
+        <td style="font-weight:600">${lbl}</td>
+        <td><code style="font-size:12px;color:var(--muted)">${d.date}</code></td>
+        <td style="text-align:center"><b style="color:#8b5cf6;font-size:14px">${hrs}h</b></td>
+        <td style="min-width:140px">${bar(Math.min(100, Math.round(hrs / 8 * 100)), '#8b5cf6')}<span style="font-size:11px;color:var(--muted)">${Math.round(hrs / 8 * 100)}% of 8h standard</span></td>
+      </tr>`;
+    }).join('');
+
+    setContent(`
+      <div class="section-header">
+        <div>
+          <div class="section-title">Hours Report — ${member.name}</div>
+          <div class="section-sub">Individual time tracking, task variance, and sprint velocity analysis</div>
+        </div>
+      </div>
+      ${filterBarHtml}
+
+      <!-- Focused Member Card -->
+      <div class="dash-member-card" style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          ${userAvatarHtml(member, 48)}
+          <div>
+            <div style="font-size:18px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:10px">
+              <span>${member.name}</span>
+              <span class="badge ${member.role==='admin'?'b-primary':'b-completed'}">${member.role==='admin'?'Workspace Manager':'Team Member'}</span>
+            </div>
+            <div style="font-size:12.5px;color:var(--muted);margin-top:3px">
+              ${member.designation || 'Team Member'} &bull; User ID: <code>${member.id}</code> &bull; Assigned Tasks: <b>${mTasks.length}</b>
+            </div>
+          </div>
+        </div>
+        <div class="dash-member-meta" style="margin-top:16px">
+          <div class="dmm-item"><span class="dmm-label">Hours Tracked</span><span class="dmm-val" style="color:#8b5cf6">${mSpent}h</span></div>
+          <div class="dmm-item"><span class="dmm-label">Hours Planned</span><span class="dmm-val" style="color:#06b6d4">${mPlanned}h</span></div>
+          <div class="dmm-item"><span class="dmm-label">Effort Variance</span><span class="dmm-val">${varianceHtml}</span></div>
+          <div class="dmm-item"><span class="dmm-label">Today's Hours</span><span class="dmm-val" style="color:#10b981">${mToday}h</span></div>
+          <div class="dmm-item"><span class="dmm-label">Tasks Completed</span><span class="dmm-val" style="color:#2563eb">${mCompleted} / ${mTasks.length}</span></div>
+        </div>
+      </div>
+
+      <!-- Task Hours Breakdown Table -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span style="display:flex;align-items:center;gap:8px">${ICON('tasks', 16, '', '#8b5cf6')} Task Hours Breakdown</span>
+          <span style="font-size:12px;font-weight:normal;color:var(--muted)">${mTasks.length} Assigned Tasks</span>
+        </div>
         <div class="table-wrap"><table>
-          <thead><tr><th>ID</th><th>Task Title</th><th>Type</th><th>Status</th><th style="text-align:center">Spent</th><th style="text-align:center">Planned</th><th style="text-align:center">Variance</th><th>Progress</th></tr></thead>
-          <tbody>${taskHrsTable(m.id, m.color)}</tbody>
+          <thead><tr><th>ID</th><th>Task Title</th><th>Type</th><th>Status</th><th>Priority</th><th style="text-align:center">Spent</th><th style="text-align:center">Planned</th><th style="text-align:center">Variance</th><th>Progress</th></tr></thead>
+          <tbody>${taskHrsTable(member.id, member.color)}</tbody>
         </table></div>
       </div>
-    </div>`).join('');
+
+      <!-- 7-Day Log Breakdown for this Member -->
+      <div class="card">
+        <div class="card-title">${ICON('clock', 16, '', '#06b6d4')} Daily Hours — Last 7 Days</div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Day</th><th>Date</th><th style="text-align:center">Hours Logged</th><th>Daily Utilization</th></tr></thead>
+          <tbody>${dailyRows}</tbody>
+        </table></div>
+      </div>
+    `);
+    return;
+  }
+
+  // Branch 2: Full Organization (All Members)
+  const cleanTotalHrs = Math.round((parseFloat(stats.totalHrs) || 0) * 10) / 10;
+  const cleanPlannedHrs = Math.round((parseFloat(stats.plannedHrs) || 0) * 10) / 10;
+  const totalVarianceDiff = Math.round((cleanPlannedHrs - cleanTotalHrs) * 10) / 10;
+  const totalVarianceLabel = totalVarianceDiff >= 0 ? `${totalVarianceDiff.toFixed(1)}h under budget` : `+${Math.abs(totalVarianceDiff).toFixed(1)}h over budget`;
+
+  const kpis = [
+    { icon:'clock', val: cleanTotalHrs + 'h', label:'Total Hours Tracked', col:'#8b5cf6' },
+    { icon:'calendar', val: cleanPlannedHrs + 'h', label:'Total Hours Planned', col:'#06b6d4' },
+    { icon:'trending-up', val: totalVarianceLabel, label:'Overall Effort Variance', col: totalVarianceDiff >= 0 ? '#10b981' : '#dc2626' },
+    { icon:'check', val: (stats.byStatus['Completed'] || 0) + ' / ' + stats.totalTasks, label:'Tasks Completed', col:'#10b981' },
+  ];
+
+  // Team Summary Table rows
+  const memberSummaryRows = (stats.perPerson || []).map(p => {
+    const memberObj = allMembers.find(u => u.id === p.id) || p;
+    const spent = Math.round((parseFloat(p.hoursLogged) || 0) * 10) / 10;
+    const planned = Math.round((parseFloat(p.hoursPlanned) || 0) * 10) / 10;
+    const diff = Math.round((planned - spent) * 10) / 10;
+    const varText = planned > 0
+      ? (diff >= 0 ? `<span style="color:#10b981;font-weight:700">${diff.toFixed(1)}h left</span>` : `<span style="color:#dc2626;font-weight:700">+${Math.abs(diff).toFixed(1)}h over</span>`)
+      : '—';
+    const rate = p.total ? Math.round(p.completed / p.total * 100) : 0;
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          ${userAvatarHtml(memberObj, 32)}
+          <div>
+            <div style="font-weight:700;color:var(--text)">${p.name}</div>
+            <div style="font-size:11.5px;color:var(--muted)">${p.designation || (p.role === 'admin' ? 'Workspace Manager' : 'Team Member')}</div>
+          </div>
+        </div>
+      </td>
+      <td style="text-align:center"><span class="badge b-primary">${p.total || 0}</span></td>
+      <td style="text-align:center"><span class="badge b-completed">${p.completed || 0}</span></td>
+      <td style="text-align:center"><b style="color:#8b5cf6;font-size:14px">${spent}h</b></td>
+      <td style="text-align:center">${planned}h</td>
+      <td style="text-align:center">${varText}</td>
+      <td style="text-align:center"><b style="color:#10b981">${Math.round((parseFloat(p.todayHours)||0)*10)/10}h</b></td>
+      <td style="min-width:110px">${bar(rate, p.color)}<span style="font-size:11px;color:var(--muted)">${rate}% (${p.completed}/${p.total})</span></td>
+      <td style="text-align:right">
+        <button class="btn btn-outline btn-sm" onclick="onHoursMemberChange('${p.id}')">View Details &rarr;</button>
+      </td>
+    </tr>`;
+  }).join('');
 
   setContent(`
     <div class="section-header">
       <div>
         <div class="section-title">Hours Report</div>
-        <div class="section-sub">Time tracking, effort variance, and utilization analysis</div>
+        <div class="section-sub">Time tracking, effort variance, and utilization analysis across the team</div>
       </div>
     </div>
-    <div class="two-col" style="margin-bottom:20px">
-      ${members.map(m=>{
-        const p = stats.perPerson.find(x=>x.id===m.id)||{};
-        return `<div class="card" style="background:linear-gradient(135deg,${m.color},${m.color}dd);color:#fff">
-          <div style="font-size:15px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:10px">
-            ${userAvatarHtml(m, 32, 'rgba(255,255,255,0.25)')}
-            <span>${m.name}</span>
-          </div>
-          <div class="person-stat"><span class="ps-label">Total Hours Logged</span><span class="ps-val">${Math.round((parseFloat(p.hoursLogged)||0)*10)/10}h</span></div>
-          <div class="person-stat"><span class="ps-label">Total Hours Planned</span><span class="ps-val">${Math.round((parseFloat(p.hoursPlanned)||0)*10)/10}h</span></div>
-          <div class="person-stat"><span class="ps-label">Today's Hours</span><span class="ps-val">${Math.round((parseFloat(p.todayHours)||0)*10)/10}h</span></div>
-          <div class="person-stat"><span class="ps-label">Tasks Done</span><span class="ps-val">${p.completed||0} / ${p.total||0}</span></div>
-        </div>`;
-      }).join('')}
+    ${filterBarHtml}
+
+    <!-- KPI Summary Grid -->
+    <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 20px">
+      ${kpis.map(k=>`
+        <div class="kpi-card" style="border-top-color:${k.col}">
+          <div class="kpi-icon" style="color:${k.col};display:flex;justify-content:center">${ICON(k.icon, 22, '', k.col)}</div>
+          <div class="kpi-val" style="color:${k.col}">${k.val}</div>
+          <div class="kpi-label">${k.label}</div>
+        </div>`).join('')}
     </div>
+
+    <!-- Organization Members Summary Table -->
     <div class="card" style="margin-bottom:20px">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span style="display:flex;align-items:center;gap:8px">${ICON('users', 16, '', 'var(--primary)')} Team Members Effort & Utilization</span>
+        <span style="font-size:12px;font-weight:normal;color:var(--muted)">Click "View Details" or select a member from the dropdown above</span>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Team Member</th><th style="text-align:center">Tasks</th><th style="text-align:center">Done</th><th style="text-align:center">Hours Tracked</th><th style="text-align:center">Planned</th><th style="text-align:center">Variance</th><th style="text-align:center">Today</th><th>Completion Rate</th><th style="text-align:right">Action</th></tr></thead>
+        <tbody>${memberSummaryRows}</tbody>
+      </table></div>
+    </div>
+
+    <!-- Daily Hours — Last 7 Days (All Members) -->
+    <div class="card">
       <div class="card-title">${ICON('clock', 16, '', '#06b6d4')} Daily Hours — Last 7 Days</div>
       <div class="table-wrap"><table>
-        <thead><tr><th>Date</th>${members.map(m=>`<th style="text-align:center;color:${m.color}">${m.name}</th>`).join('')}<th style="text-align:center">Total</th></tr></thead>
-        <tbody>${stats.dailyHours.map(d=>{
+        <thead><tr><th>Date</th>${allMembers.map(m=>`<th style="text-align:center;color:${m.color}">${m.name}</th>`).join('')}<th style="text-align:center">Total</th></tr></thead>
+        <tbody>${(stats.dailyHours || []).map(d=>{
           const dt = new Date(d.date+'T00:00:00');
           const lbl = dt.toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short'});
-          const tot = members.reduce((a,m)=>a+(d[m.id]||0),0);
+          const tot = allMembers.reduce((a,m)=>a+(d[m.id]||0),0);
           return `<tr><td style="font-weight:600">${lbl}</td>
-            ${members.map(m=>`<td style="text-align:center;color:${m.color};font-weight:700">${d[m.id]||0}h</td>`).join('')}
+            ${allMembers.map(m=>`<td style="text-align:center;color:${m.color};font-weight:700">${d[m.id]||0}h</td>`).join('')}
             <td style="text-align:center;font-weight:700">${tot.toFixed(1)}h</td></tr>`;
         }).join('')}</tbody>
       </table></div>
     </div>
-    <div class="tab-buttons">${tabs}</div>
-    ${panels}
   `);
 }
 
 function switchTab(id, el) {
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  const allPanels = el.closest('.content').querySelectorAll('[id^="hr-"]');
+  if (el) el.classList.add('active');
+  const allPanels = document.querySelectorAll('[id^="hr-"]');
   allPanels.forEach(p=>p.classList.toggle('hidden', p.id!==id));
 }
 
@@ -2793,42 +3078,207 @@ async function renderPending() {
 }
 
 // ══════════════════════════════════════════════════════
-// ADMIN — ACTIVITY LOG
+// ADMIN — ACTIVITY LOG & AUDIT TIMELINE
 // ══════════════════════════════════════════════════════
+let ACTIVITY_TYPE_FILTER = 'all';    // 'all' | 'auth' | 'work' | 'login' | 'logout'
+let ACTIVITY_MEMBER_FILTER = 'all';  // 'all' | userId
+let ACTIVITY_SEARCH_QUERY = '';
+
+function onActivityFilterChange(typeVal, memberVal, searchVal) {
+  if (typeVal !== undefined) ACTIVITY_TYPE_FILTER = typeVal;
+  if (memberVal !== undefined) ACTIVITY_MEMBER_FILTER = memberVal;
+  if (searchVal !== undefined) ACTIVITY_SEARCH_QUERY = searchVal.toLowerCase();
+  renderActivity();
+}
+
 async function renderActivity() {
   setContent('<div style="text-align:center;padding:40px;color:var(--muted)">Loading activity records...</div>');
-  const activity = await GET('/api/activity');
-  if (!activity) return;
+  let rawActivity = null;
+  try {
+    rawActivity = await GET('/api/activity');
+  } catch (e) {
+    console.error('Failed to load activity:', e);
+  }
 
-  const rows = activity.map(l=>`<tr>
-    <td style="font-weight:600;white-space:nowrap">${l.date}</td>
-    <td>
-      <div style="display:flex;align-items:center;gap:7px">
-        ${userAvatarHtml(l.user, 24)}
-        <span style="font-weight:700;color:${l.userColor||'var(--text)'}">${l.userName}</span>
+  if (!rawActivity || !Array.isArray(rawActivity)) {
+    setContent(`
+      <div class="section-header">
+        <div>
+          <div class="section-title">Activity Log & Audit Trail</div>
+          <div class="section-sub">Comprehensive timeline of workspace logins, sign-outs, and task work logs</div>
+        </div>
       </div>
-    </td>
-    <td><b style="font-family:'JetBrains Mono',monospace">${l.taskId}</b></td>
-    <td style="font-weight:600">${l.taskTitle}</td>
-    <td>${l.taskType!=='—'?tBadge(l.taskType):'—'}</td>
-    <td style="text-align:center"><b style="font-size:15px;color:#8b5cf6">${l.hours}h</b></td>
-    <td>${l.desc||'Routine task execution'}</td>
-    <td>${l.blocker?`<span class="badge b-blocked">${ICON('alert-triangle', 11)} ${l.blocker}</span>`:`<span class="badge b-completed">${ICON('check', 11)} None</span>`}</td>
-  </tr>`).join('');
+      <div class="card" style="text-align:center;padding:40px">
+        <div style="color:#ef4444;font-size:16px;font-weight:700;margin-bottom:8px">Unable to retrieve activity records</div>
+        <div style="color:var(--muted);font-size:13px;margin-bottom:16px">The activity log service might be momentarily synchronizing data.</div>
+        <button class="btn btn-primary btn-sm" onclick="renderActivity()">Retry Activity Log</button>
+      </div>
+    `);
+    return;
+  }
+
+  const allEvents = rawActivity;
+
+  // Filter items
+  const filtered = allEvents.filter(a => {
+    // 1. Type Filter
+    if (ACTIVITY_TYPE_FILTER === 'auth' && a.category !== 'AUTH_SESSION') return false;
+    if (ACTIVITY_TYPE_FILTER === 'work' && a.category !== 'WORK_LOG') return false;
+    if (ACTIVITY_TYPE_FILTER === 'login' && a.action !== 'LOGIN') return false;
+    if (ACTIVITY_TYPE_FILTER === 'logout' && a.action !== 'LOGOUT') return false;
+
+    // 2. Member Filter
+    if (ACTIVITY_MEMBER_FILTER !== 'all' && a.user !== ACTIVITY_MEMBER_FILTER) return false;
+
+    // 3. Search Query
+    if (ACTIVITY_SEARCH_QUERY) {
+      const q = ACTIVITY_SEARCH_QUERY;
+      const haystack = `${a.userName||''} ${a.user||''} ${a.taskTitle||''} ${a.taskId||''} ${a.desc||''} ${a.blocker||''} ${a.action||''}`.toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    return true;
+  });
+
+  // Calculate Metrics
+  const totalEvents = allEvents.length;
+  const workCount = allEvents.filter(a => a.category === 'WORK_LOG').length;
+  const loginCount = allEvents.filter(a => a.action === 'LOGIN').length;
+  const logoutCount = allEvents.filter(a => a.action === 'LOGOUT').length;
+
+  const rows = filtered.map(a => {
+    const isLogin = a.action === 'LOGIN';
+    const isLogout = a.action === 'LOGOUT';
+    const isWork = a.category === 'WORK_LOG';
+
+    let actionBadge = '';
+    if (isLogin) {
+      actionBadge = `<span class="badge b-completed" style="display:inline-flex;align-items:center;gap:5px">${ICON('log-in', 12)} Signed In</span>`;
+    } else if (isLogout) {
+      actionBadge = `<span class="badge" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;display:inline-flex;align-items:center;gap:5px">${ICON('logout', 12)} Signed Out</span>`;
+    } else {
+      actionBadge = `<span class="badge b-primary" style="display:inline-flex;align-items:center;gap:5px">${ICON('clock', 12)} Work Logged</span>`;
+    }
+
+    // Format Timestamp
+    let formattedTs = a.date || '—';
+    if (a.timestamp) {
+      try {
+        const d = new Date(a.timestamp);
+        if (!isNaN(d.getTime())) {
+          formattedTs = d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) + ' ' +
+                        d.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
+        }
+      } catch (err) {}
+    }
+
+    let taskCell = '';
+    if (isWork) {
+      taskCell = `
+        <div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <b style="font-family:'JetBrains Mono',monospace;color:var(--primary)">${a.taskId}</b>
+            <span style="font-weight:600;color:var(--text)">${a.taskTitle}</span>
+          </div>
+          <div style="margin-top:3px">${a.taskType !== '—' ? tBadge(a.taskType) : ''}</div>
+        </div>
+      `;
+    } else {
+      taskCell = `
+        <div>
+          <div style="font-weight:600;color:var(--text)">${isLogin ? 'Workspace Login Session' : 'Workspace Sign-Out'}</div>
+          <div style="font-size:11.5px;color:var(--muted);margin-top:2px">Session Authentication Event</div>
+        </div>
+      `;
+    }
+
+    const hoursCell = isWork
+      ? `<b style="font-size:14px;color:#8b5cf6">${a.hours}h</b>`
+      : `<span style="color:var(--muted)">—</span>`;
+
+    const summaryCell = `
+      <div>
+        <div style="font-size:12.5px;color:var(--text)">${a.desc || 'Routine task execution'}</div>
+        ${a.blocker ? `<div style="font-size:11.5px;color:#dc2626;font-weight:600;margin-top:3px">${ICON('alert-triangle', 11)} Roadblock: ${a.blocker}</div>` : ''}
+      </div>
+    `;
+
+    return `<tr>
+      <td style="font-size:12.5px;font-weight:600;white-space:nowrap;color:var(--text)">${formattedTs}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${userAvatarHtml(a.user, 26)}
+          <div>
+            <div style="font-weight:700;font-size:13px;color:${a.userColor||'var(--text)'}">${a.userName}</div>
+            <div style="font-size:11px;color:var(--muted)">${a.userRole === 'admin' ? 'Manager' : 'Team Member'}</div>
+          </div>
+        </div>
+      </td>
+      <td>${actionBadge}</td>
+      <td>${taskCell}</td>
+      <td style="text-align:center">${hoursCell}</td>
+      <td>${summaryCell}</td>
+    </tr>`;
+  }).join('');
 
   setContent(`
     <div class="section-header">
       <div>
-        <div class="section-title">Activity Log</div>
-        <div class="section-sub">Comprehensive timeline of every work session logged by team members</div>
+        <div class="section-title">Activity Log & Audit Trail</div>
+        <div class="section-sub">Comprehensive timeline of workspace logins, sign-outs, and task hours logged by team members</div>
       </div>
     </div>
+
+    <!-- Quick Metrics Row -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;margin-bottom:18px">
+      <div style="background:#ffffff;border:1px solid var(--border);border-radius:10px;padding:12px 16px;box-shadow:var(--shadow-xs)">
+        <div style="font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase">Total Events</div>
+        <div style="font-size:22px;font-weight:800;color:var(--text);margin-top:2px">${totalEvents}</div>
+      </div>
+      <div style="background:#ffffff;border:1px solid var(--border);border-radius:10px;padding:12px 16px;box-shadow:var(--shadow-xs)">
+        <div style="font-size:11.5px;font-weight:700;color:#8b5cf6;text-transform:uppercase">Work Sessions</div>
+        <div style="font-size:22px;font-weight:800;color:#8b5cf6;margin-top:2px">${workCount}</div>
+      </div>
+      <div style="background:#ffffff;border:1px solid var(--border);border-radius:10px;padding:12px 16px;box-shadow:var(--shadow-xs)">
+        <div style="font-size:11.5px;font-weight:700;color:#10b981;text-transform:uppercase">User Logins</div>
+        <div style="font-size:22px;font-weight:800;color:#10b981;margin-top:2px">${loginCount}</div>
+      </div>
+      <div style="background:#ffffff;border:1px solid var(--border);border-radius:10px;padding:12px 16px;box-shadow:var(--shadow-xs)">
+        <div style="font-size:11.5px;font-weight:700;color:#64748b;text-transform:uppercase">User Logouts</div>
+        <div style="font-size:22px;font-weight:800;color:#64748b;margin-top:2px">${logoutCount}</div>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar" style="margin-bottom:16px">
+      <input class="search-input" placeholder="Search by member, task, or keyword..." value="${ACTIVITY_SEARCH_QUERY}"
+        oninput="onActivityFilterChange(ACTIVITY_TYPE_FILTER, ACTIVITY_MEMBER_FILTER, this.value)"/>
+
+      <select class="filter-select" onchange="onActivityFilterChange(this.value, ACTIVITY_MEMBER_FILTER, ACTIVITY_SEARCH_QUERY)">
+        <option value="all" ${ACTIVITY_TYPE_FILTER==='all'?'selected':''}>All Activity Types</option>
+        <option value="work" ${ACTIVITY_TYPE_FILTER==='work'?'selected':''}>Work Hours Logged Only</option>
+        <option value="auth" ${ACTIVITY_TYPE_FILTER==='auth'?'selected':''}>Logins & Sign-Outs Only</option>
+        <option value="login" ${ACTIVITY_TYPE_FILTER==='login'?'selected':''}>Logins Only</option>
+        <option value="logout" ${ACTIVITY_TYPE_FILTER==='logout'?'selected':''}>Logouts Only</option>
+      </select>
+
+      <select class="filter-select" onchange="onActivityFilterChange(ACTIVITY_TYPE_FILTER, this.value, ACTIVITY_SEARCH_QUERY)">
+        <option value="all" ${ACTIVITY_MEMBER_FILTER==='all'?'selected':''}>All Team Members</option>
+        ${ALL_USERS.map(u => `<option value="${u.id}" ${ACTIVITY_MEMBER_FILTER===u.id?'selected':''}>${u.name} (${u.role==='admin'?'Manager':u.designation||u.id})</option>`).join('')}
+      </select>
+
+      ${(ACTIVITY_TYPE_FILTER !== 'all' || ACTIVITY_MEMBER_FILTER !== 'all' || ACTIVITY_SEARCH_QUERY) ? `
+        <button class="btn btn-outline btn-sm" onclick="ACTIVITY_TYPE_FILTER='all';ACTIVITY_MEMBER_FILTER='all';ACTIVITY_SEARCH_QUERY='';renderActivity()">Reset Filters</button>
+      ` : ''}
+    </div>
+
+    <!-- Table of Records -->
     <div class="card">
       <div class="table-wrap"><table>
-        <thead><tr><th>Date</th><th>Team Member</th><th>Task ID</th><th>Task Title</th><th>Classification</th><th style="text-align:center">Hours</th><th>Work Summary</th><th>Blockers / Roadblocks</th></tr></thead>
-        <tbody>${rows||`<tr><td colspan="8"><div class="no-data">No work logs recorded yet.</div></td></tr>`}</tbody>
+        <thead><tr><th>Timestamp</th><th>Team Member</th><th>Event</th><th>Task / Activity Subject</th><th style="text-align:center">Hours</th><th>Details & Roadblocks</th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="6"><div class="no-data">No activity records match your current filters.</div></td></tr>`}</tbody>
       </table></div>
-    </div>`);
+    </div>
+  `);
 }
 
 // ══════════════════════════════════════════════════════
