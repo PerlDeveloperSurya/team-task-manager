@@ -530,7 +530,7 @@ app.get('/api/tasks', requireAuth, (req, res) => {
 app.post('/api/tasks', requireAuth, (req, res) => {
   const tasks = readJSON('tasks.json');
   const user  = req.user || readJSON('users.json').find(u => u.id === req.session.userId);
-  const { title, type, desc, priority, status, start, startTime, due, planned, notes, assignee, startTimer } = req.body;
+  const { title, type, desc, priority, status, start, startTime, due, dueTime, planned, notes, assignee, startTimer } = req.body;
   if (!title) return res.status(400).json({ error: 'Title required' });
   const realAssignee = user.role === 'admin' ? (assignee || req.session.userId) : req.session.userId;
   
@@ -548,6 +548,7 @@ app.post('/api/tasks', requireAuth, (req, res) => {
     start: start || today(),
     startTime: taskStartTime,
     due: due || '',
+    dueTime: dueTime || '',
     planned: parseFloat(planned) || 0,
     notes: notes || '',
     assignee: realAssignee,
@@ -571,6 +572,7 @@ app.put('/api/tasks/:id', requireAuth, (req, res) => {
     ...tasks[idx],
     ...req.body,
     startTime: req.body.startTime !== undefined ? req.body.startTime : (tasks[idx].startTime || ''),
+    dueTime: req.body.dueTime !== undefined ? req.body.dueTime : (tasks[idx].dueTime || ''),
     id: req.params.id
   };
   writeJSON('tasks.json', tasks);

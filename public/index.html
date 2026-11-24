@@ -769,6 +769,106 @@ tbody td{padding:12px 14px;vertical-align:middle;}
   .kpi-val{font-size:24px;}
   .login-box{padding:32px 22px;}
 }
+
+/* INPUT WITH ICON LEAD */
+.input-with-icon{position:relative;display:flex;align-items:center;}
+.input-icon-lead{position:absolute;left:13px;color:#94a3b8;pointer-events:none;display:flex;align-items:center;}
+.input-with-icon .form-control{padding-left:42px;}
+
+/* LOGIN SCREEN UPGRADE */
+.login-brand-header{text-align:center;margin-bottom:20px;}
+.login-brand-logo{
+  width:64px;height:64px;margin:0 auto 12px;
+  background:#f8fafc;border:1px solid #e2e8f0;border-radius:18px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 12px rgba(37,99,235,0.12);
+}
+.login-org-pill{
+  display:inline-block;padding:3px 10px;border-radius:9999px;
+  font-size:10px;font-weight:800;letter-spacing:0.8px;
+  background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;
+  margin-bottom:8px;
+}
+.forgot-pass-link{font-size:12px;color:var(--primary);text-decoration:none;font-weight:600;}
+.forgot-pass-link:hover{text-decoration:underline;}
+.quick-access-bar{
+  background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;
+  padding:10px 12px;margin-bottom:18px;text-align:left;
+}
+.quick-access-label{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.4px;}
+.quick-access-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.qa-chip{
+  padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;
+  border:1px solid #cbd5e1;background:#fff;color:#334155;cursor:pointer;
+  display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+}
+.qa-chip:hover{border-color:#2563eb;color:#2563eb;background:#eff6ff;}
+.qa-chip.manager{border-color:#bfdbfe;background:#eff6ff;color:#1e40af;}
+.qa-dot{width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block;}
+.qa-chip.manager .qa-dot{background:#2563eb;}
+.login-submit-btn{
+  height:44px;font-size:14px;letter-spacing:0.2px;gap:10px;
+}
+.login-footer-security{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  font-size:11.5px;color:#94a3b8;margin-top:20px;
+}
+
+/* USER INITIALS AVATAR */
+.user-initials-avatar{
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-weight:700;color:#ffffff;letter-spacing:-0.5px;flex-shrink:0;
+  box-shadow:0 1px 3px rgba(0,0,0,0.15);user-select:none;
+}
+.badge-dot{
+  width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0;margin-right:2px;
+}
+
+/* TIMELINE & SCHEDULE CARD */
+.task-schedule-card{
+  display:inline-flex;align-items:center;gap:10px;
+  background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;
+  padding:7px 11px;font-size:12px;transition:all .15s ease;
+}
+.task-schedule-card:hover{
+  background:#ffffff;border-color:#cbd5e1;box-shadow:0 2px 5px rgba(0,0,0,0.04);
+}
+.sch-item{display:flex;flex-direction:column;gap:1px;}
+.sch-type-tag{font-size:9.5px;font-weight:800;color:#94a3b8;letter-spacing:0.5px;}
+.sch-date{font-weight:600;color:#1e293b;white-space:nowrap;font-size:12.5px;}
+.sch-time-chip{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+  color:#2563eb;background:#eff6ff;border-radius:4px;padding:1px 6px;
+  display:inline-flex;align-items:center;gap:3px;margin-top:2px;width:fit-content;
+}
+.sch-arrow-divider{display:flex;align-items:center;color:#94a3b8;padding:0 2px;}
+.sch-item.due.is-overdue .sch-date{color:#dc2626;}
+.sch-item.due.is-overdue .sch-time-chip{color:#dc2626;background:#fef2f2;}
+.sch-item.due.is-urgent .sch-date{color:#d97706;}
+
+/* DASHBOARD MEMBER SELECTOR */
+.dash-filter-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;flex-wrap:wrap;gap:12px;background:#ffffff;
+  border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px;
+  box-shadow:var(--shadow-xs);
+}
+.dash-selector-wrap{
+  display:flex;align-items:center;gap:10px;background:#f8fafc;
+  border:1.5px solid var(--border);border-radius:10px;padding:4px 12px;
+  transition:all .15s ease;
+}
+.dash-selector-wrap:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,0.15);}
+.dash-member-select{
+  border:none;background:none;font-size:13.5px;font-weight:700;
+  color:var(--text);outline:none;cursor:pointer;padding:6px 0;font-family:inherit;
+}
+.dash-member-card{
+  background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;
+  padding:20px;margin-bottom:20px;box-shadow:var(--shadow-sm);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+}
+.svg-icon{display:inline-block;vertical-align:middle;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -776,25 +876,79 @@ tbody td{padding:12px 14px;vertical-align:middle;}
 <!-- ══ LOGIN ══ -->
 <div id="login-page">
   <div class="login-box">
-    <div class="login-logo-wrap">🗂️</div>
-    <div class="login-title">Team Task Manager</div>
-    <div class="login-sub">Sign in with your team credentials</div>
+    <div class="login-brand-header">
+      <div class="login-brand-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="3" width="9" height="11" rx="2.5" fill="#2563eb"/>
+          <rect x="13" y="3" width="9" height="6" rx="2" fill="#3b82f6" opacity="0.8"/>
+          <rect x="13" y="11" width="9" height="10" rx="2.5" fill="#10b981"/>
+          <rect x="2" y="16" width="9" height="5" rx="2" fill="#06b6d4" opacity="0.8"/>
+        </svg>
+      </div>
+      <div class="login-title">Team Task Manager</div>
+      <div class="login-org-pill">WORKSPACE ACCESS PORTAL</div>
+      <div class="login-sub">Sign in with your team credentials to access tasks & track work hours</div>
+    </div>
+
+    <!-- Quick Role Credentials Hint Bar -->
+    <div class="quick-access-bar">
+      <div class="quick-access-label">Quick Sign-in:</div>
+      <div class="quick-access-chips">
+        <button type="button" class="qa-chip manager" onclick="quickFillLogin('admin','admin123')">
+          <span class="qa-dot"></span>Manager (admin)
+        </button>
+        <button type="button" class="qa-chip" onclick="quickFillLogin('person1','person1')">
+          <span class="qa-dot"></span>Member 1
+        </button>
+        <button type="button" class="qa-chip" onclick="quickFillLogin('person2','person2')">
+          <span class="qa-dot"></span>Member 2
+        </button>
+      </div>
+    </div>
+
     <div class="form-group">
       <label class="form-label">Username / Login ID</label>
-      <input type="text" class="form-control" id="login-user" placeholder="e.g. admin, person1" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()"/>
+      <div class="input-with-icon">
+        <span class="input-icon-lead">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </span>
+        <input type="text" class="form-control" id="login-user" placeholder="e.g. admin, person1" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()"/>
+      </div>
     </div>
+
     <div class="form-group">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
         <label class="form-label" style="margin-bottom:0">Password</label>
-        <a href="javascript:void(0)" onclick="openForgotPasswordModal()" style="font-size:12px;color:var(--primary);text-decoration:none;font-weight:600">Forgot password?</a>
+        <a href="javascript:void(0)" onclick="openForgotPasswordModal()" class="forgot-pass-link">Forgot password?</a>
       </div>
-      <div style="position:relative">
-        <input type="password" class="form-control" id="login-pass" placeholder="Enter your password" autocomplete="current-password" style="padding-right:42px" onkeydown="if(event.key==='Enter')doLogin()"/>
-        <button type="button" class="pass-toggle-btn" id="login-pass-toggle" onclick="toggleLoginPassword()" title="Show/Hide Password">👁️</button>
+      <div class="input-with-icon">
+        <span class="input-icon-lead">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </span>
+        <input type="password" class="form-control" id="login-pass" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+        <button type="button" class="pass-toggle-btn" id="login-pass-toggle" onclick="toggleLoginPassword()" title="Show/Hide Password">
+          <span id="login-pass-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </span>
+        </button>
       </div>
     </div>
-    <div class="err-msg" id="login-err">❌ Invalid username or password. Please try again.</div>
-    <button class="btn btn-primary btn-full" onclick="doLogin()">🔐 Sign In</button>
+
+    <div class="err-msg" id="login-err">Invalid username or password. Please try again.</div>
+
+    <button class="btn btn-primary btn-full login-submit-btn" onclick="doLogin()">
+      <span>Sign In to Workspace</span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </button>
+
+    <div class="login-footer-security">
+      <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        256-Bit TLS Security
+      </span>
+      <span>•</span>
+      <span>Local Vault Protected</span>
+    </div>
   </div>
 </div>
 
@@ -804,9 +958,11 @@ tbody td{padding:12px 14px;vertical-align:middle;}
     <div style="display:flex;align-items:center;gap:12px">
       <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileSidebar()" aria-label="Toggle Navigation">☰</button>
       <div class="topbar-brand">
-        <span class="brand-icon">🗂️</span>
+        <span class="brand-icon" style="display:inline-flex;align-items:center;justify-content:center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </span>
         <span class="brand-text">Team Task Manager</span>
-        <span class="brand-pill">v1.2</span>
+        <span class="brand-pill">v2.0</span>
       </div>
     </div>
     <div class="topbar-right">
@@ -818,7 +974,8 @@ tbody td{padding:12px 14px;vertical-align:middle;}
         </div>
       </div>
       <button class="btn-logout" onclick="doLogout()" title="Sign Out">
-        <span>🚪</span> <span class="logout-text">Logout</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span class="logout-text">Logout</span>
       </button>
     </div>
   </div>
@@ -833,8 +990,8 @@ tbody td{padding:12px 14px;vertical-align:middle;}
       <span class="timer-digits" id="tb-timer-digits">00:00:00</span>
     </div>
     <div class="timer-actions">
-      <button class="btn btn-sm btn-outline" id="tb-timer-pause-btn" style="color:#fff;border-color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.1)" onclick="togglePauseTimer()">⏸️ Pause</button>
-      <button class="btn btn-sm btn-success" onclick="stopAndLogTimer()">⏹️ Stop & Log</button>
+      <button class="btn btn-sm btn-outline" id="tb-timer-pause-btn" style="color:#fff;border-color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.1);display:inline-flex;align-items:center;gap:5px" onclick="togglePauseTimer()"><span id="tb-timer-pause-icon"></span><span id="tb-timer-pause-text">Pause</span></button>
+      <button class="btn btn-sm btn-success" style="display:inline-flex;align-items:center;gap:5px" onclick="stopAndLogTimer()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="5" y="5" rx="2"/></svg> Stop & Log</button>
       <button class="btn btn-sm btn-danger" style="padding:6px 10px;font-size:12px" onclick="cancelTimer()" title="Discard Timer">✕</button>
     </div>
   </div>
@@ -851,87 +1008,90 @@ tbody td{padding:12px 14px;vertical-align:middle;}
 <div class="modal-overlay" id="task-modal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="task-modal-title">➕ Add Task</div>
-      <button class="modal-close" onclick="closeModal('task-modal')">✕</button>
+      <div class="modal-title" id="task-modal-title">Task Details</div>
+      <button class="modal-close" onclick="closeModal('task-modal')" aria-label="Close">✕</button>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Title *</label>
-        <input class="form-control" id="t-title" placeholder="Task name"/>
+        <label class="form-label">Task Title *</label>
+        <input class="form-control" id="t-title" placeholder="e.g. Implement OAuth Flow"/>
       </div>
       <div class="form-group">
-        <label class="form-label">Type *</label>
+        <label class="form-label">Classification / Type *</label>
         <select class="form-control" id="t-type">
-          <option value="Task">📌 Task</option>
-          <option value="Requirement">📄 Requirement</option>
-          <option value="Enhancement">✨ Enhancement</option>
-          <option value="Bug">🐛 Bug Fix</option>
+          <option value="Task">Task</option>
+          <option value="Requirement">Requirement</option>
+          <option value="Enhancement">Feature / Enhancement</option>
+          <option value="Bug">Bug Fix</option>
         </select>
       </div>
     </div>
     <div class="form-group">
       <label class="form-label">Description</label>
-      <textarea class="form-control" id="t-desc" placeholder="Describe this task..."></textarea>
+      <textarea class="form-control" id="t-desc" placeholder="Scope, requirements, or acceptance criteria..."></textarea>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Priority</label>
+        <label class="form-label">Priority Level</label>
         <select class="form-control" id="t-priority">
-          <option value="High">🔴 High</option>
-          <option value="Medium" selected>🟡 Medium</option>
-          <option value="Low">🟢 Low</option>
+          <option value="Urgent">Urgent</option>
+          <option value="High">High Priority</option>
+          <option value="Medium" selected>Medium Priority</option>
+          <option value="Low">Low Priority</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Status</label>
+        <label class="form-label">Workflow Status</label>
         <select class="form-control" id="t-status">
-          <option value="Upcoming">📅 Upcoming</option>
-          <option value="Pending" selected>⏳ Pending</option>
-          <option value="In Progress">🔄 In Progress</option>
-          <option value="Review">🔍 In Review</option>
-          <option value="Completed">✅ Completed</option>
-          <option value="Blocked">🚫 Blocked</option>
+          <option value="Pending" selected>Pending</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Review">In Review</option>
+          <option value="Upcoming">Upcoming</option>
+          <option value="Completed">Completed</option>
+          <option value="Blocked">Blocked</option>
         </select>
       </div>
     </div>
-    <div class="form-row" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Start Date</label>
-        <input type="date" class="form-control" id="t-start"/>
+        <label class="form-label">Schedule Start</label>
+        <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:6px">
+          <input type="date" class="form-control" id="t-start" title="Start Date"/>
+          <input type="time" class="form-control" id="t-start-time" title="Start Time (Optional)"/>
+        </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Start Time</label>
-        <input type="time" class="form-control" id="t-start-time"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Due Date</label>
-        <input type="date" class="form-control" id="t-due"/>
+        <label class="form-label">Deadline / Due</label>
+        <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:6px">
+          <input type="date" class="form-control" id="t-due" title="Due Date"/>
+          <input type="time" class="form-control" id="t-due-time" title="Due Time (Optional)"/>
+        </div>
       </div>
     </div>
-    <div id="t-timer-option-box" style="background:#e8f0fe;border:1px solid #c2e7ff;border-radius:10px;padding:12px 14px;margin-bottom:14px">
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:600;font-size:13px;color:#174ea6;margin:0">
-        <input type="checkbox" id="t-auto-start-timer" style="width:18px;height:18px;cursor:pointer;accent-color:#1a73e8"/>
-        <span>⏱️ <b>Start live work timer now</b> for this task (sets status to In Progress)</span>
+    <div id="t-timer-option-box" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;margin-bottom:14px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:600;font-size:13px;color:#1e40af;margin:0">
+        <input type="checkbox" id="t-auto-start-timer" style="width:18px;height:18px;cursor:pointer;accent-color:#2563eb"/>
+        <span>Start live stopwatch timer immediately upon creation (sets status to In Progress)</span>
       </label>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Hours Planned</label>
+        <label class="form-label">Estimated Hours Planned</label>
         <input type="number" class="form-control" id="t-planned" placeholder="0" min="0" step="0.5"/>
       </div>
       <div class="form-group" id="assign-group">
-        <label class="form-label">Assign To</label>
+        <label class="form-label">Assigned Team Member</label>
         <select class="form-control" id="t-assign"></select>
       </div>
     </div>
     <div class="form-group">
-      <label class="form-label">Notes</label>
-      <input class="form-control" id="t-notes" placeholder="Additional notes..."/>
+      <label class="form-label">Internal Notes / Links</label>
+      <input class="form-control" id="t-notes" placeholder="Repository link, Jira key, documentation URL..."/>
     </div>
     <input type="hidden" id="t-edit-id"/>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('task-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveTask()">💾 Save Task</button>
+      <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
     </div>
   </div>
 </div>
@@ -940,93 +1100,93 @@ tbody td{padding:12px 14px;vertical-align:middle;}
 <div class="modal-overlay" id="log-modal">
   <div class="modal" style="width:460px">
     <div class="modal-header">
-      <div class="modal-title">⏱ Log Work Hours</div>
+      <div class="modal-title">Log Work Hours</div>
       <button class="modal-close" onclick="closeModal('log-modal')">✕</button>
     </div>
     <div class="form-group">
-      <label class="form-label">Task</label>
+      <label class="form-label">Select Task *</label>
       <select class="form-control" id="log-task-id"></select>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Date</label>
+        <label class="form-label">Work Date</label>
         <input type="date" class="form-control" id="log-date"/>
       </div>
       <div class="form-group">
-        <label class="form-label">Hours Worked</label>
-        <input type="number" class="form-control" id="log-hours" placeholder="0.0" min="0" max="24" step="0.5"/>
+        <label class="form-label">Hours Spent *</label>
+        <input type="number" class="form-control" id="log-hours" placeholder="0.0" min="0" max="24" step="0.25"/>
       </div>
     </div>
     <div class="form-group">
-      <label class="form-label">Work Description</label>
-      <textarea class="form-control" id="log-desc" placeholder="What did you work on?"></textarea>
+      <label class="form-label">Activity Description</label>
+      <textarea class="form-control" id="log-desc" placeholder="Summary of work completed during this session..."></textarea>
     </div>
     <div class="form-group">
-      <label class="form-label">Blockers / Issues</label>
-      <input class="form-control" id="log-blocker" placeholder="Any blockers? Leave blank if none."/>
+      <label class="form-label">Blockers or Impediments</label>
+      <input class="form-control" id="log-blocker" placeholder="Leave empty if work proceeded without blockers"/>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('log-modal')">Cancel</button>
-      <button class="btn btn-success" onclick="saveLog()">✅ Save Log</button>
+      <button class="btn btn-success" onclick="saveLog()">Save Work Log</button>
     </div>
   </div>
 </div>
 
 <!-- ══ ADD USER MODAL ══ -->
 <div class="modal-overlay" id="user-modal">
-  <div class="modal" style="width:420px">
+  <div class="modal" style="width:440px">
     <div class="modal-header">
-      <div class="modal-title">👤 Add Team Member</div>
+      <div class="modal-title">Create Team Account</div>
       <button class="modal-close" onclick="closeModal('user-modal')">✕</button>
     </div>
     <div class="form-group">
       <label class="form-label">Full Name *</label>
-      <input class="form-control" id="u-name" placeholder="e.g. John Smith"/>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">Login ID will be auto-generated from name (no spaces)</div>
+      <input class="form-control" id="u-name" placeholder="e.g. Sarah Jenkins"/>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Username / Login ID is generated automatically from full name</div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Password *</label>
-        <input type="password" class="form-control" id="u-pass" placeholder="Set a password"/>
+        <label class="form-label">Initial Password *</label>
+        <input type="password" class="form-control" id="u-pass" placeholder="Set temporary password"/>
       </div>
       <div class="form-group">
-        <label class="form-label">Role</label>
+        <label class="form-label">Access Role</label>
         <select class="form-control" id="u-role">
-          <option value="member">👤 Member</option>
-          <option value="admin">👑 Admin</option>
+          <option value="member">Team Member</option>
+          <option value="admin">Administrator (Manager)</option>
         </select>
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Avatar Emoji</label>
-        <input class="form-control" id="u-emoji" placeholder="👤" maxlength="2"/>
+        <label class="form-label">Designation / Title</label>
+        <input class="form-control" id="u-designation" placeholder="e.g. Senior Backend Engineer"/>
       </div>
       <div class="form-group">
-        <label class="form-label">Color</label>
-        <input type="color" class="form-control" id="u-color" value="#1a73e8" style="height:42px;cursor:pointer;"/>
+        <label class="form-label">Theme Color</label>
+        <input type="color" class="form-control" id="u-color" value="#2563eb" style="height:42px;cursor:pointer;"/>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('user-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveUser()">➕ Add User</button>
+      <button class="btn btn-primary" onclick="saveUser()">Create Account</button>
     </div>
   </div>
 </div>
 
 <!-- ══ EDIT USER MODAL (Admin Edit User Details) ══ -->
 <div class="modal-overlay" id="edit-user-modal">
-  <div class="modal" style="width:500px">
+  <div class="modal" style="width:520px">
     <div class="modal-header">
-      <div class="modal-title" id="eu-modal-title">✏️ Edit Team Member</div>
+      <div class="modal-title" id="eu-modal-title">Edit Team Member</div>
       <button class="modal-close" onclick="closeModal('edit-user-modal')">✕</button>
     </div>
     
-    <div style="background:#f8f9fa;border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;align-items:center;gap:14px;margin-bottom:16px">
-      <div class="avatar" id="eu-preview-avatar" style="width:44px;height:44px;font-size:20px;background:#1a73e8">👤</div>
+    <div style="background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;align-items:center;gap:14px;margin-bottom:18px">
+      <div id="eu-preview-avatar"></div>
       <div>
-        <div style="font-weight:700;font-size:15px" id="eu-preview-name">—</div>
-        <div style="font-size:12px;color:var(--muted)">User ID: <code id="eu-id-display"></code></div>
+        <div style="font-weight:700;font-size:15px;color:var(--text)" id="eu-preview-name">—</div>
+        <div style="font-size:12px;color:var(--muted)">Account ID: <code id="eu-id-display"></code></div>
       </div>
     </div>
 
@@ -1038,25 +1198,25 @@ tbody td{padding:12px 14px;vertical-align:middle;}
         <input class="form-control" id="eu-name" placeholder="Full name" oninput="updateEditAvatarPreview()"/>
       </div>
       <div class="form-group">
-        <label class="form-label">Role</label>
+        <label class="form-label">Access Role</label>
         <select class="form-control" id="eu-role">
-          <option value="member">👤 Member</option>
-          <option value="admin">👑 Admin (Manager)</option>
+          <option value="member">Team Member</option>
+          <option value="admin">Administrator (Manager)</option>
         </select>
-        <div id="eu-role-hint" style="font-size:11px;color:var(--muted);margin-top:4px;display:none">Root admin role cannot be changed</div>
+        <div id="eu-role-hint" style="font-size:11px;color:var(--muted);margin-top:4px;display:none">Primary root administrator role cannot be altered</div>
       </div>
     </div>
 
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Designation / Title</label>
-        <input class="form-control" id="eu-designation" placeholder="e.g. Lead Engineer, Designer"/>
+        <label class="form-label">Designation / Role Title</label>
+        <input class="form-control" id="eu-designation" placeholder="e.g. Lead Frontend Architect"/>
       </div>
       <div class="form-group">
-        <label class="form-label">Status</label>
+        <label class="form-label">Account Status</label>
         <select class="form-control" id="eu-status">
-          <option value="Active">🟢 Active</option>
-          <option value="Inactive">⚪ Inactive / Deactivated</option>
+          <option value="Active">Active Account</option>
+          <option value="Inactive">Inactive / Suspended</option>
         </select>
       </div>
     </div>
@@ -1067,54 +1227,39 @@ tbody td{padding:12px 14px;vertical-align:middle;}
         <input type="email" class="form-control" id="eu-email" placeholder="name@company.com"/>
       </div>
       <div class="form-group">
-        <label class="form-label">Phone</label>
-        <input type="tel" class="form-control" id="eu-phone" placeholder="+1234567890"/>
+        <label class="form-label">Contact Phone</label>
+        <input type="tel" class="form-control" id="eu-phone" placeholder="+1 (555) 000-0000"/>
       </div>
     </div>
 
     <div class="form-group">
-      <label class="form-label">Change Password</label>
+      <label class="form-label">Update Password</label>
       <div style="display:flex;gap:8px">
-        <input type="password" class="form-control" id="eu-pass" placeholder="Leave blank to keep existing password"/>
-        <button type="button" class="btn btn-outline" style="padding:0 12px" onclick="togglePassVisibility('eu-pass')">👁️</button>
+        <input type="password" class="form-control" id="eu-pass" placeholder="Leave blank to retain current password"/>
+        <button type="button" class="btn btn-outline" style="padding:0 12px" onclick="togglePassVisibility('eu-pass')">Toggle</button>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">Only fill if resetting or changing the user's password.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Leave blank unless resetting this user's password.</div>
     </div>
 
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Avatar Emoji</label>
-        <input class="form-control" id="eu-emoji" placeholder="👤" maxlength="4" oninput="updateEditAvatarPreview()"/>
-        <div class="emoji-picker-row">
-          <button type="button" class="emoji-btn" onclick="selectEditEmoji('👤')">👤</button>
-          <button type="button" class="emoji-btn" onclick="selectEditEmoji('👑')">👑</button>
-          <button type="button" class="emoji-btn" onclick="selectEditEmoji('💻')">💻</button>
-          <button type="button" class="emoji-btn" onclick="selectEditEmoji('🎨')">🎨</button>
-          <button type="button" class="emoji-btn" onclick="selectEditEmoji('🚀')">🚀</button>
-          <button type="button" class="emoji-btn" onclick="selectEditEmoji('📊')">📊</button>
-          <button type="button" class="emoji-btn" onclick="selectEditEmoji('⚡')">⚡</button>
-          <button type="button" class="emoji-btn" onclick="selectEditEmoji('🛠️')">🛠️</button>
-          <button type="button" class="emoji-btn" onclick="selectEditEmoji('🎯')">🎯</button>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Color Theme</label>
-        <input type="color" class="form-control" id="eu-color" value="#1a73e8" style="height:42px;cursor:pointer;" oninput="updateEditAvatarPreview()"/>
+        <label class="form-label">Theme Accent Color</label>
+        <input type="color" class="form-control" id="eu-color" value="#2563eb" style="height:42px;cursor:pointer;" oninput="updateEditAvatarPreview()"/>
         <div class="palette-swatches">
-          <div class="palette-swatch" style="background:#1a73e8" onclick="selectEditColor('#1a73e8')"></div>
-          <div class="palette-swatch" style="background:#34a853" onclick="selectEditColor('#34a853')"></div>
-          <div class="palette-swatch" style="background:#9c27b0" onclick="selectEditColor('#9c27b0')"></div>
-          <div class="palette-swatch" style="background:#ea4335" onclick="selectEditColor('#ea4335')"></div>
-          <div class="palette-swatch" style="background:#ff6d00" onclick="selectEditColor('#ff6d00')"></div>
-          <div class="palette-swatch" style="background:#00897b" onclick="selectEditColor('#00897b')"></div>
-          <div class="palette-swatch" style="background:#3f51b5" onclick="selectEditColor('#3f51b5')"></div>
+          <div class="palette-swatch" style="background:#2563eb" onclick="selectEditColor('#2563eb')"></div>
+          <div class="palette-swatch" style="background:#10b981" onclick="selectEditColor('#10b981')"></div>
+          <div class="palette-swatch" style="background:#8b5cf6" onclick="selectEditColor('#8b5cf6')"></div>
+          <div class="palette-swatch" style="background:#ef4444" onclick="selectEditColor('#ef4444')"></div>
+          <div class="palette-swatch" style="background:#f59e0b" onclick="selectEditColor('#f59e0b')"></div>
+          <div class="palette-swatch" style="background:#06b6d4" onclick="selectEditColor('#06b6d4')"></div>
+          <div class="palette-swatch" style="background:#475569" onclick="selectEditColor('#475569')"></div>
         </div>
       </div>
     </div>
 
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('edit-user-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveEditUser()">💾 Save Changes</button>
+      <button class="btn btn-primary" onclick="saveEditUser()">Save Changes</button>
     </div>
   </div>
 </div>
@@ -1123,36 +1268,36 @@ tbody td{padding:12px 14px;vertical-align:middle;}
 <div class="modal-overlay" id="forgot-modal">
   <div class="modal" style="width:460px">
     <div class="modal-header">
-      <div class="modal-title">🔑 Password Assistance</div>
+      <div class="modal-title">Password Assistance & Recovery</div>
       <button class="modal-close" onclick="closeModal('forgot-modal')">✕</button>
     </div>
     
     <div class="tab-buttons" style="margin-bottom:18px">
-      <button class="tab-btn active" id="tab-btn-mem-reset" onclick="switchForgotTab('member')">👤 Team Member</button>
-      <button class="tab-btn" id="tab-btn-adm-reset" onclick="switchForgotTab('admin')">👑 Admin Recovery</button>
+      <button class="tab-btn active" id="tab-btn-mem-reset" onclick="switchForgotTab('member')">Team Member Reset</button>
+      <button class="tab-btn" id="tab-btn-adm-reset" onclick="switchForgotTab('admin')">Master Admin Recovery</button>
     </div>
 
     <!-- Panel 1: Team Member Reset Request -->
     <div id="forgot-panel-member">
       <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">
-        Enter your Username or Login ID. A password reset request will be sent to your Team Manager to reset your password.
+        Provide your Username or Login ID. A password reset request will be dispatched to your workspace manager.
       </p>
       <div class="form-group">
         <label class="form-label">Username / Login ID *</label>
         <input class="form-control" id="fp-user" placeholder="e.g. person1, person2"/>
       </div>
       <div class="form-group">
-        <label class="form-label">Your Email or Phone (Optional)</label>
-        <input class="form-control" id="fp-contact" placeholder="Where manager can confirm or reach you"/>
+        <label class="form-label">Email or Phone for Verification (Optional)</label>
+        <input class="form-control" id="fp-contact" placeholder="Where manager can confirm identity"/>
       </div>
       <div class="form-group">
-        <label class="form-label">Note for Manager (Optional)</label>
-        <input class="form-control" id="fp-note" placeholder="e.g. Forgot my login password"/>
+        <label class="form-label">Note for Administrator (Optional)</label>
+        <input class="form-control" id="fp-note" placeholder="Reason or context..."/>
       </div>
       <div id="fp-msg" style="display:none;font-size:13px;padding:10px 14px;border-radius:8px;margin-bottom:14px"></div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeModal('forgot-modal')">Cancel</button>
-        <button class="btn btn-primary" onclick="submitForgotPassword()">📨 Send Request to Admin</button>
+        <button class="btn btn-primary" onclick="submitForgotPassword()">Send Request to Admin</button>
       </div>
     </div>
 
@@ -1165,21 +1310,21 @@ tbody td{padding:12px 14px;vertical-align:middle;}
         <label class="form-label">Master Recovery Key *</label>
         <div style="position:relative">
           <input type="password" class="form-control" id="ar-key" placeholder="Enter recovery key" style="padding-right:42px"/>
-          <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('ar-key')">👁️</button>
+          <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('ar-key')">Show</button>
         </div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px">Default key: <code>admin-recovery-2024</code> (or configured in Render env)</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Configured via <code>ADMIN_RECOVERY_KEY</code> environment variable or default key.</div>
       </div>
       <div class="form-group">
         <label class="form-label">New Admin Password *</label>
         <div style="position:relative">
           <input type="password" class="form-control" id="ar-new-pass" placeholder="At least 4 characters" style="padding-right:42px"/>
-          <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('ar-new-pass')">👁️</button>
+          <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('ar-new-pass')">Show</button>
         </div>
       </div>
       <div id="ar-msg" style="display:none;font-size:13px;padding:10px 14px;border-radius:8px;margin-bottom:14px"></div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeModal('forgot-modal')">Cancel</button>
-        <button class="btn btn-primary" onclick="submitAdminRecovery()">🔑 Reset Admin Password</button>
+        <button class="btn btn-primary" onclick="submitAdminRecovery()">Reset Admin Password</button>
       </div>
     </div>
   </div>
@@ -1241,58 +1386,226 @@ const PUT  = (url, b) => api('PUT', url, b);
 const DEL  = url      => api('DELETE', url);
 
 // ══════════════════════════════════════════════════════
-// HELPERS
+// VECTOR SVG ICON SYSTEM (Professional Product Look)
+// ══════════════════════════════════════════════════════
+const ICONS = {
+  'dashboard': `<path d="M3 3h7v9H3z"/><path d="M14 3h7v5h-7z"/><path d="M14 12h7v9h-7z"/><path d="M3 16h7v5H3z"/>`,
+  'tasks': `<path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>`,
+  'clock': `<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>`,
+  'calendar': `<rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>`,
+  'activity': `<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>`,
+  'users': `<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>`,
+  'user': `<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>`,
+  'trash': `<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>`,
+  'backup': `<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>`,
+  'home': `<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>`,
+  'play': `<polygon points="6 3 20 12 6 21 6 3"/>`,
+  'stop': `<rect width="14" height="14" x="5" y="5" rx="2"/>`,
+  'pause': `<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>`,
+  'edit': `<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>`,
+  'plus': `<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>`,
+  'check': `<polyline points="20 6 9 17 4 12"/>`,
+  'alert-triangle': `<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>`,
+  'arrow-right': `<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>`,
+  'flag': `<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>`,
+  'logout': `<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>`,
+  'eye': `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`,
+  'eye-off': `<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/>`,
+  'search': `<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>`,
+  'sparkles': `<path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>`,
+  'bug': `<rect width="8" height="14" x="8" y="6" rx="4"/><path d="m19 7-3 2"/><path d="m5 7 3 2"/><path d="m19 19-3-2"/><path d="m5 19 3-2"/><path d="M20 13h-4"/><path d="M4 13h4"/><path d="m10 4 1 2"/><path d="m14 4-1 2"/>`,
+  'file-text': `<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>`,
+  'key': `<path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="16.5" r="5.5"/>`,
+  'shield': `<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>`,
+  'filter': `<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>`,
+  'trending-up': `<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>`,
+  'refresh': `<path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/>`
+};
+
+function ICON(name, size = 16, className = '', color = 'currentColor') {
+  const inner = ICONS[name] || ICONS['tasks'];
+  return `<svg class="svg-icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+}
+
+// ══════════════════════════════════════════════════════
+// USER INITIALS & AVATAR GENERATOR
+// ══════════════════════════════════════════════════════
+function getInitials(name) {
+  if (!name) return 'U';
+  const parts = String(name).trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function userAvatarHtml(userOrName, size = 32, bg = null) {
+  let name = '';
+  let color = bg;
+  if (typeof userOrName === 'object' && userOrName !== null) {
+    name = userOrName.name || userOrName.id || 'User';
+    color = color || userOrName.color || '#2563eb';
+  } else {
+    name = userOrName || 'User';
+    const found = ALL_USERS.find(u => u.name === name || u.id === name);
+    color = color || (found ? found.color : '#2563eb');
+  }
+  const initials = getInitials(name);
+  const fontSize = Math.max(10, Math.round(size * 0.42));
+  return `<span class="user-initials-avatar" style="width:${size}px;height:${size}px;min-width:${size}px;background:${color};font-size:${fontSize}px" title="${name}">${initials}</span>`;
+}
+
+// ══════════════════════════════════════════════════════
+// 12-HOUR TIME & UNIFIED TASK SCHEDULE TIMELINE CELL
+// ══════════════════════════════════════════════════════
+function formatTime12(timeStr) {
+  if (!timeStr) return '';
+  const [hStr, mStr] = timeStr.split(':');
+  let h = parseInt(hStr, 10);
+  if (isNaN(h)) return timeStr;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${mStr || '00'} ${ampm}`;
+}
+
+function renderTaskScheduleCell(t) {
+  const hasStart = !!t.start;
+  const hasDue = !!t.due;
+  if (!hasStart && !hasDue) {
+    return `<span style="color:var(--muted);font-size:12px;font-style:italic">No schedule set</span>`;
+  }
+  
+  const startFmt = hasStart ? fmtDate(t.start) : 'Not set';
+  const startTimeFmt = t.startTime ? formatTime12(t.startTime) : '';
+  const dueFmt = hasDue ? fmtDate(t.due) : 'Open deadline';
+  const dueTimeFmt = t.dueTime ? formatTime12(t.dueTime) : '';
+  
+  let isOverdue = false;
+  let isUrgent = false;
+  let urgencyChip = '';
+
+  if (hasDue) {
+    const dl = daysLeft(t.due);
+    if (t.status === 'Completed') {
+      urgencyChip = `<span class="sch-time-chip" style="background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0">${ICON('check', 11, '', '#065f46')} Done</span>`;
+    } else if (dl !== null) {
+      if (dl < 0) {
+        isOverdue = true;
+        urgencyChip = `<span class="sch-time-chip" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca">${ICON('alert-triangle', 11, '', '#dc2626')} ${Math.abs(dl)}d Overdue</span>`;
+      } else if (dl === 0) {
+        isUrgent = true;
+        urgencyChip = `<span class="sch-time-chip" style="background:#fffbeb;color:#d97706;border:1px solid #fde68a">${ICON('clock', 11, '', '#d97706')} Due Today</span>`;
+      } else if (dl <= 2) {
+        isUrgent = true;
+        urgencyChip = `<span class="sch-time-chip" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa">${ICON('clock', 11, '', '#ea580c')} ${dl}d Left</span>`;
+      }
+    }
+  }
+
+  return `
+    <div class="task-schedule-card">
+      <div class="sch-item">
+        <span class="sch-type-tag">START</span>
+        <span class="sch-date">${startFmt}</span>
+        ${startTimeFmt ? `<span class="sch-time-chip">${ICON('clock', 10, '', '#2563eb')} ${startTimeFmt}</span>` : ''}
+      </div>
+      <div class="sch-arrow-divider">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </div>
+      <div class="sch-item due ${isOverdue ? 'is-overdue' : ''} ${isUrgent ? 'is-urgent' : ''}">
+        <span class="sch-type-tag">DEADLINE</span>
+        <span class="sch-date">${dueFmt}</span>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          ${dueTimeFmt ? `<span class="sch-time-chip">${ICON('clock', 10, '', 'currentColor')} ${dueTimeFmt}</span>` : ''}
+          ${urgencyChip}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════════════════
+// PROFESSIONAL BADGES & HELPERS
 // ══════════════════════════════════════════════════════
 function sBadge(s) {
-  const m = {Completed:'completed','In Progress':'inprogress',Pending:'pending',Upcoming:'upcoming',Blocked:'blocked',Review:'review'};
-  const i = {Completed:'✅','In Progress':'🔄',Pending:'⏳',Upcoming:'📅',Blocked:'🚫',Review:'🔍'};
-  return `<span class="badge b-${m[s]||'pending'}">${i[s]||''} ${s}</span>`;
+  const m = {
+    'Completed':   { cls: 'b-completed',  dot: '#10b981' },
+    'In Progress': { cls: 'b-inprogress', dot: '#2563eb' },
+    'Pending':     { cls: 'b-pending',    dot: '#f59e0b' },
+    'Upcoming':    { cls: 'b-upcoming',   dot: '#8b5cf6' },
+    'Blocked':     { cls: 'b-blocked',    dot: '#ef4444' },
+    'Review':      { cls: 'b-review',     dot: '#06b6d4' }
+  };
+  const conf = m[s] || { cls: 'b-pending', dot: '#f59e0b' };
+  return `<span class="badge ${conf.cls}"><span class="badge-dot" style="background:${conf.dot}"></span>${s}</span>`;
 }
+
 function tBadge(t) {
-  const m = {Task:'task',Requirement:'requirement',Enhancement:'enhancement',Bug:'bug'};
-  const i = {Task:'📌',Requirement:'📄',Enhancement:'✨',Bug:'🐛'};
-  return `<span class="badge b-${m[t]||'task'}">${i[t]||''} ${t}</span>`;
+  const m = {
+    'Task':        { cls: 'b-task',        icon: 'tasks' },
+    'Requirement': { cls: 'b-requirement', icon: 'file-text' },
+    'Enhancement': { cls: 'b-enhancement', icon: 'sparkles' },
+    'Bug':         { cls: 'b-bug',         icon: 'bug' }
+  };
+  const conf = m[t] || { cls: 'b-task', icon: 'tasks' };
+  return `<span class="badge ${conf.cls}">${ICON(conf.icon, 12)} ${t}</span>`;
 }
+
 function pBadge(p) {
-  return `<span class="badge b-${(p||'medium').toLowerCase()}">${p}</span>`;
+  const prio = p || 'Medium';
+  const conf = {
+    'Urgent': { cls: 'b-high', icon: 'alert-triangle' },
+    'High':   { cls: 'b-high', icon: 'flag' },
+    'Medium': { cls: 'b-medium', icon: 'flag' },
+    'Low':    { cls: 'b-low', icon: 'flag' }
+  }[prio] || { cls: 'b-medium', icon: 'flag' };
+  return `<span class="badge ${conf.cls}">${ICON(conf.icon, 11)} ${prio}</span>`;
 }
-function bar(pct, col='#1a73e8') {
+
+function bar(pct, col='#2563eb') {
   return `<div class="progress-wrap"><div class="progress-bar" style="width:${pct}%;background:${col}"></div></div>`;
 }
+
 function userName(uid) {
-  const u = ALL_USERS.find(x=>x.id===uid);
+  const u = ALL_USERS.find(x => x.id === uid);
   return u ? u.name : uid;
 }
+
 function userColor(uid) {
-  const u = ALL_USERS.find(x=>x.id===uid);
-  return u ? u.color : '#607d8b';
+  const u = ALL_USERS.find(x => x.id === uid);
+  return u ? u.color : '#2563eb';
 }
+
 function hoursForTask(logs, taskId) {
-  return logs.filter(l=>l.taskId===taskId).reduce((a,l)=>a+(l.hours||0),0);
+  return logs.filter(l => l.taskId === taskId).reduce((a, l) => a + (l.hours || 0), 0);
 }
+
 function pct(task, logs) {
-  if (task.status==='Completed') return 100;
+  if (task.status === 'Completed') return 100;
   const spent = hoursForTask(logs, task.id);
-  if (!task.planned) return task.status==='In Progress'?50:0;
-  return Math.min(100, Math.round(spent/task.planned*100));
+  if (!task.planned) return task.status === 'In Progress' ? 50 : 0;
+  return Math.min(100, Math.round(spent / task.planned * 100));
 }
+
 function dlBadge(due) {
   const dl = daysLeft(due);
-  if (dl===null) return '—';
-  if (dl<0)  return `<span style="color:#c62828;font-weight:700">⚠️ ${Math.abs(dl)}d late</span>`;
-  if (dl===0) return `<span style="color:#e65100;font-weight:700">🔥 Due Today</span>`;
-  if (dl<=2)  return `<span style="color:#f57c00;font-weight:700">⚡ ${dl}d left</span>`;
+  if (dl === null) return '—';
+  if (dl < 0) return `<span style="color:#dc2626;font-weight:700;display:inline-flex;align-items:center;gap:3px">${ICON('alert-triangle', 12, '', '#dc2626')} ${Math.abs(dl)}d late</span>`;
+  if (dl === 0) return `<span style="color:#d97706;font-weight:700;display:inline-flex;align-items:center;gap:3px">${ICON('clock', 12, '', '#d97706')} Due Today</span>`;
+  if (dl <= 2) return `<span style="color:#b45309;font-weight:700;display:inline-flex;align-items:center;gap:3px">${ICON('clock', 12, '', '#b45309')} ${dl}d left</span>`;
   return `<span style="color:var(--muted)">${dl}d left</span>`;
 }
-function showToast(msg, col='#202124') {
+
+function showToast(msg, col='#1e293b') {
   const t = document.createElement('div');
-  t.className='toast'; t.style.background=col; t.textContent=msg;
+  t.className = 'toast';
+  t.style.background = col;
+  t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(()=>t.remove(),3000);
+  setTimeout(() => t.remove(), 3000);
 }
+
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function setContent(html) { document.getElementById('content').innerHTML=html; }
+function setContent(html) { document.getElementById('content').innerHTML = html; }
 
 // ══════════════════════════════════════════════════════
 // LIVE TASK TIMER ENGINE
@@ -1393,13 +1706,16 @@ function renderTimerBar() {
   if (titleEl) titleEl.textContent = TIMER_STATE.taskTitle;
   
   const dot = document.getElementById('tb-timer-pulse');
-  const pauseBtn = document.getElementById('tb-timer-pause-btn');
+  const pauseIcon = document.getElementById('tb-timer-pause-icon');
+  const pauseText = document.getElementById('tb-timer-pause-text');
   if (TIMER_STATE.isPaused) {
     if (dot) dot.classList.add('paused');
-    if (pauseBtn) pauseBtn.innerHTML = '▶️ Resume';
+    if (pauseIcon) pauseIcon.innerHTML = ICON('play', 13);
+    if (pauseText) pauseText.textContent = 'Resume';
   } else {
     if (dot) dot.classList.remove('paused');
-    if (pauseBtn) pauseBtn.innerHTML = '⏸️ Pause';
+    if (pauseIcon) pauseIcon.innerHTML = ICON('pause', 13);
+    if (pauseText) pauseText.textContent = 'Pause';
   }
   updateTimerDigits();
 }
@@ -1410,13 +1726,13 @@ function togglePauseTimer() {
     TIMER_STATE.isPaused = false;
     TIMER_STATE.startedAt = Date.now();
     TIMER_STATE.pausedAt = null;
-    showToast('▶️ Timer resumed', '#1a73e8');
+    showToast('Timer resumed', '#2563eb');
   } else {
     TIMER_STATE.accumulatedMs = getTimerElapsedMs();
     TIMER_STATE.isPaused = true;
     TIMER_STATE.startedAt = null;
     TIMER_STATE.pausedAt = Date.now();
-    showToast('⏸️ Timer paused', '#f57c00');
+    showToast('Timer paused', '#d97706');
   }
   localStorage.setItem('ttm_active_timer', JSON.stringify(TIMER_STATE));
   renderTimerBar();
@@ -1440,7 +1756,7 @@ function cancelTimer() {
     TIMER_STATE = null;
     localStorage.removeItem('ttm_active_timer');
     renderTimerBar();
-    showToast('⏹️ Timer discarded', '#607d8b');
+    showToast('Timer discarded', '#64748b');
     if (CURRENT_VIEW === 'all-tasks') renderAllTasks();
     else if (CURRENT_VIEW === 'my-tasks') renderMyTasks();
   }
@@ -1449,15 +1765,25 @@ function cancelTimer() {
 // ══════════════════════════════════════════════════════
 // LOGIN / LOGOUT & SESSION
 // ══════════════════════════════════════════════════════
+function quickFillLogin(u, p) {
+  const uEl = document.getElementById('login-user');
+  const pEl = document.getElementById('login-pass');
+  if (uEl) uEl.value = u;
+  if (pEl) pEl.value = p;
+  const errEl = document.getElementById('login-err');
+  if (errEl) errEl.style.display = 'none';
+  doLogin();
+}
+
 async function doLogin() {
   const user = document.getElementById('login-user').value.trim();
   const pass = document.getElementById('login-pass').value;
-  if (!user) { showToast('Please enter your username', '#f57c00'); return; }
-  if (!pass) { showToast('Please enter your password', '#f57c00'); return; }
+  if (!user) { showToast('Please enter your username', '#d97706'); return; }
+  if (!pass) { showToast('Please enter your password', '#d97706'); return; }
   const data = await POST('/api/login', { username: user, password: pass });
   if (!data || data.error) {
     const errEl = document.getElementById('login-err');
-    errEl.textContent = '❌ ' + (data?.error || 'Invalid username or password. Please try again.');
+    errEl.textContent = 'Invalid username or password. Please try again.';
     errEl.style.display = 'block';
     return;
   }
@@ -1498,14 +1824,14 @@ function showLogin() {
 
 function toggleLoginPassword() {
   const p = document.getElementById('login-pass');
-  const btn = document.getElementById('login-pass-toggle');
+  const iconContainer = document.getElementById('login-pass-icon');
   if (!p) return;
   if (p.type === 'password') {
     p.type = 'text';
-    if (btn) btn.textContent = '🙈';
+    if (iconContainer) iconContainer.innerHTML = ICON('eye-off', 18);
   } else {
     p.type = 'password';
-    if (btn) btn.textContent = '👁️';
+    if (iconContainer) iconContainer.innerHTML = ICON('eye', 18);
   }
 }
 
@@ -1557,8 +1883,8 @@ async function submitForgotPassword() {
   } else {
     msgEl.style.background = '#e6f4ea';
     msgEl.style.color = '#137333';
-    msgEl.textContent = '✅ ' + (r.message || 'Request submitted successfully! Notify your manager.');
-    showToast('✅ Reset request sent to Admin!', '#34a853');
+    msgEl.textContent = r.message || 'Request submitted successfully! Notify your manager.';
+    showToast('Reset request sent to Workspace Admin', '#10b981');
   }
 }
 
@@ -1592,8 +1918,8 @@ async function submitAdminRecovery() {
   } else {
     msgEl.style.background = '#e6f4ea';
     msgEl.style.color = '#137333';
-    msgEl.textContent = '✅ ' + (r.message || 'Admin password reset! You can now log in.');
-    showToast('✅ Admin password reset!', '#34a853');
+    msgEl.textContent = r.message || 'Admin password reset! You can now log in.';
+    showToast('Admin password reset successfully!', '#10b981');
     setTimeout(() => {
       closeModal('forgot-modal');
       document.getElementById('login-user').value = 'admin';
@@ -1613,10 +1939,10 @@ async function resolveResetRequest(id, resetToDefault = false) {
     newPassword: newPassword || undefined
   });
   if (!r || r.error) {
-    showToast('❌ ' + (r?.error || 'Failed to resolve reset request'), '#ea4335');
+    showToast('Failed to resolve reset request: ' + (r?.error || 'Error'), '#dc2626');
     return;
   }
-  showToast(r.message || '✅ Password reset successfully!', '#34a853');
+  showToast(r.message || 'Password reset successfully!', '#10b981');
   if (CURRENT_VIEW === 'dashboard') renderAdminDashboard();
   else if (CURRENT_VIEW === 'users') renderUsers();
 }
@@ -1625,10 +1951,10 @@ async function dismissResetRequest(id) {
   if (!confirm('Dismiss this password reset request?')) return;
   const r = await DEL(`/api/resets/${id}`);
   if (!r || r.error) {
-    showToast('❌ ' + (r?.error || 'Failed to dismiss request'), '#ea4335');
+    showToast('Failed to dismiss request: ' + (r?.error || 'Error'), '#dc2626');
     return;
   }
-  showToast('Dismissed reset request', '#5f6368');
+  showToast('Dismissed reset request', '#64748b');
   if (CURRENT_VIEW === 'dashboard') renderAdminDashboard();
   else if (CURRENT_VIEW === 'users') renderUsers();
 }
@@ -1640,8 +1966,10 @@ async function enterApp(isCached = false) {
   document.getElementById('tb-name').textContent = ME.name;
   document.getElementById('tb-role').textContent = ME.role === 'admin' ? 'Manager' : 'Team Member';
   const av = document.getElementById('tb-avatar');
-  av.textContent = ME.emoji || '👤';
-  av.style.background = ME.color || '#607d8b';
+  if (av) {
+    av.innerHTML = userAvatarHtml(ME, 34);
+    av.style.background = 'transparent';
+  }
   buildSidebar();
   renderTimerBar();
 
@@ -1674,33 +2002,33 @@ function closeMobileSidebar() {
 }
 
 function buildSidebar() {
-  const isAdmin = ME.role==='admin';
+  const isAdmin = ME.role === 'admin';
   const navs = isAdmin ? [
-    { view:'dashboard',    icon:'📊', label:'Dashboard' },
-    { view:'all-tasks',    icon:'📋', label:'All Tasks' },
-    { view:'hours',        icon:'⏱',  label:'Hours Report' },
-    { view:'pending',      icon:'🔜', label:'Pending & Upcoming' },
-    { view:'activity',     icon:'📝', label:'Activity Log' },
-    { view:'users',        icon:'👥', label:'Manage Users' },
-    { view:'deleted',      icon:'🗑', label:'Deleted Tasks' },
-    { view:'backup',       icon:'💾', label:'Backup & Sync' },
+    { view:'dashboard',    icon:'dashboard', label:'Dashboard' },
+    { view:'all-tasks',    icon:'tasks',     label:'All Tasks' },
+    { view:'hours',        icon:'clock',     label:'Hours Report' },
+    { view:'pending',      icon:'calendar',  label:'Pending & Upcoming' },
+    { view:'activity',     icon:'activity',  label:'Activity Log' },
+    { view:'users',        icon:'users',     label:'Manage Users' },
+    { view:'deleted',      icon:'trash',     label:'Deleted Tasks' },
+    { view:'backup',       icon:'backup',    label:'Backup & Sync' },
   ] : [
-    { view:'my-dashboard', icon:'🏠', label:'My Dashboard' },
-    { view:'my-tasks',     icon:'📋', label:'My Tasks' },
-    { view:'log-hours',    icon:'⏱',  label:'Log Hours' },
-    { view:'my-history',   icon:'📅', label:'My History' },
+    { view:'my-dashboard', icon:'home',      label:'My Dashboard' },
+    { view:'my-tasks',     icon:'tasks',     label:'My Tasks' },
+    { view:'log-hours',    icon:'clock',     label:'Log Hours' },
+    { view:'my-history',   icon:'calendar',  label:'My History' },
   ];
   document.getElementById('sidebar').innerHTML = `
     <div class="sidebar-mobile-header">
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:20px">🗂️</span>
+        <span style="color:var(--primary);display:flex;align-items:center">${ICON('tasks', 20)}</span>
         <span style="font-weight:800;font-size:15px;color:var(--text)">Task Manager</span>
       </div>
       <button class="sidebar-close-btn" onclick="closeMobileSidebar()">✕</button>
     </div>
     <div class="sidebar-label">Navigation Menu</div>
     ${navs.map(n=>`<div class="nav-item" data-view="${n.view}" onclick="showView('${n.view}')">
-      <span class="nav-icon">${n.icon}</span>
+      <span class="nav-icon">${ICON(n.icon, 18)}</span>
       <span class="nav-label">${n.label}</span>
     </div>`).join('')}
     <div style="margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);font-size:11.5px;color:var(--muted)">
@@ -1734,10 +2062,17 @@ function showView(view) {
 }
 
 // ══════════════════════════════════════════════════════
-// ADMIN — DASHBOARD
+// ADMIN — DASHBOARD (With Team Member Selector)
 // ══════════════════════════════════════════════════════
+let DASHBOARD_MEMBER_FILTER = 'all';
+
+function onDashboardMemberChange(userId) {
+  DASHBOARD_MEMBER_FILTER = userId;
+  renderAdminDashboard();
+}
+
 async function renderAdminDashboard() {
-  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">📊 Loading dashboard...</div>');
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">Loading dashboard overview...</div>');
   const [stats, tasks, logs, resets] = await Promise.all([
     GET('/api/stats'), GET('/api/tasks'), GET('/api/logs'), GET('/api/resets')
   ]);
@@ -1747,83 +2082,257 @@ async function renderAdminDashboard() {
     saveClientVault(ALL_USERS, tasks || [], logs || []);
   }
 
+  const allTasks = tasks || [];
+  const allLogs = logs || [];
   const pendingResets = Array.isArray(resets) ? resets : [];
+  
   const resetBanner = pendingResets.length > 0 ? `
-    <div style="background:#fef7e0;border:1px solid #f9ab00;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 2px 8px rgba(249,171,0,0.15)">
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:var(--shadow-xs)">
       <div style="display:flex;align-items:center;gap:12px">
-        <div style="font-size:26px">🔑</div>
+        <div style="color:#d97706;display:flex;align-items:center">${ICON('key', 24)}</div>
         <div>
-          <div style="font-weight:700;color:#b06000;font-size:14px">${pendingResets.length} Pending Password Reset Request${pendingResets.length > 1 ? 's' : ''}</div>
-          <div style="font-size:12px;color:#5f6368;margin-top:2px">
+          <div style="font-weight:700;color:#92400e;font-size:14px">${pendingResets.length} Pending Password Assistance Request${pendingResets.length > 1 ? 's' : ''}</div>
+          <div style="font-size:12px;color:#78350f;margin-top:2px">
             ${pendingResets.map(r => `<b>${r.userName} (${r.userId})</b>`).join(', ')} requested password assistance.
           </div>
         </div>
       </div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-sm btn-primary" onclick="showView('users')">Manage in Users ➔</button>
+        <button class="btn btn-sm btn-primary" onclick="showView('users')">Manage in Users &rarr;</button>
       </div>
     </div>` : '';
 
+  // Filter bar with Member Selector
+  const filterBarHtml = `
+    <div class="dash-filter-bar">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">
+          ${ICON('filter', 14)} Dashboard Scope:
+        </div>
+        <div class="dash-selector-wrap">
+          ${ICON('users', 16, '', '#2563eb')}
+          <select class="dash-member-select" id="dash-member-select" onchange="onDashboardMemberChange(this.value)">
+            <option value="all" ${DASHBOARD_MEMBER_FILTER==='all'?'selected':''}>Full Organization (All Members)</option>
+            <optgroup label="Team Members">
+              ${ALL_USERS.filter(u=>u.role!=='admin').map(u=>`<option value="${u.id}" ${DASHBOARD_MEMBER_FILTER===u.id?'selected':''}>${u.name} (${u.designation||u.id})</option>`).join('')}
+            </optgroup>
+            <optgroup label="Workspace Managers">
+              ${ALL_USERS.filter(u=>u.role==='admin').map(u=>`<option value="${u.id}" ${DASHBOARD_MEMBER_FILTER===u.id?'selected':''}>${u.name} (Manager)</option>`).join('')}
+            </optgroup>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        ${DASHBOARD_MEMBER_FILTER !== 'all' ? `<button class="btn btn-outline btn-sm" onclick="onDashboardMemberChange('all')">Reset to Full Team</button>` : ''}
+        <button class="btn btn-primary btn-sm" onclick="openAddTask()">${ICON('plus', 14)} Add Task</button>
+      </div>
+    </div>
+  `;
+
+  // Render Member-Specific View vs All-Members View
+  if (DASHBOARD_MEMBER_FILTER !== 'all') {
+    const member = ALL_USERS.find(u => u.id === DASHBOARD_MEMBER_FILTER) || { id: DASHBOARD_MEMBER_FILTER, name: DASHBOARD_MEMBER_FILTER, role: 'member' };
+    const mTasks = allTasks.filter(t => t.assignee === member.id);
+    const mLogs = allLogs.filter(l => l.user === member.id);
+    const mCompleted = mTasks.filter(t => t.status === 'Completed').length;
+    const mInProg = mTasks.filter(t => t.status === 'In Progress').length;
+    const mPending = mTasks.filter(t => t.status === 'Pending').length;
+    const mBlocked = mTasks.filter(t => t.status === 'Blocked').length;
+    const mSpentHrs = mLogs.reduce((a, l) => a + (l.hours || 0), 0);
+    const mPlannedHrs = mTasks.reduce((a, t) => a + (t.planned || 0), 0);
+    const mRate = mTasks.length ? Math.round(mCompleted / mTasks.length * 100) : 0;
+    const todayLogs = mLogs.filter(l => l.date === today());
+    const todayHrs = todayLogs.reduce((a, l) => a + (l.hours || 0), 0);
+
+    const mKpis = [
+      { icon:'tasks', val: mTasks.length, label: 'Assigned Tasks', col: '#2563eb' },
+      { icon:'check', val: mCompleted, label: 'Completed', col: '#10b981' },
+      { icon:'refresh', val: mInProg, label: 'In Progress', col: '#3b82f6' },
+      { icon:'clock', val: mPending, label: 'Pending / Queued', col: '#f59e0b' },
+      { icon:'alert-triangle', val: mBlocked, label: 'Blocked', col: '#ef4444' },
+      { icon:'clock', val: mSpentHrs.toFixed(1) + 'h', label: 'Hours Tracked', col: '#8b5cf6' },
+      { icon:'calendar', val: mPlannedHrs + 'h', label: 'Planned Hours', col: '#06b6d4' },
+      { icon:'trending-up', val: mRate + '%', label: 'Completion Rate', col: '#10b981' },
+    ];
+
+    const activeMemberTasks = mTasks.filter(t => t.status !== 'Completed');
+    const recentMemberLogs = [...mLogs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0, 5);
+
+    setContent(`
+      <div class="section-header">
+        <div>
+          <div class="section-title">Team Member Spotlight: ${member.name}</div>
+          <div class="section-sub">Detailed workload, active sprint schedule, and time tracking analytics</div>
+        </div>
+      </div>
+      ${resetBanner}
+      ${filterBarHtml}
+
+      <!-- Spotlight Member Profile Card -->
+      <div class="dash-member-card">
+        <div style="display:flex;align-items:center;gap:16px">
+          ${userAvatarHtml(member, 52)}
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:18px;font-weight:800;color:var(--text)">${member.name}</span>
+              ${member.role === 'admin' ? '<span class="badge b-requirement">Administrator</span>' : '<span class="badge b-task">Team Member</span>'}
+              <span class="badge b-completed"><span class="badge-dot" style="background:#10b981"></span>Active</span>
+            </div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px">
+              ${member.designation ? `<b>${member.designation}</b> &bull; ` : ''}
+              User ID: <code style="font-weight:bold;color:var(--primary)">${member.id}</code>
+              ${member.email ? ` &bull; ${member.email}` : ''}
+              ${member.phone ? ` &bull; ${member.phone}` : ''}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div style="text-align:right;margin-right:8px">
+            <div style="font-size:20px;font-weight:800;color:#2563eb">${todayHrs}h</div>
+            <div style="font-size:11px;color:var(--muted)">Logged Today</div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="showView('all-tasks'); _taskFilters.assignee='${member.id}'; renderAllTasks();">View All Tasks &rarr;</button>
+          <button class="btn btn-outline btn-sm" onclick="openEditUserModal('${member.id}')">${ICON('edit', 13)} Edit Member</button>
+        </div>
+      </div>
+
+      <!-- Member KPIs -->
+      <div class="kpi-grid">
+        ${mKpis.map(k=>`
+          <div class="kpi-card" style="border-top-color:${k.col}">
+            <div class="kpi-icon" style="color:${k.col};display:flex;justify-content:center">${ICON(k.icon, 22, '', k.col)}</div>
+            <div class="kpi-val" style="color:${k.col}">${k.val}</div>
+            <div class="kpi-label">${k.label}</div>
+          </div>`).join('')}
+      </div>
+
+      <div class="two-col">
+        <!-- Active Tasks for this Member -->
+        <div class="card">
+          <div class="card-title">${ICON('tasks', 16, '', 'var(--primary)')} Active Tasks in Progress (${activeMemberTasks.length})</div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>ID</th><th>Task</th><th>Type</th><th>Status</th><th>Priority</th><th>Schedule & Deadline</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${activeMemberTasks.length ? activeMemberTasks.map(t=>{
+                const cleanTitle = (t.title||'').replace(/'/g, "\\'");
+                const isRunning = TIMER_STATE && TIMER_STATE.taskId === t.id;
+                return `<tr>
+                  <td><b style="color:var(--primary)">${t.id}</b></td>
+                  <td><div style="font-weight:600">${t.title}</div></td>
+                  <td>${tBadge(t.type)}</td>
+                  <td>${sBadge(t.status)}</td>
+                  <td>${pBadge(t.priority)}</td>
+                  <td>${renderTaskScheduleCell(t)}</td>
+                  <td>
+                    <div style="display:flex;gap:4px">
+                      ${isRunning
+                        ? `<button class="btn btn-sm btn-warn" onclick="stopAndLogTimer()" title="Timer running!">${ICON('stop', 12)}</button>`
+                        : `<button class="btn btn-sm btn-outline" style="border-color:#10b981;color:#059669" onclick="startTaskTimer('${t.id}','${cleanTitle}')" title="Start Timer">${ICON('play', 12)}</button>`
+                      }
+                      <button class="btn btn-sm btn-outline" onclick="editTask('${t.id}')">${ICON('edit', 12)}</button>
+                    </div>
+                  </td>
+                </tr>`;
+              }).join('') : `<tr><td colspan="7"><div class="no-data">No active tasks currently assigned to this member.</div></td></tr>`}
+            </tbody>
+          </table></div>
+        </div>
+
+        <!-- Recent Logs for this Member -->
+        <div class="card">
+          <div class="card-title">${ICON('clock', 16, '', '#8b5cf6')} Recent Work Logs (${mLogs.length} Total)</div>
+          ${recentMemberLogs.length ? recentMemberLogs.map(l=>{
+            const task = allTasks.find(t=>t.id===l.taskId) || {};
+            return `
+              <div class="log-entry">
+                <div class="avatar" style="background:${member.color||'#2563eb'}18;color:${member.color||'#2563eb'};width:38px;height:38px;font-size:12px;font-weight:800">${l.hours}h</div>
+                <div class="log-info">
+                  <div class="log-task">${task.title || l.taskId}</div>
+                  <div class="log-meta">${l.date} &bull; ${l.desc || 'Routine task execution'}</div>
+                  ${l.blocker ? `<div style="font-size:11px;color:#dc2626;font-weight:600;margin-top:2px">Alert: ${l.blocker}</div>` : ''}
+                </div>
+                <div class="log-hours" style="color:${member.color||'#2563eb'}">${l.hours}h</div>
+              </div>
+            `;
+          }).join('') : `<div class="no-data">No work hours logged yet for this member.</div>`}
+        </div>
+      </div>
+    `);
+    return;
+  }
+
+  // All-members organization overview
   const kpis = [
-    { icon:'📋', val:stats.totalTasks,                label:'Total Tasks',    col:'#1a73e8' },
-    { icon:'✅', val:stats.byStatus['Completed']||0,   label:'Completed',      col:'#34a853' },
-    { icon:'🔄', val:stats.byStatus['In Progress']||0, label:'In Progress',    col:'#1565c0' },
-    { icon:'⏳', val:stats.byStatus['Pending']||0,      label:'Pending',        col:'#e65100' },
-    { icon:'🚫', val:stats.byStatus['Blocked']||0,     label:'Blocked',        col:'#c62828' },
-    { icon:'⏱', val:stats.totalHrs+'h',               label:'Hours Logged',   col:'#9c27b0' },
-    { icon:'📅', val:stats.plannedHrs+'h',             label:'Hrs Planned',    col:'#00897b' },
-    { icon:'📈', val:stats.totalTasks?Math.round((stats.byStatus['Completed']||0)/stats.totalTasks*100)+'%':'0%', label:'Completion', col:'#f57c00' },
+    { icon:'tasks', val:stats.totalTasks, label:'Total Tasks', col:'#2563eb' },
+    { icon:'check', val:stats.byStatus['Completed']||0, label:'Completed', col:'#10b981' },
+    { icon:'refresh', val:stats.byStatus['In Progress']||0, label:'In Progress', col:'#3b82f6' },
+    { icon:'clock', val:stats.byStatus['Pending']||0, label:'Pending', col:'#f59e0b' },
+    { icon:'alert-triangle', val:stats.byStatus['Blocked']||0, label:'Blocked', col:'#ef4444' },
+    { icon:'clock', val:stats.totalHrs+'h', label:'Hours Logged', col:'#8b5cf6' },
+    { icon:'calendar', val:stats.plannedHrs+'h', label:'Hrs Planned', col:'#06b6d4' },
+    { icon:'trending-up', val:stats.totalTasks?Math.round((stats.byStatus['Completed']||0)/stats.totalTasks*100)+'%':'0%', label:'Completion Rate', col:'#10b981' },
   ];
 
-  const recentTasks = [...tasks].sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).slice(0,6);
+  const recentTasks = [...allTasks].sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).slice(0,6);
 
   setContent(`
     <div class="section-header">
-      <div><div class="section-title">📊 Admin Dashboard</div><div class="section-sub">Live overview of your team's work</div></div>
-      <button class="btn btn-primary btn-sm" onclick="openAddTask()">➕ Add Task</button>
+      <div>
+        <div class="section-title">Admin Dashboard</div>
+        <div class="section-sub">Live organization overview & team productivity tracking</div>
+      </div>
     </div>
     ${resetBanner}
-    <div class="kpi-grid">${kpis.map(k=>`
-      <div class="kpi-card" style="border-top-color:${k.col}">
-        <div class="kpi-icon">${k.icon}</div>
-        <div class="kpi-val" style="color:${k.col}">${k.val}</div>
-        <div class="kpi-label">${k.label}</div>
-      </div>`).join('')}</div>
+    ${filterBarHtml}
+
+    <div class="kpi-grid">
+      ${kpis.map(k=>`
+        <div class="kpi-card" style="border-top-color:${k.col}">
+          <div class="kpi-icon" style="color:${k.col};display:flex;justify-content:center">${ICON(k.icon, 22, '', k.col)}</div>
+          <div class="kpi-val" style="color:${k.col}">${k.val}</div>
+          <div class="kpi-label">${k.label}</div>
+        </div>`).join('')}
+    </div>
 
     <div class="two-col">
       <div class="card">
-        <div class="card-title">👥 Team Members</div>
+        <div class="card-title">${ICON('users', 16, '', 'var(--primary)')} Team Members Workload</div>
         ${stats.perPerson.map(p=>`
-          <div style="border:2px solid ${p.color}22;border-radius:10px;padding:14px;margin-bottom:10px">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-              <div class="avatar" style="background:${p.color}">${ALL_USERS.find(u=>u.id===p.id)?.emoji||'👤'}</div>
-              <div><div style="font-weight:700">${p.name}</div>
-              <div style="font-size:12px;color:var(--muted)"><span class="online-dot"></span>Active</div></div>
+          <div style="border:1.5px solid ${p.color}33;border-radius:12px;padding:14px;margin-bottom:12px;background:#ffffff;box-shadow:var(--shadow-xs);cursor:pointer;transition:all .15s ease" onclick="onDashboardMemberChange('${p.id}')">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div style="display:flex;align-items:center;gap:10px">
+                ${userAvatarHtml(p, 36)}
+                <div>
+                  <div style="font-weight:700;font-size:14px;color:var(--text)">${p.name}</div>
+                  <div style="font-size:11.5px;color:var(--muted)">Click to view individual member dashboard</div>
+                </div>
+              </div>
+              <span class="badge b-completed" style="font-size:10px"><span class="badge-dot" style="background:#10b981"></span>Active</span>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;text-align:center">
-              ${[['Total',p.total,'#607d8b'],['Done',p.completed,'#34a853'],['Active',p.inProgress,'#1a73e8'],['Blocked',p.blocked,'#ea4335']].map(([l,v,c])=>`
-                <div style="background:#f8f9fa;border-radius:8px;padding:8px"><div style="font-size:18px;font-weight:800;color:${c}">${v}</div><div style="font-size:10px;color:var(--muted)">${l}</div></div>`).join('')}
+              ${[['Total',p.total,'#475569'],['Done',p.completed,'#10b981'],['Active',p.inProgress,'#2563eb'],['Blocked',p.blocked,'#ef4444']].map(([l,v,c])=>`
+                <div style="background:#f8fafc;border-radius:8px;padding:8px"><div style="font-size:17px;font-weight:800;color:${c}">${v}</div><div style="font-size:10px;font-weight:600;color:var(--muted)">${l}</div></div>`).join('')}
             </div>
-            <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:13px">
-              <span style="color:var(--muted)">⏱ ${p.hoursLogged}h logged / ${p.hoursPlanned}h planned</span>
-              <span style="color:var(--accent);font-weight:700">📅 Today: ${p.todayHours}h</span>
+            <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12px">
+              <span style="color:var(--muted)">Tracked: <b>${p.hoursLogged}h</b> / ${p.hoursPlanned}h planned</span>
+              <span style="color:#2563eb;font-weight:700">Today: ${p.todayHours}h</span>
             </div>
           </div>`).join('')}
       </div>
       <div>
         <div class="card">
-          <div class="card-title">📌 By Task Type</div>
+          <div class="card-title">${ICON('tasks', 16, '', '#8b5cf6')} Workload By Task Type</div>
           ${Object.entries(stats.byType).map(([type,count])=>{
             const p2 = Math.round(count/stats.totalTasks*100);
-            const cm = {Task:'#1a73e8',Requirement:'#9c27b0',Enhancement:'#34a853',Bug:'#ea4335'};
-            return `<div style="margin-bottom:12px">
-              <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px">
-                ${tBadge(type)} <span style="color:var(--muted)">${count} (${p2}%)</span>
-              </div>${bar(p2, cm[type]||'#607d8b')}</div>`;
+            const cm = {Task:'#2563eb',Requirement:'#8b5cf6',Enhancement:'#10b981',Bug:'#ef4444'};
+            return `<div style="margin-bottom:14px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px">
+                ${tBadge(type)} <span style="color:var(--muted);font-weight:600">${count} (${p2}%)</span>
+              </div>${bar(p2, cm[type]||'#64748b')}</div>`;
           }).join('')}
         </div>
         <div class="card">
-          <div class="card-title">📆 Daily Hours (Last 7 Days)</div>
+          <div class="card-title">${ICON('clock', 16, '', '#06b6d4')} Daily Hours (Last 7 Days)</div>
           <div class="table-wrap"><table>
             <thead><tr><th>Date</th>${stats.perPerson.map(p=>`<th style="color:${p.color}">${p.name}</th>`).join('')}<th>Total</th></tr></thead>
             <tbody>${stats.dailyHours.map(d=>{
@@ -1842,20 +2351,26 @@ async function renderAdminDashboard() {
     </div>
 
     <div class="card">
-      <div class="card-title">🕐 Recently Added Tasks</div>
+      <div class="card-title">${ICON('tasks', 16, '', 'var(--primary)')} Recently Added Tasks</div>
       <div class="table-wrap"><table>
-        <thead><tr><th>ID</th><th>Task</th><th>Type</th><th>Assigned To</th><th>Status</th><th>Priority</th><th>Hrs Spent/Planned</th></tr></thead>
+        <thead><tr><th>ID</th><th>Task</th><th>Type</th><th>Assigned To</th><th>Status</th><th>Priority</th><th>Schedule & Deadline</th><th>Hours</th></tr></thead>
         <tbody>${recentTasks.map(t=>{
-          const spent = hoursForTask(logs,t.id);
+          const spent = hoursForTask(allLogs,t.id);
           const uc = userColor(t.assignee);
           return `<tr>
             <td><b style="color:var(--primary)">${t.id}</b></td>
             <td style="font-weight:600">${t.title}</td>
             <td>${tBadge(t.type)}</td>
-            <td><span style="color:${uc};font-weight:600">${userName(t.assignee)}</span></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px">
+                ${userAvatarHtml(t.assignee, 22)}
+                <span style="color:${uc};font-weight:600">${userName(t.assignee)}</span>
+              </div>
+            </td>
             <td>${sBadge(t.status)}</td>
             <td>${pBadge(t.priority)}</td>
-            <td><b>${spent}h</b>/${t.planned||0}h</td>
+            <td>${renderTaskScheduleCell(t)}</td>
+            <td><b>${spent}h</b> / ${t.planned||0}h</td>
           </tr>`;
         }).join('')}</tbody>
       </table></div>
@@ -1869,7 +2384,7 @@ async function renderAdminDashboard() {
 let _taskFilters = { status:'', type:'', assignee:'', search:'' };
 async function renderAllTasks(fs) {
   if (fs) _taskFilters = { ...fs };
-  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">📋 Loading tasks...</div>');
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">Loading tasks...</div>');
   const params = new URLSearchParams();
   if (_taskFilters.status)   params.set('status',   _taskFilters.status);
   if (_taskFilters.type)     params.set('type',     _taskFilters.type);
@@ -1883,26 +2398,32 @@ async function renderAllTasks(fs) {
     const pp = pct(t,logs);
     const uc = userColor(t.assignee);
     const isRunning = TIMER_STATE && TIMER_STATE.taskId === t.id;
-    const startStr = t.start ? (fmtDate(t.start) + (t.startTime ? `<br><small style="color:var(--muted)">🕒 ${t.startTime}</small>` : '')) : '—';
     const cleanTitle = (t.title||'').replace(/'/g, "\\'");
     return `<tr>
-      <td><b style="color:var(--primary)">${t.id}</b></td>
-      <td><div style="font-weight:600">${t.title}</div>${t.desc?`<div style="font-size:11px;color:var(--muted)">${t.desc.substring(0,50)}</div>`:''}</td>
+      <td><b style="color:var(--primary);font-family:'JetBrains Mono',monospace">${t.id}</b></td>
+      <td>
+        <div style="font-weight:600;color:var(--text)">${t.title}</div>
+        ${t.desc?`<div style="font-size:11px;color:var(--muted);margin-top:2px">${t.desc.substring(0,55)}${t.desc.length>55?'...':''}</div>`:''}
+      </td>
       <td>${tBadge(t.type)}</td>
-      <td><span style="color:${uc};font-weight:600">${userName(t.assignee)}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:7px">
+          ${userAvatarHtml(t.assignee, 24)}
+          <span style="color:${uc};font-weight:600;font-size:12.5px">${userName(t.assignee)}</span>
+        </div>
+      </td>
       <td>${sBadge(t.status)}</td>
       <td>${pBadge(t.priority)}</td>
-      <td>${startStr}</td>
-      <td>${fmtDate(t.due)}<br><small>${dlBadge(t.due)}</small></td>
-      <td><b>${spent}h</b>/${t.planned||0}h<br>${bar(pp)}</td>
+      <td>${renderTaskScheduleCell(t)}</td>
+      <td><b>${spent}h</b> / ${t.planned||0}h<br>${bar(pp)}</td>
       <td>
         <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
           ${isRunning
-            ? `<button class="btn btn-sm btn-warn" onclick="stopAndLogTimer()" title="Timer running! Click to Stop & Log">⏹️ <span class="live-timer-for-${t.id}">${formatHMS(Math.floor(getTimerElapsedMs()/1000))}</span></button>`
-            : `<button class="btn btn-sm btn-outline" style="border-color:#34a853;color:#2d9348" onclick="startTaskTimer('${t.id}','${cleanTitle}')" title="Start Live Timer">▶️ Timer</button>`
+            ? `<button class="btn btn-sm btn-warn" onclick="stopAndLogTimer()" title="Timer running! Click to Stop & Log">${ICON('stop', 12)} <span class="live-timer-for-${t.id}">${formatHMS(Math.floor(getTimerElapsedMs()/1000))}</span></button>`
+            : `<button class="btn btn-sm btn-outline" style="border-color:#10b981;color:#059669" onclick="startTaskTimer('${t.id}','${cleanTitle}')" title="Start Live Timer">${ICON('play', 12)} Timer</button>`
           }
-          <button class="btn btn-sm btn-outline" onclick="editTask('${t.id}')">✏️</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')">🗑</button>
+          <button class="btn btn-sm btn-outline" onclick="editTask('${t.id}')" title="Edit Task">${ICON('edit', 13)}</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')" title="Delete Task">${ICON('trash', 13)}</button>
         </div>
       </td>
     </tr>`;
@@ -1913,18 +2434,21 @@ async function renderAllTasks(fs) {
 
   setContent(`
     <div class="section-header">
-      <div><div class="section-title">📋 All Tasks</div><div class="section-sub">${tasks.length} tasks</div></div>
-      <button class="btn btn-primary btn-sm" onclick="openAddTask()">➕ Add Task</button>
+      <div>
+        <div class="section-title">All Tasks</div>
+        <div class="section-sub">${tasks.length} total tasks across team workspace</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openAddTask()">${ICON('plus', 14)} Add Task</button>
     </div>
     <div class="filter-bar">
-      <input class="search-input" placeholder="🔍 Search..." value="${_taskFilters.search}"
+      <input class="search-input" placeholder="Search tasks by title or scope..." value="${_taskFilters.search}"
         oninput="_taskFilters.search=this.value;renderAllTasks()"/>
       <select class="filter-select" onchange="_taskFilters.status=this.value;renderAllTasks()">
-        <option value="">All Status</option>
+        <option value="">All Statuses</option>
         ${['In Progress','Pending','Completed','Upcoming','Blocked','Review'].map(s=>`<option ${_taskFilters.status===s?'selected':''}>${s}</option>`).join('')}
       </select>
       <select class="filter-select" onchange="_taskFilters.type=this.value;renderAllTasks()">
-        <option value="">All Types</option>
+        <option value="">All Classifications</option>
         ${['Task','Requirement','Enhancement','Bug'].map(t=>`<option ${_taskFilters.type===t?'selected':''}>${t}</option>`).join('')}
       </select>
       <select class="filter-select" onchange="_taskFilters.assignee=this.value;renderAllTasks()">
@@ -1933,8 +2457,8 @@ async function renderAllTasks(fs) {
     </div>
     <div class="card">
       <div class="table-wrap"><table>
-        <thead><tr><th>ID</th><th>Task</th><th>Type</th><th>Assigned To</th><th>Status</th><th>Priority</th><th>Start</th><th>Due</th><th>Hours</th><th>Actions</th></tr></thead>
-        <tbody>${rows||`<tr><td colspan="10"><div class="no-data">📭 No tasks found</div></td></tr>`}</tbody>
+        <thead><tr><th>ID</th><th>Task Title</th><th>Type</th><th>Assigned To</th><th>Status</th><th>Priority</th><th>Schedule & Deadline</th><th>Hours Tracked</th><th>Actions</th></tr></thead>
+        <tbody>${rows||`<tr><td colspan="9"><div class="no-data">No tasks found matching current filters.</div></td></tr>`}</tbody>
       </table></div>
     </div>`);
 }
@@ -1943,7 +2467,7 @@ async function renderAllTasks(fs) {
 // ADMIN — HOURS REPORT
 // ══════════════════════════════════════════════════════
 async function renderHoursReport() {
-  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">⏱ Loading hours report...</div>');
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">Loading hours report...</div>');
   const [tasks, logs, stats] = await Promise.all([GET('/api/tasks'), GET('/api/logs'), GET('/api/stats')]);
   if (!tasks) return;
 
@@ -1957,29 +2481,29 @@ async function renderHoursReport() {
       const pp = pct(t, logs);
       const variance = spent && t.planned
         ? (spent>t.planned
-            ? `<span style="color:#c62828">+${(spent-t.planned).toFixed(1)}h over</span>`
-            : `<span style="color:#34a853">${(t.planned-spent).toFixed(1)}h left</span>`)
+            ? `<span style="color:#dc2626;font-weight:700">+${(spent-t.planned).toFixed(1)}h over</span>`
+            : `<span style="color:#10b981;font-weight:700">${(t.planned-spent).toFixed(1)}h left</span>`)
         : '—';
       return `<tr>
-        <td><b>${t.id}</b></td>
+        <td><b style="font-family:'JetBrains Mono',monospace">${t.id}</b></td>
         <td style="font-weight:600">${t.title}</td>
         <td>${tBadge(t.type)}</td>
         <td>${sBadge(t.status)}</td>
-        <td style="text-align:center"><b style="color:#9c27b0;font-size:16px">${spent}h</b></td>
+        <td style="text-align:center"><b style="color:#8b5cf6;font-size:15px">${spent}h</b></td>
         <td style="text-align:center">${t.planned||0}h</td>
         <td style="text-align:center">${variance}</td>
         <td style="min-width:90px">${bar(pp, color)}<span style="font-size:11px;color:var(--muted)">${pp}%</span></td>
       </tr>`;
-    }).join('') || `<tr><td colspan="8"><div class="no-data">No tasks</div></td></tr>`;
+    }).join('') || `<tr><td colspan="8"><div class="no-data">No tasks assigned to this member.</div></td></tr>`;
   }
 
-  const tabs = members.map((m,i)=>`<button class="tab-btn ${i===0?'active':''}" onclick="switchTab('hr-${m.id}',this)">${m.emoji||'👤'} ${m.name}</button>`).join('');
+  const tabs = members.map((m,i)=>`<button class="tab-btn ${i===0?'active':''}" onclick="switchTab('hr-${m.id}',this)"><span style="display:inline-flex;align-items:center;gap:6px">${userAvatarHtml(m, 20)} ${m.name}</span></button>`).join('');
   const panels = members.map((m,i)=>`
     <div id="hr-${m.id}" class="${i>0?'hidden':''}">
       <div class="card" style="margin-bottom:0">
-        <div class="card-title" style="color:${m.color}">⏱ ${m.name} — Task Hours Breakdown</div>
+        <div class="card-title" style="color:${m.color}">${m.name} — Task Hours Breakdown</div>
         <div class="table-wrap"><table>
-          <thead><tr><th>ID</th><th>Task</th><th>Type</th><th>Status</th><th style="text-align:center">Spent</th><th style="text-align:center">Planned</th><th style="text-align:center">Variance</th><th>Progress</th></tr></thead>
+          <thead><tr><th>ID</th><th>Task Title</th><th>Type</th><th>Status</th><th style="text-align:center">Spent</th><th style="text-align:center">Planned</th><th style="text-align:center">Variance</th><th>Progress</th></tr></thead>
           <tbody>${taskHrsTable(m.id, m.color)}</tbody>
         </table></div>
       </div>
@@ -1987,13 +2511,19 @@ async function renderHoursReport() {
 
   setContent(`
     <div class="section-header">
-      <div><div class="section-title">⏱ Hours Report</div><div class="section-sub">Time tracking and analysis</div></div>
+      <div>
+        <div class="section-title">⏱ Hours Report</div>
+        <div class="section-sub">Time tracking, effort variance, and utilization analysis</div>
+      </div>
     </div>
     <div class="two-col" style="margin-bottom:20px">
       ${members.map(m=>{
         const p = stats.perPerson.find(x=>x.id===m.id)||{};
-        return `<div class="card" style="background:linear-gradient(135deg,${m.color},${m.color}bb);color:#fff">
-          <div style="font-size:14px;font-weight:700;margin-bottom:14px;opacity:.9">${m.emoji||'👤'} ${m.name}</div>
+        return `<div class="card" style="background:linear-gradient(135deg,${m.color},${m.color}dd);color:#fff">
+          <div style="font-size:15px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+            ${userAvatarHtml(m, 32, 'rgba(255,255,255,0.25)')}
+            <span>${m.name}</span>
+          </div>
           <div class="person-stat"><span class="ps-label">Total Hours Logged</span><span class="ps-val">${p.hoursLogged||0}h</span></div>
           <div class="person-stat"><span class="ps-label">Total Hours Planned</span><span class="ps-val">${p.hoursPlanned||0}h</span></div>
           <div class="person-stat"><span class="ps-label">Today's Hours</span><span class="ps-val">${p.todayHours||0}h</span></div>
@@ -2002,7 +2532,7 @@ async function renderHoursReport() {
       }).join('')}
     </div>
     <div class="card" style="margin-bottom:20px">
-      <div class="card-title">📆 Daily Hours — Last 7 Days</div>
+      <div class="card-title">${ICON('clock', 16, '', '#06b6d4')} Daily Hours — Last 7 Days</div>
       <div class="table-wrap"><table>
         <thead><tr><th>Date</th>${members.map(m=>`<th style="text-align:center;color:${m.color}">${m.name}</th>`).join('')}<th style="text-align:center">Total</th></tr></thead>
         <tbody>${stats.dailyHours.map(d=>{
@@ -2031,7 +2561,7 @@ function switchTab(id, el) {
 // ADMIN — PENDING & UPCOMING
 // ══════════════════════════════════════════════════════
 async function renderPending() {
-  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">🔜 Loading...</div>');
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">Loading pending tasks...</div>');
   const [tasks, logs] = await Promise.all([GET('/api/tasks'), GET('/api/logs')]);
   if (!tasks) return;
   const filtered = tasks.filter(t=>['Pending','Upcoming','Blocked','Review'].includes(t.status))
@@ -2042,34 +2572,42 @@ async function renderPending() {
     const dl = daysLeft(t.due);
     const uc = userColor(t.assignee);
     let action='';
-    if (t.status==='Blocked') action='<span style="color:#c62828;font-weight:700">🚨 Resolve blocker!</span>';
-    else if (dl===null) action='📌 No due date';
-    else if (dl<0)  action=`<span style="color:#c62828">⚠️ OVERDUE ${Math.abs(dl)}d</span>`;
-    else if (dl===0) action='<span style="color:#e65100">🔥 Due TODAY</span>';
-    else if (dl<=2)  action=`<span style="color:#f57c00">⚡ ${dl}d — start NOW</span>`;
-    else if (dl<=5)  action=`📌 ${dl}d — prepare`;
-    else action=`📅 ${dl} days away`;
+    if (t.status==='Blocked') action='<span class="badge b-blocked">Resolve Blocker</span>';
+    else if (dl===null) action='<span style="color:var(--muted)">No due date</span>';
+    else if (dl<0)  action=`<span class="badge b-blocked">${Math.abs(dl)}d Overdue</span>`;
+    else if (dl===0) action='<span class="badge b-pending">Due Today</span>';
+    else if (dl<=2)  action=`<span class="badge b-upcoming">${dl}d Left &bull; Start now</span>`;
+    else if (dl<=5)  action=`<span style="color:var(--text);font-weight:600">${dl}d Left &bull; Prepare</span>`;
+    else action=`<span style="color:var(--muted)">${dl} days away</span>`;
     return `<tr>
-      <td><b style="color:var(--primary)">${t.id}</b></td>
+      <td><b style="color:var(--primary);font-family:'JetBrains Mono',monospace">${t.id}</b></td>
       <td style="font-weight:600">${t.title}</td>
       <td>${tBadge(t.type)}</td>
-      <td><span style="color:${uc};font-weight:600">${userName(t.assignee)}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:7px">
+          ${userAvatarHtml(t.assignee, 22)}
+          <span style="color:${uc};font-weight:600">${userName(t.assignee)}</span>
+        </div>
+      </td>
       <td>${sBadge(t.status)}</td>
       <td>${pBadge(t.priority)}</td>
-      <td>${fmtDate(t.due)}</td>
+      <td>${renderTaskScheduleCell(t)}</td>
       <td>${action}</td>
-      <td><b>${spent}h</b>/${t.planned||0}h</td>
+      <td><b>${spent}h</b> / ${t.planned||0}h</td>
     </tr>`;
   }).join('');
 
   setContent(`
     <div class="section-header">
-      <div><div class="section-title">🔜 Pending & Upcoming</div><div class="section-sub">${filtered.length} tasks need attention</div></div>
+      <div>
+        <div class="section-title">Pending & Upcoming Tasks</div>
+        <div class="section-sub">${filtered.length} tasks needing attention or upcoming on schedule</div>
+      </div>
     </div>
     <div class="card">
       <div class="table-wrap"><table>
-        <thead><tr><th>ID</th><th>Task</th><th>Type</th><th>Person</th><th>Status</th><th>Priority</th><th>Due</th><th>Action Needed</th><th>Hours</th></tr></thead>
-        <tbody>${rows||`<tr><td colspan="9"><div class="no-data">🎉 No pending tasks!</div></td></tr>`}</tbody>
+        <thead><tr><th>ID</th><th>Task Title</th><th>Type</th><th>Assigned To</th><th>Status</th><th>Priority</th><th>Schedule & Deadline</th><th>Action Needed</th><th>Hours</th></tr></thead>
+        <tbody>${rows||`<tr><td colspan="9"><div class="no-data">No pending tasks! All work is completed or in review.</div></td></tr>`}</tbody>
       </table></div>
     </div>`);
 }
@@ -2078,29 +2616,37 @@ async function renderPending() {
 // ADMIN — ACTIVITY LOG
 // ══════════════════════════════════════════════════════
 async function renderActivity() {
-  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">📝 Loading activity...</div>');
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">Loading activity records...</div>');
   const activity = await GET('/api/activity');
   if (!activity) return;
 
   const rows = activity.map(l=>`<tr>
     <td style="font-weight:600;white-space:nowrap">${l.date}</td>
-    <td><span class="avatar" style="background:${l.userColor||'#607d8b'};width:28px;height:28px;font-size:12px;display:inline-flex;align-items:center;justify-content:center;color:#fff;border-radius:50%;margin-right:6px">${ALL_USERS.find(u=>u.id===l.user)?.emoji||'👤'}</span><span style="font-weight:700;color:${l.userColor}">${l.userName}</span></td>
-    <td><b>${l.taskId}</b></td>
+    <td>
+      <div style="display:flex;align-items:center;gap:7px">
+        ${userAvatarHtml(l.user, 24)}
+        <span style="font-weight:700;color:${l.userColor||'var(--text)'}">${l.userName}</span>
+      </div>
+    </td>
+    <td><b style="font-family:'JetBrains Mono',monospace">${l.taskId}</b></td>
     <td style="font-weight:600">${l.taskTitle}</td>
     <td>${l.taskType!=='—'?tBadge(l.taskType):'—'}</td>
-    <td style="text-align:center"><b style="font-size:16px;color:#9c27b0">${l.hours}h</b></td>
-    <td>${l.desc||'—'}</td>
-    <td>${l.blocker?`<span style="color:#c62828">⚠️ ${l.blocker}</span>`:'<span style="color:#34a853">✅ None</span>'}</td>
+    <td style="text-align:center"><b style="font-size:15px;color:#8b5cf6">${l.hours}h</b></td>
+    <td>${l.desc||'Routine task execution'}</td>
+    <td>${l.blocker?`<span class="badge b-blocked">${ICON('alert-triangle', 11)} ${l.blocker}</span>`:`<span class="badge b-completed">${ICON('check', 11)} None</span>`}</td>
   </tr>`).join('');
 
   setContent(`
     <div class="section-header">
-      <div><div class="section-title">📝 Activity Log</div><div class="section-sub">Every logged work entry from all team members</div></div>
+      <div>
+        <div class="section-title">Activity Log</div>
+        <div class="section-sub">Comprehensive timeline of every work session logged by team members</div>
+      </div>
     </div>
     <div class="card">
       <div class="table-wrap"><table>
-        <thead><tr><th>Date</th><th>Person</th><th>Task ID</th><th>Task</th><th>Type</th><th style="text-align:center">Hours</th><th>Description</th><th>Blockers</th></tr></thead>
-        <tbody>${rows||`<tr><td colspan="8"><div class="no-data">📭 No logs yet</div></td></tr>`}</tbody>
+        <thead><tr><th>Date</th><th>Team Member</th><th>Task ID</th><th>Task Title</th><th>Classification</th><th style="text-align:center">Hours</th><th>Work Summary</th><th>Blockers / Roadblocks</th></tr></thead>
+        <tbody>${rows||`<tr><td colspan="8"><div class="no-data">No work logs recorded yet.</div></td></tr>`}</tbody>
       </table></div>
     </div>`);
 }
@@ -2109,7 +2655,7 @@ async function renderActivity() {
 // ADMIN — MANAGE USERS
 // ══════════════════════════════════════════════════════
 async function renderUsers() {
-  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">👥 Loading users...</div>');
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">Loading team directory...</div>');
   const [users, resets] = await Promise.all([
     GET('/api/users'),
     GET('/api/resets')
@@ -2121,27 +2667,31 @@ async function renderUsers() {
   let resetSectionHtml = '';
   if (pendingResets.length > 0) {
     resetSectionHtml = `
-      <div class="card" style="border:2px solid #f9ab00;background:#fffdf6;margin-bottom:20px">
-        <div class="card-title" style="color:#b06000;display:flex;align-items:center;gap:8px">
-          🔑 Pending Password Reset Requests (${pendingResets.length})
+      <div class="card" style="border:1.5px solid #f59e0b;background:#fffdf6;margin-bottom:20px;border-radius:14px">
+        <div class="card-title" style="color:#b45309;display:flex;align-items:center;gap:8px">
+          ${ICON('key', 18)} Pending Password Assistance Requests (${pendingResets.length})
         </div>
         <div style="font-size:13px;color:var(--muted);margin-bottom:14px">
-          The following team members requested password assistance. You can reset their password to their User ID or specify a new custom password.
+          The following team members requested password assistance. You can reset their password to their User ID or assign a custom password.
         </div>
         ${pendingResets.map(r => `
-          <div style="background:#fff;border:1px solid #fedc97;border-radius:8px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div style="background:#fff;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
             <div>
-              <div style="font-weight:700;font-size:14px;color:#202124">👤 ${r.userName} <code style="font-weight:normal;color:#1a73e8">(${r.userId})</code></div>
-              <div style="font-size:12px;color:var(--muted);margin-top:2px">
+              <div style="font-weight:700;font-size:14px;color:var(--text);display:flex;align-items:center;gap:6px">
+                ${userAvatarHtml(r.userId, 20)}
+                <span>${r.userName}</span>
+                <code style="font-weight:normal;color:var(--primary);font-size:12px">(${r.userId})</code>
+              </div>
+              <div style="font-size:12px;color:var(--muted);margin-top:4px">
                 Requested: ${new Date(r.requestedAt).toLocaleString()}
-                ${r.contact ? ` &nbsp;•&nbsp; Contact: <b>${r.contact}</b>` : ''}
-                ${r.note ? ` &nbsp;•&nbsp; Note: <i>"${r.note}"</i>` : ''}
+                ${r.contact ? ` &bull; Contact: <b>${r.contact}</b>` : ''}
+                ${r.note ? ` &bull; Note: <i>"${r.note}"</i>` : ''}
               </div>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <button class="btn btn-sm btn-primary" onclick="resolveResetRequest('${r.id}', true)">🔄 Reset to Default ID</button>
-              <button class="btn btn-sm btn-outline" style="border-color:#1a73e8;color:#1a73e8" onclick="resolveResetRequest('${r.id}', false)">✏️ Custom Password</button>
-              <button class="btn btn-sm btn-danger" onclick="dismissResetRequest('${r.id}')">✕ Dismiss</button>
+              <button class="btn btn-sm btn-primary" onclick="resolveResetRequest('${r.id}', true)">Reset to Default ID</button>
+              <button class="btn btn-sm btn-outline" style="border-color:var(--primary);color:var(--primary)" onclick="resolveResetRequest('${r.id}', false)">Custom Password</button>
+              <button class="btn btn-sm btn-danger" onclick="dismissResetRequest('${r.id}')">Dismiss</button>
             </div>
           </div>
         `).join('')}
@@ -2152,43 +2702,46 @@ async function renderUsers() {
     const isRootAdmin = u.id === 'admin';
     const isInactive = u.status === 'Inactive';
     const statusBadge = isInactive
-      ? `<span class="badge b-blocked" style="font-size:10px">⚪ Inactive</span>`
-      : `<span class="badge b-completed" style="font-size:10px">🟢 Active</span>`;
-    const designationStr = u.designation ? ` &nbsp;•&nbsp; <span style="color:#1565c0;font-weight:600">${u.designation}</span>` : '';
+      ? `<span class="badge b-blocked" style="font-size:10px"><span class="badge-dot" style="background:#ef4444"></span>Inactive</span>`
+      : `<span class="badge b-completed" style="font-size:10px"><span class="badge-dot" style="background:#10b981"></span>Active</span>`;
+    const designationStr = u.designation ? ` &bull; <span style="color:#2563eb;font-weight:600">${u.designation}</span>` : '';
     const contactStr = (u.email || u.phone)
-      ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">${[u.email, u.phone].filter(Boolean).join(' &nbsp;•&nbsp; ')}</div>`
+      ? `<div style="font-size:11.5px;color:var(--muted);margin-top:3px">${[u.email, u.phone].filter(Boolean).join(' &bull; ')}</div>`
       : '';
 
     return `
     <div class="user-row-card" style="${isInactive ? 'opacity:0.75;background:#f9fafb;' : ''}">
-      <div class="avatar" style="background:${u.color||'#607d8b'};width:46px;height:46px;font-size:20px;flex-shrink:0">${u.emoji||'👤'}</div>
+      <div style="flex-shrink:0">${userAvatarHtml(u, 44)}</div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-weight:700;font-size:15px">${u.name}</span>
+          <span style="font-weight:700;font-size:15px;color:var(--text)">${u.name}</span>
           ${statusBadge}
-          ${u.role==='admin' ? '<span class="badge b-requirement" style="font-size:10px">👑 Admin</span>' : '<span class="badge b-task" style="font-size:10px">👤 Member</span>'}
+          ${u.role==='admin' ? '<span class="badge b-requirement" style="font-size:10px">Admin</span>' : '<span class="badge b-task" style="font-size:10px">Member</span>'}
         </div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px">ID: <code>${u.id}</code>${designationStr} &nbsp;•&nbsp; Joined: ${u.createdAt||'—'}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">ID: <code>${u.id}</code>${designationStr} &bull; Joined: ${u.createdAt||'—'}</div>
         ${contactStr}
       </div>
       <div class="user-row-actions">
-        <button class="btn btn-sm btn-outline" style="border-color:#1a73e8;color:#1a73e8" onclick="openEditUserModal('${u.id}')">✏️ Edit Details</button>
-        ${!isRootAdmin ? `<button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}','${u.name}')">🗑 Remove</button>` : '<span class="badge b-completed" style="font-size:11px;margin-left:4px">Primary Admin</span>'}
+        <button class="btn btn-sm btn-outline" style="border-color:var(--primary);color:var(--primary)" onclick="openEditUserModal('${u.id}')">${ICON('edit', 12)} Edit Details</button>
+        ${!isRootAdmin ? `<button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}','${u.name}')">${ICON('trash', 12)} Remove</button>` : '<span class="badge b-completed" style="font-size:11px;margin-left:4px">Primary Root</span>'}
       </div>
     </div>`;
   }).join('');
 
   setContent(`
     <div class="section-header">
-      <div><div class="section-title">👥 Manage Users</div><div class="section-sub">${users.length} users registered & managed</div></div>
-      <button class="btn btn-primary btn-sm" onclick="openModal('user-modal')">➕ Add User</button>
+      <div>
+        <div class="section-title">Manage Users</div>
+        <div class="section-sub">${users.length} active workspace accounts registered</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openModal('user-modal')">${ICON('plus', 14)} Add User</button>
     </div>
     ${resetSectionHtml}
     <div class="card">
-      <div class="card-title">Team Members</div>
+      <div class="card-title">Team Directory</div>
       ${cards}
-      <div style="margin-top:16px;padding:12px;background:#e8f0fe;border:1px solid #c2e7ff;border-radius:8px;font-size:13px;color:#174ea6">
-        💡 <b>Admin User Management:</b> Click <b>✏️ Edit Details</b> on any user to update their Name, Role, Password, Title, Contact Info, Avatar Emoji, Color, or Status.
+      <div style="margin-top:16px;padding:12px 16px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;font-size:12.5px;color:#1e40af">
+        💡 <b>Workspace Administrator Controls:</b> Click <b>Edit Details</b> on any user to update their Name, Access Role, Password, Title, Contact Info, Theme Color, or Account Status.
       </div>
     </div>`);
 }
@@ -2206,8 +2759,7 @@ function openEditUserModal(userId) {
   document.getElementById('eu-phone').value = user.phone || '';
   document.getElementById('eu-pass').value = '';
   document.getElementById('eu-pass').type = 'password';
-  document.getElementById('eu-emoji').value = user.emoji || '👤';
-  document.getElementById('eu-color').value = user.color || '#1a73e8';
+  document.getElementById('eu-color').value = user.color || '#2563eb';
 
   // Root admin protection
   if (user.id === 'admin') {
@@ -2227,24 +2779,18 @@ function togglePassVisibility(id) {
   if (el) el.type = el.type === 'password' ? 'text' : 'password';
 }
 
-function selectEditEmoji(emoji) {
-  document.getElementById('eu-emoji').value = emoji;
-  updateEditAvatarPreview();
-}
-
 function selectEditColor(color) {
   document.getElementById('eu-color').value = color;
   updateEditAvatarPreview();
 }
 
 function updateEditAvatarPreview() {
-  const emoji = document.getElementById('eu-emoji').value || '👤';
-  const color = document.getElementById('eu-color').value || '#1a73e8';
+  const color = document.getElementById('eu-color').value || '#2563eb';
   const name = document.getElementById('eu-name').value || 'User';
   const av = document.getElementById('eu-preview-avatar');
   if (av) {
-    av.textContent = emoji;
-    av.style.background = color;
+    av.innerHTML = userAvatarHtml({ name, color }, 46);
+    av.style.background = 'transparent';
   }
   const nameEl = document.getElementById('eu-preview-name');
   if (nameEl) nameEl.textContent = name;
@@ -2253,7 +2799,7 @@ function updateEditAvatarPreview() {
 async function saveEditUser() {
   const id = document.getElementById('eu-id').value;
   const name = document.getElementById('eu-name').value.trim();
-  if (!name) { showToast('Name is required', '#f57c00'); return; }
+  if (!name) { showToast('Name is required', '#d97706'); return; }
 
   const body = {
     name,
@@ -2262,7 +2808,6 @@ async function saveEditUser() {
     status: document.getElementById('eu-status').value,
     email: document.getElementById('eu-email').value,
     phone: document.getElementById('eu-phone').value,
-    emoji: document.getElementById('eu-emoji').value || '👤',
     color: document.getElementById('eu-color').value,
   };
 
@@ -2271,11 +2816,11 @@ async function saveEditUser() {
 
   const r = await PUT('/api/users/' + id, body);
   if (!r || r.error) {
-    showToast('❌ ' + (r?.error || 'Failed to update user'), '#ea4335');
+    showToast('Failed to update user: ' + (r?.error || 'Unknown error'), '#dc2626');
     return;
   }
 
-  showToast('✅ User details updated!', '#34a853');
+  showToast('User details updated!', '#10b981');
   closeModal('edit-user-modal');
 
   ALL_USERS = await GET('/api/users') || [];
@@ -2287,8 +2832,10 @@ async function saveEditUser() {
     document.getElementById('tb-name').textContent = ME.name;
     document.getElementById('tb-role').textContent = ME.role === 'admin' ? 'Manager' : 'Team Member';
     const av = document.getElementById('tb-avatar');
-    av.textContent = ME.emoji || '👤';
-    av.style.background = ME.color || '#607d8b';
+    if (av) {
+      av.innerHTML = userAvatarHtml(ME, 34);
+      av.style.background = 'transparent';
+    }
   }
 
   renderUsers();
@@ -2298,12 +2845,11 @@ async function saveUser() {
   const name  = document.getElementById('u-name').value.trim();
   const pass  = document.getElementById('u-pass').value;
   const role  = document.getElementById('u-role').value;
-  const emoji = document.getElementById('u-emoji').value||'👤';
   const color = document.getElementById('u-color').value;
-  if (!name||!pass) { showToast('Name and password required','#f57c00'); return; }
-  const result = await POST('/api/users', { name, password:pass, role, emoji, color });
-  if (!result||result.error) { showToast('❌ '+(result?.error||'Error'),'#ea4335'); return; }
-  showToast('✅ User added!','#34a853');
+  if (!name||!pass) { showToast('Name and password required','#d97706'); return; }
+  const result = await POST('/api/users', { name, password:pass, role, color });
+  if (!result||result.error) { showToast('Error: '+(result?.error||'Failed to create user'),'#dc2626'); return; }
+  showToast('User added!','#10b981');
   closeModal('user-modal');
   ALL_USERS = await GET('/api/users')||[];
   renderUsers();
@@ -2312,8 +2858,8 @@ async function saveUser() {
 async function deleteUser(id, name) {
   if (!confirm(`Remove user "${name}"? Their tasks and logs will remain.`)) return;
   const r = await DEL('/api/users/'+id);
-  if (!r||r.error) { showToast('❌ '+(r?.error||'Error'),'#ea4335'); return; }
-  showToast('🗑 User removed','#ea4335');
+  if (!r||r.error) { showToast('Error: '+(r?.error||'Failed to delete user'),'#dc2626'); return; }
+  showToast('User removed','#dc2626');
   ALL_USERS = await GET('/api/users')||[];
   renderUsers();
 }
@@ -2322,10 +2868,10 @@ async function deleteUser(id, name) {
 // MEMBER — MY DASHBOARD
 // ══════════════════════════════════════════════════════
 async function renderMyDashboard() {
-  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">🏠 Loading...</div>');
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">Loading personal workspace...</div>');
   const [tasks, logs] = await Promise.all([GET('/api/tasks'), GET('/api/logs')]);
   if (!tasks) return;
-  const color = ME.color||'#1a73e8';
+  const color = ME.color||'#2563eb';
   const todayHrs = logs.filter(l=>l.date===today()).reduce((a,l)=>a+(l.hours||0),0);
   const totalHrs = logs.reduce((a,l)=>a+(l.hours||0),0);
   const done=tasks.filter(t=>t.status==='Completed').length;
@@ -2334,13 +2880,13 @@ async function renderMyDashboard() {
   const blocked=tasks.filter(t=>t.status==='Blocked').length;
 
   const kpis=[
-    {icon:'📋',val:tasks.length,label:'My Tasks',col:color},
-    {icon:'✅',val:done,label:'Completed',col:'#34a853'},
-    {icon:'🔄',val:inprog,label:'In Progress',col:'#1565c0'},
-    {icon:'⏳',val:pending,label:'Pending',col:'#e65100'},
-    {icon:'🚫',val:blocked,label:'Blocked',col:'#c62828'},
-    {icon:'⏱',val:totalHrs+'h',label:'Total Hours',col:'#9c27b0'},
-    {icon:'📅',val:todayHrs+'h',label:"Today's Hours",col:'#00897b'},
+    {icon:'tasks',val:tasks.length,label:'My Assigned Tasks',col:color},
+    {icon:'check',val:done,label:'Completed',col:'#10b981'},
+    {icon:'refresh',val:inprog,label:'In Progress',col:'#2563eb'},
+    {icon:'clock',val:pending,label:'Pending',col:'#f59e0b'},
+    {icon:'alert-triangle',val:blocked,label:'Blocked',col:'#ef4444'},
+    {icon:'clock',val:totalHrs+'h',label:'Total Hours Logged',col:'#8b5cf6'},
+    {icon:'calendar',val:todayHrs+'h',label:"Today's Logged Hours",col:'#06b6d4'},
   ];
 
   const urgent = tasks.filter(t=>{
@@ -2352,46 +2898,58 @@ async function renderMyDashboard() {
 
   setContent(`
     <div class="section-header">
-      <div><div class="section-title">🏠 My Dashboard</div><div class="section-sub">Welcome, ${ME.name}!</div></div>
+      <div>
+        <div class="section-title">My Dashboard</div>
+        <div class="section-sub">Welcome back, ${ME.name}! Here is your current workload and sprint focus.</div>
+      </div>
       <div style="display:flex;gap:10px">
-        <button class="btn btn-outline btn-sm" onclick="openLogModal()">⏱ Log Hours</button>
-        <button class="btn btn-primary btn-sm" onclick="openAddTask()">➕ Add Task</button>
+        <button class="btn btn-outline btn-sm" onclick="openLogModal()">${ICON('clock', 14)} Log Hours</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddTask()">${ICON('plus', 14)} Add Task</button>
       </div>
     </div>
     <div class="kpi-grid">${kpis.map(k=>`
       <div class="kpi-card" style="border-top-color:${k.col}">
-        <div class="kpi-icon">${k.icon}</div>
+        <div class="kpi-icon" style="color:${k.col};display:flex;justify-content:center">${ICON(k.icon, 22, '', k.col)}</div>
         <div class="kpi-val" style="color:${k.col}">${k.val}</div>
         <div class="kpi-label">${k.label}</div>
       </div>`).join('')}</div>
     <div class="two-col">
       <div class="card">
-        <div class="card-title">⚡ Urgent Tasks</div>
+        <div class="card-title">${ICON('clock', 16, '', '#ea580c')} Priority & Upcoming Deadlines</div>
         ${urgent.length ? urgent.map(t=>{
           const dl=daysLeft(t.due); const spent=hoursForTask(logs,t.id);
-          return `<div style="border:2px solid ${dl<0?'#fce8e8':'#fff3e0'};border-radius:10px;padding:12px;margin-bottom:10px">
-            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-              <div><div style="font-weight:700">${t.title}</div><div style="margin-top:4px">${tBadge(t.type)} ${sBadge(t.status)}</div></div>
-              <div style="text-align:right"><div style="color:#c62828;font-weight:800">${dl<0?'OVERDUE':'⚡ '+dl+'d left'}</div><div style="font-size:11px;color:var(--muted)">Due ${fmtDate(t.due)}</div></div>
+          return `<div style="border:1.5px solid ${dl<0?'#fecaca':'#fed7aa'};background:#ffffff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow-xs)">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+              <div>
+                <div style="font-weight:700;font-size:14px;color:var(--text)">${t.title}</div>
+                <div style="margin-top:5px;display:flex;gap:6px;align-items:center">${tBadge(t.type)} ${sBadge(t.status)}</div>
+              </div>
+              <div style="text-align:right">
+                <div style="color:${dl<0?'#dc2626':'#d97706'};font-weight:800;font-size:12px">${dl<0?`${Math.abs(dl)}d OVERDUE`:`${dl}d Left`}</div>
+                <div style="font-size:11.5px;color:var(--muted);margin-top:2px">Deadline: ${fmtDate(t.due)}</div>
+              </div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px">${bar(pct(t,logs),color)}<span style="font-size:11px;color:var(--muted)">${spent}h/${t.planned||0}h</span></div>
+            <div style="margin-top:8px">
+              ${renderTaskScheduleCell(t)}
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:8px">${bar(pct(t,logs),color)}<span style="font-size:11px;color:var(--muted);white-space:nowrap">${spent}h / ${t.planned||0}h</span></div>
           </div>`;
-        }).join(''):'<div class="no-data">🎉 No urgent tasks!</div>'}
+        }).join(''):'<div class="no-data">No high-urgency deadlines right now. All caught up!</div>'}
       </div>
       <div class="card">
-        <div class="card-title">📝 Recent Work Logs</div>
+        <div class="card-title">${ICON('activity', 16, '', '#8b5cf6')} Recent Work Sessions</div>
         ${recentLogs.length ? recentLogs.map(l=>{
           const task=tasks.find(t=>t.id===l.taskId)||{};
           return `<div class="log-entry">
-            <div class="avatar" style="background:${color}22;color:${color};width:36px;height:36px">${l.hours}h</div>
+            <div class="avatar" style="background:${color}18;color:${color};width:38px;height:38px;font-weight:800;font-size:12px">${l.hours}h</div>
             <div class="log-info">
               <div class="log-task">${task.title||l.taskId}</div>
-              <div class="log-meta">${l.date} • ${l.desc||'—'}</div>
-              ${l.blocker?`<div style="font-size:11px;color:#c62828">⚠️ ${l.blocker}</div>`:''}
+              <div class="log-meta">${l.date} &bull; ${l.desc||'Routine task execution'}</div>
+              ${l.blocker?`<div style="font-size:11px;color:#dc2626;font-weight:600;margin-top:2px">Alert: ${l.blocker}</div>`:''}
             </div>
             <div class="log-hours" style="color:${color}">${l.hours}h</div>
           </div>`;
-        }).join(''):'<div class="no-data">📋 Start logging your work!</div>'}
+        }).join(''):'<div class="no-data">Start tracking your work hours!</div>'}
       </div>
     </div>`);
 }
@@ -2402,37 +2960,38 @@ async function renderMyDashboard() {
 let _myFilters = { status:'', type:'' };
 async function renderMyTasks(fs) {
   if (fs) _myFilters = { ...fs };
-  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">📋 Loading...</div>');
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">Loading personal tasks...</div>');
   const params = new URLSearchParams();
   if (_myFilters.status) params.set('status',_myFilters.status);
   if (_myFilters.type)   params.set('type',_myFilters.type);
   const [tasks, logs] = await Promise.all([GET('/api/tasks?'+params), GET('/api/logs')]);
   if (!tasks) return;
-  const color = ME.color||'#1a73e8';
+  const color = ME.color||'#2563eb';
 
   const rows = tasks.map(t=>{
     const spent=hoursForTask(logs,t.id); const pp=pct(t,logs);
     const isRunning = TIMER_STATE && TIMER_STATE.taskId === t.id;
-    const startStr = t.start ? (fmtDate(t.start) + (t.startTime ? `<br><small style="color:var(--muted)">🕒 ${t.startTime}</small>` : '')) : '—';
     const cleanTitle = (t.title||'').replace(/'/g, "\\'");
     return `<tr>
-      <td><b style="color:var(--primary)">${t.id}</b></td>
-      <td style="font-weight:600">${t.title}</td>
+      <td><b style="color:var(--primary);font-family:'JetBrains Mono',monospace">${t.id}</b></td>
+      <td>
+        <div style="font-weight:600;color:var(--text)">${t.title}</div>
+        ${t.desc?`<div style="font-size:11px;color:var(--muted);margin-top:2px">${t.desc.substring(0,50)}${t.desc.length>50?'...':''}</div>`:''}
+      </td>
       <td>${tBadge(t.type)}</td>
       <td>${sBadge(t.status)}</td>
       <td>${pBadge(t.priority)}</td>
-      <td>${startStr}</td>
-      <td>${fmtDate(t.due)}<br><small>${dlBadge(t.due)}</small></td>
-      <td><b>${spent}h</b>/${t.planned||0}h<br>${bar(pp,color)}</td>
+      <td>${renderTaskScheduleCell(t)}</td>
+      <td><b>${spent}h</b> / ${t.planned||0}h<br>${bar(pp,color)}</td>
       <td>
         <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
           ${isRunning
-            ? `<button class="btn btn-sm btn-warn" onclick="stopAndLogTimer()" title="Timer running! Click to Stop & Log">⏹️ <span class="live-timer-for-${t.id}">${formatHMS(Math.floor(getTimerElapsedMs()/1000))}</span></button>`
-            : `<button class="btn btn-sm btn-outline" style="border-color:#34a853;color:#2d9348" onclick="startTaskTimer('${t.id}','${cleanTitle}')" title="Start Live Timer">▶️ Timer</button>`
+            ? `<button class="btn btn-sm btn-warn" onclick="stopAndLogTimer()" title="Timer running! Click to Stop & Log">${ICON('stop', 12)} <span class="live-timer-for-${t.id}">${formatHMS(Math.floor(getTimerElapsedMs()/1000))}</span></button>`
+            : `<button class="btn btn-sm btn-outline" style="border-color:#10b981;color:#059669" onclick="startTaskTimer('${t.id}','${cleanTitle}')" title="Start Live Timer">${ICON('play', 12)} Timer</button>`
           }
-          <button class="btn btn-sm btn-outline" onclick="editTask('${t.id}')">✏️</button>
-          <button class="btn btn-sm btn-success" onclick="quickLog('${t.id}')">⏱</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')">🗑</button>
+          <button class="btn btn-sm btn-outline" onclick="editTask('${t.id}')" title="Edit Task">${ICON('edit', 12)}</button>
+          <button class="btn btn-sm btn-outline" style="border-color:#8b5cf6;color:#7c3aed" onclick="quickLog('${t.id}')" title="Log Hours Directly">${ICON('clock', 12)}</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')" title="Delete Task">${ICON('trash', 12)}</button>
         </div>
       </td>
     </tr>`;
@@ -2440,23 +2999,26 @@ async function renderMyTasks(fs) {
 
   setContent(`
     <div class="section-header">
-      <div><div class="section-title">📋 My Tasks</div><div class="section-sub">${tasks.length} tasks</div></div>
-      <button class="btn btn-primary btn-sm" onclick="openAddTask()">➕ Add Task</button>
+      <div>
+        <div class="section-title">My Tasks</div>
+        <div class="section-sub">${tasks.length} tasks currently assigned to you</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openAddTask()">${ICON('plus', 14)} Add Task</button>
     </div>
     <div class="filter-bar">
       <select class="filter-select" onchange="_myFilters.status=this.value;renderMyTasks()">
-        <option value="">All Status</option>
+        <option value="">All Statuses</option>
         ${['In Progress','Pending','Completed','Upcoming','Blocked','Review'].map(s=>`<option ${_myFilters.status===s?'selected':''}>${s}</option>`).join('')}
       </select>
       <select class="filter-select" onchange="_myFilters.type=this.value;renderMyTasks()">
-        <option value="">All Types</option>
+        <option value="">All Classifications</option>
         ${['Task','Requirement','Enhancement','Bug'].map(t=>`<option ${_myFilters.type===t?'selected':''}>${t}</option>`).join('')}
       </select>
     </div>
     <div class="card">
       <div class="table-wrap"><table>
-        <thead><tr><th>ID</th><th>Task</th><th>Type</th><th>Status</th><th>Priority</th><th>Start</th><th>Due</th><th>Hours</th><th>Actions</th></tr></thead>
-        <tbody>${rows||`<tr><td colspan="9"><div class="no-data">📭 No tasks yet</div></td></tr>`}</tbody>
+        <thead><tr><th>ID</th><th>Task Title</th><th>Type</th><th>Status</th><th>Priority</th><th>Schedule & Deadline</th><th>Hours Tracked</th><th>Actions</th></tr></thead>
+        <tbody>${rows||`<tr><td colspan="8"><div class="no-data">No tasks found. Click "Add Task" to create one.</div></td></tr>`}</tbody>
       </table></div>
     </div>`);
 }
@@ -2465,10 +3027,10 @@ async function renderMyTasks(fs) {
 // MEMBER — LOG HOURS PAGE
 // ══════════════════════════════════════════════════════
 async function renderLogHoursPage() {
-  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">⏱ Loading...</div>');
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">Loading time tracker...</div>');
   const [tasks, logs] = await Promise.all([GET('/api/tasks'), GET('/api/logs')]);
   if (!tasks) return;
-  const color = ME.color||'#1a73e8';
+  const color = ME.color||'#2563eb';
   const todayLogs = logs.filter(l=>l.date===today());
   const todayHrs  = todayLogs.reduce((a,l)=>a+(l.hours||0),0);
   const totalHrs  = logs.reduce((a,l)=>a+(l.hours||0),0);
@@ -2477,46 +3039,51 @@ async function renderLogHoursPage() {
 
   setContent(`
     <div class="section-header">
-      <div><div class="section-title">⏱ Log Hours</div><div class="section-sub">Track your daily work time</div></div>
-      <button class="btn btn-success" onclick="openLogModal()">➕ Log Time</button>
+      <div>
+        <div class="section-title">⏱ Log Hours</div>
+        <div class="section-sub">Accurately record your daily work sessions and effort spent</div>
+      </div>
+      <button class="btn btn-success" onclick="openLogModal()">${ICON('plus', 14)} Log Time</button>
     </div>
     <div class="two-col">
       <div>
         <div class="card">
-          <div class="card-title">📅 Today — ${new Date().toLocaleDateString('en-IN',{weekday:'long',day:'2-digit',month:'long'})}</div>
-          <div style="font-size:40px;font-weight:800;color:${color};margin-bottom:16px">${todayHrs}h <span style="font-size:14px;color:var(--muted);font-weight:400">logged today</span></div>
+          <div class="card-title">${ICON('clock', 16, '', color)} Today — ${new Date().toLocaleDateString('en-IN',{weekday:'long',day:'2-digit',month:'long'})}</div>
+          <div style="font-size:36px;font-weight:800;color:${color};margin-bottom:16px">${todayHrs}h <span style="font-size:14px;color:var(--muted);font-weight:500">logged today</span></div>
           ${todayLogs.length ? todayLogs.map(l=>{
             const task=tasks.find(t=>t.id===l.taskId)||{};
             return `<div class="log-entry">
-              <div class="avatar" style="background:${color}22;color:${color};width:36px;height:36px">⏱</div>
+              <div class="avatar" style="background:${color}18;color:${color};width:38px;height:38px;font-weight:800;font-size:12px">⏱</div>
               <div class="log-info">
                 <div class="log-task">${task.title||l.taskId}</div>
-                <div class="log-meta">${task.type?tBadge(task.type):''} ${l.desc||'—'}</div>
-                ${l.blocker?`<div style="font-size:11px;color:#c62828">⚠️ ${l.blocker}</div>`:''}
+                <div class="log-meta">${task.type?tBadge(task.type):''} ${l.desc||'Routine task execution'}</div>
+                ${l.blocker?`<div style="font-size:11px;color:#dc2626;font-weight:600">Alert: ${l.blocker}</div>`:''}
               </div>
               <div style="display:flex;align-items:center;gap:8px">
                 <div class="log-hours" style="color:${color}">${l.hours}h</div>
-                <button class="btn btn-sm btn-danger" onclick="deleteLog('${l.id}')">🗑</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteLog('${l.id}')" title="Delete Log">${ICON('trash', 12)}</button>
               </div>
             </div>`;
-          }).join(''):'<div class="no-data" style="padding:20px">⏳ No logs today. Add one!</div>'}
+          }).join(''):'<div class="no-data" style="padding:20px">No logs recorded today yet. Add one above!</div>'}
         </div>
       </div>
       <div>
-        <div class="card" style="background:linear-gradient(135deg,${color},${color}bb);color:#fff">
-          <div style="font-size:13px;opacity:.85;margin-bottom:12px">📊 My Stats</div>
+        <div class="card" style="background:linear-gradient(135deg,${color},${color}dd);color:#fff">
+          <div style="font-size:14px;font-weight:700;margin-bottom:12px;opacity:.9">My Work Statistics</div>
           <div class="person-stat"><span class="ps-label">Total Hours Logged</span><span class="ps-val">${totalHrs}h</span></div>
           <div class="person-stat"><span class="ps-label">This Week</span><span class="ps-val">${weekHrs.toFixed(1)}h</span></div>
           <div class="person-stat"><span class="ps-label">Today</span><span class="ps-val">${todayHrs}h</span></div>
           <div class="person-stat"><span class="ps-label">Log Entries</span><span class="ps-val">${logs.length}</span></div>
         </div>
         <div class="card" style="margin-top:16px">
-          <div class="card-title">⚡ Quick Log</div>
+          <div class="card-title">${ICON('tasks', 16, '', 'var(--primary)')} Quick Log for Active Tasks</div>
           ${activeTasks.slice(0,5).map(t=>`
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f0f0f0">
-              <div><div style="font-size:13px;font-weight:600">${t.title.substring(0,28)}${t.title.length>28?'…':''}</div>
-              <div style="font-size:11px;color:var(--muted)">${sBadge(t.status)}</div></div>
-              <button class="btn btn-sm btn-outline" onclick="quickLog('${t.id}')">⏱ Log</button>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f1f5f9">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text)">${t.title.substring(0,30)}${t.title.length>30?'...':''}</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">${sBadge(t.status)}</div>
+              </div>
+              <button class="btn btn-sm btn-outline" onclick="quickLog('${t.id}')">${ICON('clock', 12)} Log</button>
             </div>`).join('')}
         </div>
       </div>
@@ -2526,7 +3093,7 @@ async function renderLogHoursPage() {
 async function deleteLog(id) {
   if (!confirm('Delete this log entry?')) return;
   await DEL('/api/logs/'+id);
-  showToast('🗑 Log deleted','#ea4335');
+  showToast('Log deleted','#dc2626');
   renderLogHoursPage();
 }
 
@@ -2534,33 +3101,36 @@ async function deleteLog(id) {
 // MEMBER — MY HISTORY
 // ══════════════════════════════════════════════════════
 async function renderMyHistory() {
-  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">📅 Loading history...</div>');
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">Loading work history...</div>');
   const [tasks, logs] = await Promise.all([GET('/api/tasks'), GET('/api/logs')]);
   if (!tasks) return;
-  const color = ME.color||'#1a73e8';
+  const color = ME.color||'#2563eb';
 
   const rows = logs.map(l=>{
     const task=tasks.find(t=>t.id===l.taskId)||{};
     return `<tr>
       <td style="font-weight:600">${l.date}</td>
-      <td><b>${l.taskId}</b></td>
+      <td><b style="font-family:'JetBrains Mono',monospace">${l.taskId}</b></td>
       <td style="font-weight:600">${task.title||'—'}</td>
       <td>${task.type?tBadge(task.type):'—'}</td>
-      <td style="text-align:center"><b style="font-size:16px;color:${color}">${l.hours}h</b></td>
-      <td>${l.desc||'—'}</td>
-      <td>${l.blocker?`<span style="color:#c62828">⚠️ ${l.blocker}</span>`:'<span style="color:#34a853">✅ None</span>'}</td>
-      <td><button class="btn btn-sm btn-danger" onclick="deleteLog('${l.id}')">🗑</button></td>
+      <td style="text-align:center"><b style="font-size:15px;color:${color}">${l.hours}h</b></td>
+      <td>${l.desc||'Routine task execution'}</td>
+      <td>${l.blocker?`<span class="badge b-blocked">${ICON('alert-triangle', 11)} ${l.blocker}</span>`:`<span class="badge b-completed">${ICON('check', 11)} None</span>`}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="deleteLog('${l.id}')" title="Delete Log">${ICON('trash', 12)}</button></td>
     </tr>`;
   }).join('');
 
   setContent(`
     <div class="section-header">
-      <div><div class="section-title">📅 My Work History</div><div class="section-sub">${logs.length} log entries • Total: ${logs.reduce((a,l)=>a+(l.hours||0),0)}h logged</div></div>
+      <div>
+        <div class="section-title">📅 My Work History</div>
+        <div class="section-sub">${logs.length} logged sessions &bull; Total: ${logs.reduce((a,l)=>a+(l.hours||0),0)}h tracked</div>
+      </div>
     </div>
     <div class="card">
       <div class="table-wrap"><table>
-        <thead><tr><th>Date</th><th>Task ID</th><th>Task</th><th>Type</th><th style="text-align:center">Hours</th><th>Description</th><th>Blockers</th><th></th></tr></thead>
-        <tbody>${rows||`<tr><td colspan="8"><div class="no-data">📭 No history yet. Start logging!</div></td></tr>`}</tbody>
+        <thead><tr><th>Date</th><th>Task ID</th><th>Task Title</th><th>Type</th><th style="text-align:center">Hours</th><th>Work Summary</th><th>Blockers</th><th>Actions</th></tr></thead>
+        <tbody>${rows||`<tr><td colspan="8"><div class="no-data">No work history recorded yet.</div></td></tr>`}</tbody>
       </table></div>
     </div>`);
 }
@@ -2569,17 +3139,17 @@ async function renderMyHistory() {
 // ADMIN — DELETED TASKS AUDIT LOG
 // ══════════════════════════════════════════════════════
 async function renderDeletedTasks() {
-  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">🗑 Loading deletion log...</div>');
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">Loading deletion audit trail...</div>');
   const audit = await GET('/api/audit');
   if (!audit) return;
 
   const statCards = [
-    { icon:'🗑', val: audit.length,                                              label:'Total Deletions',      col:'#ea4335' },
-    { icon:'👥', val: [...new Set(audit.map(a=>a.deletedBy))].length,            label:'Users Who Deleted',    col:'#f57c00' },
-    { icon:'📌', val: audit.filter(a=>a.task?.type==='Task').length,             label:'Tasks Deleted',        col:'#1a73e8' },
-    { icon:'📄', val: audit.filter(a=>a.task?.type==='Requirement').length,      label:'Requirements Deleted', col:'#9c27b0' },
-    { icon:'✨', val: audit.filter(a=>a.task?.type==='Enhancement').length,      label:'Enhancements Deleted', col:'#34a853' },
-    { icon:'🐛', val: audit.filter(a=>a.task?.type==='Bug').length,              label:'Bugs Deleted',         col:'#c62828' },
+    { icon:'trash',          val: audit.length,                                              label:'Total Deletions',      col:'#dc2626' },
+    { icon:'users',          val: [...new Set(audit.map(a=>a.deletedBy))].length,            label:'Users Who Deleted',    col:'#ea580c' },
+    { icon:'tasks',          val: audit.filter(a=>a.task?.type==='Task').length,             label:'Tasks Deleted',        col:'#2563eb' },
+    { icon:'file-text',      val: audit.filter(a=>a.task?.type==='Requirement').length,      label:'Requirements Deleted', col:'#8b5cf6' },
+    { icon:'sparkles',       val: audit.filter(a=>a.task?.type==='Enhancement').length,      label:'Enhancements Deleted', col:'#10b981' },
+    { icon:'bug',            val: audit.filter(a=>a.task?.type==='Bug').length,              label:'Bugs Deleted',         col:'#dc2626' },
   ];
 
   const auditRows = audit.map(a => {
@@ -2587,27 +3157,32 @@ async function renderDeletedTasks() {
     const dtStr  = dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})
                  + ' ' + dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
     const isSelf = a.task?.assignee === a.deletedBy;
-    const rowBg  = !isSelf ? 'background:#fff5f5' : '';
+    const rowBg  = !isSelf ? 'background:#fef2f2' : '';
     const delLabel = isSelf
-      ? `<span style="color:#f57c00;font-weight:600">Own task</span>`
-      : `<span style="color:#c62828;font-weight:700">⚠️ Other's task</span>`;
+      ? `<span class="badge b-medium">Own task</span>`
+      : `<span class="badge b-high">Other member's task</span>`;
     return `<tr style="${rowBg}">
       <td style="font-size:11px;white-space:nowrap;color:var(--muted)">${dtStr}</td>
       <td>
         <div style="display:flex;align-items:center;gap:7px">
-          <div class="avatar" style="background:${a.deletedByColor};width:26px;height:26px;font-size:11px">${a.deletedByEmoji||'👤'}</div>
+          ${userAvatarHtml(a.deletedBy, 22, a.deletedByColor)}
           <span style="font-weight:700;color:${a.deletedByColor}">${a.deletedByName}</span>
         </div>
       </td>
-      <td><b style="color:#ea4335">${a.task?.id||'—'}</b></td>
+      <td><b style="color:#dc2626;font-family:'JetBrains Mono',monospace">${a.task?.id||'—'}</b></td>
       <td>
         <div style="font-weight:600">${a.task?.title||'—'}</div>
-        ${a.task?.desc?`<div style="font-size:11px;color:var(--muted)">${a.task.desc.substring(0,50)}${a.task.desc.length>50?'…':''}</div>`:''}
+        ${a.task?.desc?`<div style="font-size:11px;color:var(--muted)">${a.task.desc.substring(0,50)}${a.task.desc.length>50?'...':''}</div>`:''}
       </td>
       <td>${a.task?.type ? tBadge(a.task.type) : '—'}</td>
       <td>${a.task?.status ? sBadge(a.task.status) : '—'}</td>
       <td>${a.task?.priority ? pBadge(a.task.priority) : '—'}</td>
-      <td><span style="color:${a.task?.assigneeColor||'#607d8b'};font-weight:600">${a.task?.assigneeName||'—'}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          ${userAvatarHtml(a.task?.assignee, 20)}
+          <span style="color:${a.task?.assigneeColor||'#64748b'};font-weight:600">${a.task?.assigneeName||'—'}</span>
+        </div>
+      </td>
       <td style="font-size:12px;color:var(--muted)">${a.task?.createdByName||'—'}</td>
       <td>${delLabel}</td>
     </tr>`;
@@ -2616,27 +3191,27 @@ async function renderDeletedTasks() {
   setContent(`
     <div class="section-header">
       <div>
-        <div class="section-title">🗑 Deleted Tasks Log</div>
-        <div class="section-sub">Full audit trail — every task deleted by any user is recorded here</div>
+        <div class="section-title">🗑 Deleted Tasks Audit Trail</div>
+        <div class="section-sub">Full audit trail &bull; every task deleted by any user is recorded with timestamp and ownership</div>
       </div>
-      ${audit.length?`<button class="btn btn-danger btn-sm" onclick="clearAuditLog()">🗑 Clear Log</button>`:''}
+      ${audit.length?`<button class="btn btn-danger btn-sm" onclick="clearAuditLog()">${ICON('trash', 14)} Clear Log</button>`:''}
     </div>
 
     <div class="kpi-grid">
       ${statCards.map(k=>`
         <div class="kpi-card" style="border-top-color:${k.col}">
-          <div class="kpi-icon">${k.icon}</div>
+          <div class="kpi-icon" style="color:${k.col};display:flex;justify-content:center">${ICON(k.icon, 22, '', k.col)}</div>
           <div class="kpi-val" style="color:${k.col}">${k.val}</div>
           <div class="kpi-label">${k.label}</div>
         </div>`).join('')}
     </div>
 
     ${audit.length ? `
-    <div class="card" style="border-left:4px solid #ea4335">
-      <div class="card-title" style="color:#ea4335">
+    <div class="card" style="border-left:4px solid #dc2626">
+      <div class="card-title" style="color:#dc2626">
         📋 Deletion History
         <span style="font-size:12px;font-weight:400;color:var(--muted);margin-left:10px">
-          Rows in <span style="background:#fff5f5;padding:1px 6px;border-radius:4px;color:#c62828">red</span> = user deleted someone else's task
+          Highlighted rows = user deleted someone else's task
         </span>
       </div>
       <div class="table-wrap"><table>
@@ -2650,10 +3225,9 @@ async function renderDeletedTasks() {
     </div>` : `
     <div class="card">
       <div class="no-data" style="padding:60px">
-        <div style="font-size:52px;margin-bottom:14px">🎉</div>
         <div style="font-size:16px;font-weight:700">No tasks have been deleted yet!</div>
         <div style="font-size:13px;color:var(--muted);margin-top:8px">
-          Every deletion by any user will be automatically recorded here.
+          Every task deletion by any user will be automatically logged here.
         </div>
       </div>
     </div>`}
@@ -2663,8 +3237,8 @@ async function renderDeletedTasks() {
 async function clearAuditLog() {
   if (!confirm('Clear the entire deletion audit log? This cannot be undone.')) return;
   const r = await DEL('/api/audit');
-  if (!r || r.error) { showToast('❌ Failed to clear log','#ea4335'); return; }
-  showToast('🗑 Audit log cleared','#607d8b');
+  if (!r || r.error) { showToast('Failed to clear log', '#dc2626'); return; }
+  showToast('Audit log cleared', '#64748b');
   renderDeletedTasks();
 }
 
@@ -2696,7 +3270,7 @@ function getClientVault() {
 }
 
 async function renderBackupSync() {
-  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">💾 Loading Backup & Sync center...</div>');
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">Loading Backup & Sync center...</div>');
   const [stats, statusRes, tasks] = await Promise.all([
     GET('/api/stats'),
     GET('/api/system-status'),
@@ -2717,28 +3291,28 @@ async function renderBackupSync() {
 
   const isMongo = !!sysStatus.hasMongo;
   const storageBadge = isMongo
-    ? `<span style="background:#e6f4ea;color:#137333;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">🟢 Persistent Cloud (MongoDB Atlas Active)</span>`
-    : `<span style="background:#fef7e0;color:#b06000;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">🟡 Ephemeral Disk (Render Free Tier)</span>`;
+    ? `<span style="background:#ecfdf5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">${ICON('shield', 13, '', '#065f46')} Persistent Cloud (MongoDB Atlas Active)</span>`
+    : `<span style="background:#fffbeb;color:#b45309;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">${ICON('alert-triangle', 13, '', '#b45309')} Ephemeral Disk (Render Free Tier)</span>`;
 
   setContent(`
     <div class="section-header">
       <div>
-        <div class="section-title">💾 Backup, Restore & Deploy Protection</div>
+        <div class="section-title">Backup, Restore & Deploy Protection</div>
         <div class="section-sub">Protect your users, tasks, and hour logs from being lost on Render redeployments</div>
       </div>
-      <button class="btn btn-primary btn-sm" onclick="downloadSystemBackup()">📥 Download Backup Now</button>
+      <button class="btn btn-primary btn-sm" onclick="downloadSystemBackup()">${ICON('backup', 14)} Download Backup Now</button>
     </div>
 
     <!-- Storage Status Alert Banner -->
-    <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:var(--shadow);margin-bottom:20px;border-left:5px solid ${isMongo ? '#34a853' : '#f9ab00'}">
+    <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:var(--shadow);margin-bottom:20px;border-left:5px solid ${isMongo ? '#10b981' : '#f59e0b'}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
         <div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-            <span style="font-size:20px">${isMongo ? '🛡️' : '⚠️'}</span>
-            <span style="font-size:16px;font-weight:800;color:#202124">Current Storage Mode:</span>
+            <span style="display:flex;align-items:center;color:${isMongo ? '#10b981' : '#f59e0b'}">${ICON(isMongo ? 'shield' : 'alert-triangle', 20)}</span>
+            <span style="font-size:16px;font-weight:800;color:var(--text)">Current Storage Mode:</span>
             ${storageBadge}
           </div>
-          <p style="font-size:13px;color:#5f6368;margin-bottom:0;line-height:1.6">
+          <p style="font-size:13px;color:#64748b;margin-bottom:0;line-height:1.6">
             ${isMongo 
               ? '<b>Zero-data-loss active:</b> MongoDB Atlas cloud storage is connected. All new users, tasks, and hour logs are permanently preserved in the cloud across every new Render build and restart!'
               : '<b>Important Render Notice:</b> On Render\'s free tier, local disk files reset when a new build or deploy happens. Use the <b>1-Click Backup</b> or <b>Browser Vault</b> below before deploying, or connect <b>Free MongoDB Atlas</b> for 100% automated persistence.'}
@@ -2746,8 +3320,8 @@ async function renderBackupSync() {
         </div>
         <div style="display:flex;gap:16px;text-align:right">
           <div><div style="font-size:22px;font-weight:800;color:var(--primary)">${ALL_USERS.length}</div><div style="font-size:11px;color:var(--muted)">Active Users</div></div>
-          <div><div style="font-size:22px;font-weight:800;color:#34a853">${currentTasks.length}</div><div style="font-size:11px;color:var(--muted)">Total Tasks</div></div>
-          <div><div style="font-size:22px;font-weight:800;color:#9c27b0">${stats?.totalHrs || 0}h</div><div style="font-size:11px;color:var(--muted)">Hours Logged</div></div>
+          <div><div style="font-size:22px;font-weight:800;color:#10b981">${currentTasks.length}</div><div style="font-size:11px;color:var(--muted)">Total Tasks</div></div>
+          <div><div style="font-size:22px;font-weight:800;color:#8b5cf6">${stats?.totalHrs || 0}h</div><div style="font-size:11px;color:var(--muted)">Hours Logged</div></div>
         </div>
       </div>
     </div>
@@ -2759,28 +3333,28 @@ async function renderBackupSync() {
       <div class="card" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between">
         <div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-            <span style="font-size:24px">📦</span>
+            <span style="color:var(--primary)">${ICON('backup', 24)}</span>
             <div>
-              <div style="font-weight:800;font-size:15px;color:#202124">Option 1: 1-Click JSON Backup & Merge</div>
-              <div style="font-size:12px;color:var(--muted)">Manual snapshot file • Works anytime</div>
+              <div style="font-weight:800;font-size:15px;color:var(--text)">Option 1: JSON Backup & Merge</div>
+              <div style="font-size:12px;color:var(--muted)">Manual snapshot file &bull; Works anytime</div>
             </div>
           </div>
-          <p style="font-size:13px;color:#5f6368;line-height:1.5;margin-bottom:16px">
+          <p style="font-size:13px;color:#64748b;line-height:1.5;margin-bottom:16px">
             Download a full <code>.json</code> snapshot containing all users, tasks, logs, and audit records to your computer. After any new deploy, upload it using <b>Safe Merge</b> to restore all data without overwriting existing items.
           </p>
         </div>
         <div>
           <div style="display:flex;flex-direction:column;gap:10px">
             <button class="btn btn-primary" onclick="downloadSystemBackup()" style="width:100%">
-              📥 Download Backup (.json)
+              Download Backup (.json)
             </button>
             <div style="display:flex;gap:8px">
               <input type="file" id="restore-file-input" accept=".json" style="display:none" onchange="handleRestoreFile(event)"/>
-              <button class="btn btn-outline" onclick="triggerRestoreFileInput('merge')" style="flex:1;border-color:#1a73e8;color:#1a73e8;font-weight:700">
-                🔄 Safe Merge Upload
+              <button class="btn btn-outline" onclick="triggerRestoreFileInput('merge')" style="flex:1;border-color:var(--primary);color:var(--primary);font-weight:700">
+                Safe Merge Upload
               </button>
-              <button class="btn btn-outline" onclick="triggerRestoreFileInput('replace')" style="color:#ea4335;border-color:#ea4335" title="Replaces entire system database with file data">
-                ⚠️ Replace
+              <button class="btn btn-outline" onclick="triggerRestoreFileInput('replace')" style="color:#dc2626;border-color:#dc2626" title="Replaces entire system database with file data">
+                Replace
               </button>
             </div>
             <div style="font-size:11px;color:var(--muted);text-align:center">
@@ -2794,25 +3368,25 @@ async function renderBackupSync() {
       <div class="card" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between">
         <div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-            <span style="font-size:24px">⚡</span>
+            <span style="color:#10b981">${ICON('shield', 24)}</span>
             <div>
-              <div style="font-weight:800;font-size:15px;color:#202124">Option 2: Automatic Browser Vault</div>
-              <div style="font-size:12px;color:var(--muted)">Cached in this browser • Instant recovery</div>
+              <div style="font-weight:800;font-size:15px;color:var(--text)">Option 2: Automatic Browser Vault</div>
+              <div style="font-size:12px;color:var(--muted)">Cached in this browser &bull; Instant recovery</div>
             </div>
           </div>
-          <p style="font-size:13px;color:#5f6368;line-height:1.5;margin-bottom:14px">
+          <p style="font-size:13px;color:#64748b;line-height:1.5;margin-bottom:14px">
             Your browser automatically caches a live copy of all users and tasks while you work. If Render resets after a fresh deploy, click below to push your cached vault directly back into the live server!
           </p>
-          <div style="background:#f8f9fa;border:1px solid #e0e0e0;border-radius:8px;padding:12px;font-size:12px;margin-bottom:16px">
-            <div style="font-weight:700;color:#202124;margin-bottom:4px">📱 Browser Vault Status:</div>
-            <div>• Cached Users: <b>${vaultUsersCount}</b></div>
-            <div>• Cached Tasks: <b>${vaultTasksCount}</b></div>
-            <div>• Last Synced: <b>${vaultSavedAt}</b></div>
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;font-size:12px;margin-bottom:16px">
+            <div style="font-weight:700;color:var(--text);margin-bottom:4px">Browser Vault Status:</div>
+            <div>&bull; Cached Users: <b>${vaultUsersCount}</b></div>
+            <div>&bull; Cached Tasks: <b>${vaultTasksCount}</b></div>
+            <div>&bull; Last Synced: <b>${vaultSavedAt}</b></div>
           </div>
         </div>
         <div>
-          <button class="btn btn-outline" style="width:100%;border-color:#34a853;color:#34a853;font-weight:700" onclick="restoreFromBrowserVault()">
-            ⚡ Restore Server from Browser Vault
+          <button class="btn btn-outline" style="width:100%;border-color:#10b981;color:#059669;font-weight:700" onclick="restoreFromBrowserVault()">
+            Restore Server from Browser Vault
           </button>
           <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">
             Safe merge: will sync missing users and tasks to server.
@@ -2824,25 +3398,25 @@ async function renderBackupSync() {
       <div class="card" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between">
         <div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-            <span style="font-size:24px">☁️</span>
+            <span style="color:#8b5cf6">${ICON('backup', 24)}</span>
             <div>
-              <div style="font-weight:800;font-size:15px;color:#202124">Option 3: Permanent Cloud Database</div>
-              <div style="font-size:12px;color:var(--muted)">MongoDB Atlas (Free Forever M0) • Zero manual work</div>
+              <div style="font-weight:800;font-size:15px;color:var(--text)">Option 3: Permanent Cloud Database</div>
+              <div style="font-size:12px;color:var(--muted)">MongoDB Atlas (Free Forever M0) &bull; Zero manual work</div>
             </div>
           </div>
-          <p style="font-size:13px;color:#5f6368;line-height:1.5;margin-bottom:12px">
+          <p style="font-size:13px;color:#64748b;line-height:1.5;margin-bottom:12px">
             Your code is already pre-configured to automatically sync with <b>MongoDB Atlas</b>. Once configured, every deploy automatically retains 100% of tasks and users with zero risk of data loss.
           </p>
-          <div style="background:#e8f0fe;border:1px solid #c2e7ff;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;margin-bottom:14px;color:#174ea6">
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px;font-size:12px;line-height:1.5;margin-bottom:14px;color:#1e40af">
             <b>Simple 3-Step Setup:</b><br/>
-            1. Create a free M0 cluster at <a href="https://www.mongodb.com/cloud/atlas" target="_blank" style="color:#1a73e8;font-weight:700">mongodb.com</a><br/>
+            1. Create a free M0 cluster at <a href="https://www.mongodb.com/cloud/atlas" target="_blank" style="color:var(--primary);font-weight:700">mongodb.com</a><br/>
             2. Copy your connection URI (<code>mongodb+srv://...</code>)<br/>
-            3. In Render Dashboard ➔ <b>Environment</b> ➔ Add <code>MONGODB_URI</code>
+            3. In Render Dashboard &rarr; <b>Environment</b> &rarr; Add <code>MONGODB_URI</code>
           </div>
         </div>
         <div>
-          <div style="padding:10px;background:#f8f9fa;border-radius:8px;font-size:12px;text-align:center;color:var(--muted)">
-            ${isMongo ? '✅ Connected and actively syncing!' : '💡 No code changes needed — just add the variable in Render!'}
+          <div style="padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;text-align:center;color:var(--muted)">
+            ${isMongo ? 'Connected and actively syncing!' : 'No code changes needed — just add the variable in Render!'}
           </div>
         </div>
       </div>
@@ -2871,39 +3445,39 @@ async function handleRestoreFile(event) {
     try {
       const data = JSON.parse(e.target.result);
       if (!data || (!data.users && !data.tasks)) {
-        showToast('❌ Invalid backup file format', '#ea4335');
+        showToast('Invalid backup file format', '#dc2626');
         return;
       }
 
-      const modeTitle = RESTORE_MODE === 'replace' ? '⚠️ FULL REPLACE' : '🔄 Safe Merge';
+      const modeTitle = RESTORE_MODE === 'replace' ? 'FULL REPLACE' : 'Safe Merge';
       const confirmMsg = RESTORE_MODE === 'replace'
         ? `Are you sure you want to completely replace all current users and tasks with data from "${file.name}"? This cannot be undone.`
         : `Merge data from "${file.name}"? This will safely add any missing users and tasks without deleting your current work.`;
 
       if (!confirm(`${modeTitle}:\n\n${confirmMsg}`)) return;
 
-      showToast('⏳ Uploading and restoring data...', '#1a73e8');
+      showToast('Uploading and restoring data...', '#2563eb');
       const res = await POST('/api/restore', { mode: RESTORE_MODE, data });
       if (!res || res.error) {
-        showToast('❌ Restore failed: ' + (res?.error || 'Unknown error'), '#ea4335');
+        showToast('Restore failed: ' + (res?.error || 'Unknown error'), '#dc2626');
         return;
       }
 
-      showToast(`✅ ${res.message || 'Data restored successfully!'}`, '#34a853');
+      showToast(res.message || 'Data restored successfully!', '#10b981');
       ALL_USERS = await GET('/api/users') || [];
       renderBackupSync();
     } catch (err) {
-      showToast('❌ Error parsing JSON file: ' + err.message, '#ea4335');
+      showToast('Error parsing JSON file: ' + err.message, '#dc2626');
     }
   };
   reader.readAsText(file);
 }
 
 async function downloadSystemBackup() {
-  showToast('📦 Preparing backup...', '#1a73e8');
+  showToast('Preparing backup file...', '#2563eb');
   const backup = await GET('/api/backup');
   if (!backup || backup.error) {
-    showToast('❌ Backup failed: ' + (backup?.error || 'Unknown error'), '#ea4335');
+    showToast('Backup failed: ' + (backup?.error || 'Unknown error'), '#dc2626');
     return;
   }
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -2915,13 +3489,13 @@ async function downloadSystemBackup() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showToast('✅ Backup downloaded successfully!', '#34a853');
+  showToast('Backup downloaded successfully!', '#10b981');
 }
 
 async function restoreFromBrowserVault() {
   const vault = getClientVault();
   if (!vault || (!vault.users?.length && !vault.tasks?.length)) {
-    showToast('⚠️ No cached data found in this browser vault.', '#f57c00');
+    showToast('No cached data found in this browser vault.', '#d97706');
     return;
   }
 
@@ -2931,14 +3505,14 @@ async function restoreFromBrowserVault() {
     return;
   }
 
-  showToast('⏳ Syncing browser vault to server...', '#1a73e8');
+  showToast('Syncing browser vault to server...', '#2563eb');
   const res = await POST('/api/restore', { mode: 'merge', data: vault });
   if (!res || res.error) {
-    showToast('❌ Vault restore failed: ' + (res?.error || 'Unknown error'), '#ea4335');
+    showToast('Vault restore failed: ' + (res?.error || 'Unknown error'), '#dc2626');
     return;
   }
 
-  showToast(`✅ Vault synced! ${res.message || ''}`, '#34a853');
+  showToast(`Vault synced! ${res.message || ''}`, '#10b981');
   ALL_USERS = await GET('/api/users') || [];
   renderBackupSync();
 }
@@ -2947,7 +3521,7 @@ async function restoreFromBrowserVault() {
 // TASK CRUD
 // ══════════════════════════════════════════════════════
 async function openAddTask() {
-  document.getElementById('task-modal-title').textContent='➕ Add New Task';
+  document.getElementById('task-modal-title').textContent='Add New Task';
   ['t-title','t-desc','t-notes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('t-type').value='Task';
   document.getElementById('t-priority').value='Medium';
@@ -2961,6 +3535,7 @@ async function openAddTask() {
   document.getElementById('t-start-time').value = `${hh}:${mm}`;
 
   document.getElementById('t-due').value='';
+  document.getElementById('t-due-time').value='18:00';
   document.getElementById('t-planned').value='';
   document.getElementById('t-edit-id').value='';
   
@@ -2985,7 +3560,7 @@ async function openAddTask() {
 async function editTask(id) {
   const tasks=await GET('/api/tasks'); if(!tasks) return;
   const t=tasks.find(x=>x.id===id); if(!t) return;
-  document.getElementById('task-modal-title').textContent='✏️ Edit Task';
+  document.getElementById('task-modal-title').textContent='Edit Task';
   document.getElementById('t-title').value=t.title;
   document.getElementById('t-type').value=t.type;
   document.getElementById('t-desc').value=t.desc||'';
@@ -2994,6 +3569,7 @@ async function editTask(id) {
   document.getElementById('t-start').value=t.start||'';
   document.getElementById('t-start-time').value=t.startTime||'';
   document.getElementById('t-due').value=t.due||'';
+  document.getElementById('t-due-time').value=t.dueTime||'';
   document.getElementById('t-planned').value=t.planned||'';
   document.getElementById('t-notes').value=t.notes||'';
   document.getElementById('t-edit-id').value=id;
@@ -3014,7 +3590,7 @@ async function editTask(id) {
 
 async function saveTask() {
   const title=document.getElementById('t-title').value.trim();
-  if(!title){showToast('Title is required','#f57c00');return;}
+  if(!title){showToast('Title is required','#d97706');return;}
   const editId=document.getElementById('t-edit-id').value;
   const timerCheck = document.getElementById('t-auto-start-timer');
   const startTimerChecked = !editId && timerCheck && timerCheck.checked;
@@ -3028,31 +3604,32 @@ async function saveTask() {
     start:document.getElementById('t-start').value,
     startTime:document.getElementById('t-start-time').value,
     due:document.getElementById('t-due').value,
+    dueTime:document.getElementById('t-due-time').value,
     planned:parseFloat(document.getElementById('t-planned').value)||0,
     notes:document.getElementById('t-notes').value,
     startTimer:startTimerChecked
   };
   if (ME.role==='admin') body.assignee=document.getElementById('t-assign').value;
   const r = editId ? await PUT('/api/tasks/'+editId,body) : await POST('/api/tasks',body);
-  if(!r||r.error){showToast('❌ '+(r?.error||'Error'),'#ea4335');return;}
+  if(!r||r.error){showToast('Failed to save task: '+(r?.error||'Unknown error'),'#dc2626');return;}
 
   closeModal('task-modal');
 
   if(startTimerChecked && r.id) {
     startTaskTimer(r.id, r.title);
-    showToast(`⏱️ Task added & live timer started!`, '#1a73e8');
+    showToast(`Task created and timer started!`, '#2563eb');
   } else {
-    showToast(editId?'✅ Task updated!':'✅ Task added!','#34a853');
+    showToast(editId?'Task updated!':'Task created!','#10b981');
   }
 
   if(ME.role==='admin') renderAllTasks(); else renderMyTasks();
 }
 
 async function deleteTask(id) {
-  if(!confirm('Delete this task?')) return;
+  if(!confirm('Delete this task? It will be archived in the deletion audit log.')) return;
   const r=await DEL('/api/tasks/'+id);
-  if(!r||r.error){showToast('❌ '+(r?.error||'Error'),'#ea4335');return;}
-  showToast('🗑 Deleted','#ea4335');
+  if(!r||r.error){showToast('Failed to delete task: '+(r?.error||'Unknown error'),'#dc2626');return;}
+  showToast('Task deleted','#dc2626');
   if(ME.role==='admin') renderAllTasks(); else renderMyTasks();
 }
 
@@ -3074,16 +3651,16 @@ function quickLog(taskId){ openLogModal(taskId); }
 async function saveLog() {
   const taskId=document.getElementById('log-task-id').value;
   const hours=parseFloat(document.getElementById('log-hours').value);
-  if(!taskId){showToast('Select a task','#f57c00');return;}
-  if(isNaN(hours)||hours<=0){showToast('Enter valid hours','#f57c00');return;}
+  if(!taskId){showToast('Select a task','#d97706');return;}
+  if(isNaN(hours)||hours<=0){showToast('Enter valid hours','#d97706');return;}
   const r=await POST('/api/logs',{
     taskId, hours,
     date:document.getElementById('log-date').value,
     desc:document.getElementById('log-desc').value,
     blocker:document.getElementById('log-blocker').value,
   });
-  if(!r||r.error){showToast('❌ '+(r?.error||'Error'),'#ea4335');return;}
-  showToast(`✅ ${hours}h logged!`,'#34a853');
+  if(!r||r.error){showToast('Failed to log hours: '+(r?.error||'Error'),'#dc2626');return;}
+  showToast(`${hours}h work session logged!`,'#10b981');
   closeModal('log-modal');
 
   // If active timer was running for this task, clean it up
@@ -3136,8 +3713,10 @@ document.querySelectorAll('.modal-overlay').forEach(o=>{
       document.getElementById('tb-name').textContent = ME.name;
       document.getElementById('tb-role').textContent = ME.role === 'admin' ? 'Manager' : 'Team Member';
       const av = document.getElementById('tb-avatar');
-      av.textContent = ME.emoji || '👤';
-      av.style.background = ME.color || '#607d8b';
+      if (av) {
+        av.innerHTML = userAvatarHtml(ME, 34);
+        av.style.background = 'transparent';
+      }
       if (document.getElementById('app').style.display !== 'block') {
         enterApp(false);
       }

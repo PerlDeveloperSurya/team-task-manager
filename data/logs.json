@@ -90,5 +90,25 @@
     "desc": "Work session tracked via live timer (00:11:53)",
     "blocker": "",
     "createdAt": "2026-11-24T10:50:13.062Z"
+  },
+  {
+    "id": "L-D1EFFF49",
+    "taskId": "T-DEMO2",
+    "user": "admin",
+    "date": "2026-11-24",
+    "hours": 0.44,
+    "desc": "Work session tracked via live timer (00:26:33)",
+    "blocker": "",
+    "createdAt": "2026-11-24T11:39:00.446Z"
+  },
+  {
+    "id": "L-499FA588",
+    "taskId": "T-DEMO2",
+    "user": "admin",
+    "date": "2026-11-24",
+    "hours": 0.1,
+    "desc": "Work session tracked via live timer (00:00:14)",
+    "blocker": "Blocker",
+    "createdAt": "2026-11-24T11:42:12.502Z"
   }
 ]

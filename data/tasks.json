@@ -13,7 +13,8 @@
     "assignee": "person2",
     "notes": "Migration ready",
     "createdBy": "person2",
-    "createdAt": "2026-11-11"
+    "createdAt": "2026-11-11",
+    "dueTime": ""
   },
   {
     "id": "T-DEMO3",
@@ -61,7 +62,8 @@
     "assignee": "person1",
     "notes": "Need backend fix",
     "createdBy": "person1",
-    "createdAt": "2026-11-16"
+    "createdAt": "2026-11-16",
+    "dueTime": ""
   },
   {
     "id": "T-DEMO7",
@@ -69,7 +71,7 @@
     "type": "Enhancement",
     "desc": "Make all pages mobile-friendly",
     "priority": "Medium",
-    "status": "Upcoming",
+    "status": "In Progress",
     "start": "2026-11-23",
     "startTime": "14:00",
     "due": "2026-11-28",
@@ -77,6 +79,7 @@
     "assignee": "person1",
     "notes": "",
     "createdBy": "admin",
-    "createdAt": "2026-11-17"
+    "createdAt": "2026-11-17",
+    "dueTime": ""
   }
 ]
