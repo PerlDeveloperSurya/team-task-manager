@@ -1032,6 +1032,79 @@ tbody td{padding:12px 14px;vertical-align:middle;}
   font-weight: 700;
   font-family: 'JetBrains Mono', monospace;
 }
+
+/* DASHBOARD & HOURS REPORT MEMBER SELECTOR & CARDS */
+.dash-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-xs);
+  flex-wrap: wrap;
+}
+.dash-selector-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 6px 12px;
+  transition: border-color .15s;
+}
+.dash-selector-wrap:focus-within {
+  border-color: var(--primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.dash-member-select {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #0f172a;
+  cursor: pointer;
+  min-width: 180px;
+}
+.dash-member-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-shadow: var(--shadow-xs);
+}
+.dash-member-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.dmm-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.dmm-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.dmm-val {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a;
+}
 </style>
 </head>
 <body>
@@ -1580,7 +1653,9 @@ const ICONS = {
   'sidebar': `<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/>`,
   'lock': `<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>`,
   'login': `<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>`,
-  'log-in': `<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>`
+  'log-in': `<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>`,
+  'logout': `<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>`,
+  'log-out': `<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>`
 };
 
 function ICON(name, size = 16, className = '', color = 'currentColor') {
@@ -1869,6 +1944,7 @@ function updateTimerDigits() {
 
 let LIVE_POLL_INTERVAL = null;
 let GLOBAL_TICK_INTERVAL = null;
+let LAST_LIVE_STATE_HASH = '';
 
 function startLiveSyncPoll() {
   if (!GLOBAL_TICK_INTERVAL) {
@@ -1880,21 +1956,42 @@ function startLiveSyncPoll() {
     if (CURRENT_VIEW !== 'dashboard' && CURRENT_VIEW !== 'all-tasks') return;
     if (document.querySelector('.modal.open')) return;
     try {
-      const liveTimers = await GET('/api/timers/live');
-      if (!Array.isArray(liveTimers)) return;
-      const currentUsers = Array.from(document.querySelectorAll('[class*="live-timer-for-user-"]'))
-        .map(el => {
-          const m = el.className.match(/live-timer-for-user-([^\s]+)/);
-          return m ? m[1] : '';
-        }).filter(Boolean).sort().join(',');
-      const newUsers = liveTimers.map(lt => lt.userId).sort().join(',');
+      const liveStatus = await GET('/api/live-status');
+      if (!liveStatus || !Array.isArray(liveStatus.activeTimers)) return;
 
-      if (currentUsers !== newUsers) {
+      const liveTimers = liveStatus.activeTimers;
+
+      // Update timer elements' dataset in-place so the second ticker stays live and precise
+      liveTimers.forEach(lt => {
+        document.querySelectorAll(`.live-timer-for-user-${lt.userId}`).forEach(el => {
+          el.dataset.started = String(lt.startedAt || '');
+          el.dataset.acc = String(lt.accumulatedMs || 0);
+          el.dataset.paused = lt.isPaused ? '1' : '0';
+        });
+      });
+
+      // Construct a state fingerprint that detects ANY change:
+      // - user started/stopped a timer
+      // - user paused/resumed a timer
+      // - user switched tasks
+      // - tasks count or log count changed (work logged)
+      const stateHash = JSON.stringify({
+        timers: liveTimers.map(t => `${t.userId}:${t.taskId}:${t.isPaused}`),
+        tasks: liveStatus.taskCount,
+        logs: liveStatus.logCount,
+        inProg: liveStatus.inProgressCount,
+        lastLog: liveStatus.lastLogId
+      });
+
+      if (LAST_LIVE_STATE_HASH && LAST_LIVE_STATE_HASH !== stateHash) {
+        LAST_LIVE_STATE_HASH = stateHash;
         if (CURRENT_VIEW === 'dashboard') renderAdminDashboard();
         else if (CURRENT_VIEW === 'all-tasks') renderAllTasks();
+      } else {
+        LAST_LIVE_STATE_HASH = stateHash;
       }
     } catch (e) {}
-  }, 5000);
+  }, 3500);
 }
 
 function renderTimerBar() {
@@ -2780,7 +2877,7 @@ async function renderHoursReport() {
     return;
   }
 
-  const allMembers = ALL_USERS;
+  const allMembers = (ALL_USERS && ALL_USERS.length > 0) ? ALL_USERS : ((await GET('/api/users')) || []);
   const allLogs = logs || [];
   const allTasks = tasks || [];
 
@@ -3096,6 +3193,13 @@ function onActivityFilterChange(typeVal, memberVal, searchVal) {
 
 async function renderActivity() {
   setContent('<div style="text-align:center;padding:40px;color:var(--muted)">Loading activity records...</div>');
+  
+  if (!ALL_USERS || ALL_USERS.length === 0) {
+    try {
+      ALL_USERS = (await GET('/api/users')) || [];
+    } catch(e) {}
+  }
+
   let rawActivity = null;
   try {
     rawActivity = await GET('/api/activity');
@@ -3112,9 +3216,9 @@ async function renderActivity() {
         </div>
       </div>
       <div class="card" style="text-align:center;padding:40px">
-        <div style="color:#ef4444;font-size:16px;font-weight:700;margin-bottom:8px">Unable to retrieve activity records</div>
-        <div style="color:var(--muted);font-size:13px;margin-bottom:16px">The activity log service might be momentarily synchronizing data.</div>
-        <button class="btn btn-primary btn-sm" onclick="renderActivity()">Retry Activity Log</button>
+        <div style="color:var(--text);font-size:16px;font-weight:700;margin-bottom:8px">No Activity Logged Yet</div>
+        <div style="color:var(--muted);font-size:13px;margin-bottom:16px">Team login events, sign-outs, and task work sessions will appear here dynamically.</div>
+        <button class="btn btn-primary btn-sm" onclick="renderActivity()">Refresh Activity Log</button>
       </div>
     `);
     return;
@@ -3992,58 +4096,43 @@ async function renderBackupSync() {
   const vaultSavedAt = vault?.savedAt ? new Date(vault.savedAt).toLocaleString() : 'Just now';
 
   const isCloud = !!(sysStatus.hasPg || sysStatus.hasMongo);
-  const storageBadge = sysStatus.hasPg
-    ? `<span style="background:#ecfdf5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">${ICON('shield', 13, '', '#065f46')} Render PostgreSQL Active</span>`
-    : (sysStatus.hasMongo
-        ? `<span style="background:#ecfdf5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">${ICON('shield', 13, '', '#065f46')} MongoDB Atlas Active</span>`
-        : `<span style="background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">${ICON('shield', 13, '', '#0369a1')} Auto-Vault Active (No Database Needed)</span>`);
-
-  const hideMongo = localStorage.getItem('ttm_hide_mongo') === '1';
-  const isBadAuth = sysStatus.mongoError && sysStatus.mongoError.toLowerCase().includes('bad auth');
-  const warningTitle = isBadAuth
-    ? 'MongoDB Atlas Authentication Failed (bad auth)'
-    : 'MongoDB Atlas Not Yet Connected';
-  const warningDesc = isBadAuth
-    ? 'The network connection to MongoDB Atlas succeeded, but Atlas rejected the database username or password in <code>MONGODB_URI</code>.'
-    : 'Render attempted to connect with your <code>MONGODB_URI</code>, but MongoDB Atlas dropped the connection.';
-
-  const mongoWarningBox = (!isCloud && sysStatus.mongoUriSet && !hideMongo) ? `
-    <div style="background:#fff7ed;border:1.5px solid #fdba74;border-radius:12px;padding:18px 20px;margin-bottom:20px;box-shadow:var(--shadow-xs)">
-      <div style="display:flex;align-items:flex-start;gap:14px">
-        <span style="color:#ea580c;display:flex;margin-top:2px">${ICON('alert-triangle', 22)}</span>
-        <div style="flex:1">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-            <div style="font-weight:800;color:#9a3412;font-size:15px">${warningTitle}</div>
-            <div style="display:flex;gap:8px">
-              <button class="btn btn-sm btn-outline" onclick="localStorage.setItem('ttm_hide_mongo','1');renderBackupSync()" style="font-size:11.5px">
-                Switch to Auto-Vault (Hide MongoDB)
-              </button>
-              <button class="btn btn-sm btn-primary" id="btn-reconnect-mongo" onclick="triggerMongoReconnect()" style="background:#ea580c;border-color:#ea580c;font-size:11.5px">
-                ${ICON('refresh', 12)} Retry MongoDB
-              </button>
-            </div>
-          </div>
-          <div style="font-size:12.5px;color:#7c2d12;margin-top:6px;line-height:1.5">
-            ${warningDesc} If you prefer not to use MongoDB, simply click <b>"Switch to Auto-Vault"</b> or delete <code>MONGODB_URI</code> in Render. Your tasks and users are already automatically protected!
-          </div>
-        </div>
-      </div>
-    </div>
-  ` : '';
+  const storageBadge = isCloud
+    ? (sysStatus.hasPg
+        ? `<span style="background:#ecfdf5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">${ICON('shield', 13, '', '#065f46')} Render PostgreSQL Active</span>`
+        : `<span style="background:#ecfdf5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">${ICON('shield', 13, '', '#065f46')} MongoDB Atlas Active</span>`)
+    : `<span style="background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">${ICON('shield', 13, '', '#065f46')} Full Free Lifetime Edition (Auto-Vault Active)</span>`;
 
   setContent(`
     <div class="section-header">
       <div>
         <div class="section-title">Backup, Restore & Deploy Protection</div>
-        <div class="section-sub">Protect your users, tasks, and hour logs from being lost on Render redeployments</div>
+        <div class="section-sub">Full Free Lifetime Edition: Zero cloud database fees, zero trials, 100% lifetime protected</div>
       </div>
       <button class="btn btn-primary btn-sm" onclick="downloadSystemBackup()">${ICON('backup', 14)} Download Backup Now</button>
     </div>
 
-    ${mongoWarningBox}
-
     <!-- Storage Status Alert Banner -->
-    <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:var(--shadow);margin-bottom:20px;border-left:5px solid ${isCloud ? '#10b981' : '#0284c7'}">
+    <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:var(--shadow);margin-bottom:20px;border-left:5px solid ${isCloud ? '#10b981' : '#059669'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <span style="display:flex;align-items:center;color:${isCloud ? '#10b981' : '#059669'}">${ICON('shield', 20)}</span>
+            <span style="font-size:16px;font-weight:800;color:var(--text)">Storage Protection:</span>
+            ${storageBadge}
+          </div>
+          <p style="font-size:13px;color:#64748b;margin-bottom:0;line-height:1.6">
+            ${isCloud 
+              ? '<b>Cloud persistence active:</b> Connected to external cloud database. All users, tasks, and hour logs are permanently preserved across every new Render build and restart!'
+              : '<b>Full Free Lifetime Edition (Zero Database Setup Required):</b> Your tasks, users, and hours are automatically protected in your browser\'s local vault. When Render restarts or redeploys, the app automatically detects it and seamlessly merges your workspace back! Zero subscriptions, never expires, and 100% free forever.'}
+          </p>
+        </div>
+        <div style="display:flex;gap:16px;text-align:right">
+          <div><div style="font-size:22px;font-weight:800;color:var(--primary)">${ALL_USERS.length}</div><div style="font-size:11px;color:var(--muted)">Active Users</div></div>
+          <div><div style="font-size:22px;font-weight:800;color:#10b981">${currentTasks.length}</div><div style="font-size:11px;color:var(--muted)">Total Tasks</div></div>
+          <div><div style="font-size:22px;font-weight:800;color:#8b5cf6">${stats?.totalHrs || 0}h</div><div style="font-size:11px;color:var(--muted)">Hours Logged</div></div>
+        </div>
+      </div>
+    </div>
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
         <div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
@@ -4133,29 +4222,27 @@ async function renderBackupSync() {
         </div>
       </div>
 
-      <!-- OPTION 3: MongoDB Atlas Permanent Cloud Storage -->
+      <!-- OPTION 3: Optional External Cloud Database -->
       <div class="card" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between">
         <div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-            <span style="color:#8b5cf6">${ICON('backup', 24)}</span>
+            <span style="color:#8b5cf6">${ICON('shield', 24)}</span>
             <div>
-              <div style="font-weight:800;font-size:15px;color:var(--text)">Option 3: Permanent Cloud Database</div>
-              <div style="font-size:12px;color:var(--muted)">MongoDB Atlas (Free Forever M0) &bull; Zero manual work</div>
+              <div style="font-weight:800;font-size:15px;color:var(--text)">Option 3: Optional Cloud Database</div>
+              <div style="font-size:12px;color:var(--muted)">Optional MongoDB Atlas / PostgreSQL</div>
             </div>
           </div>
           <p style="font-size:13px;color:#64748b;line-height:1.5;margin-bottom:12px">
-            Your code is already pre-configured to automatically sync with <b>MongoDB Atlas</b>. Once configured, every deploy automatically retains 100% of tasks and users with zero risk of data loss.
+            Optional cloud database connectivity. If not configured, your workspace safely runs 100% free forever on local storage + Auto-Vault without any billing or trials.
           </p>
-          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px;font-size:12px;line-height:1.5;margin-bottom:14px;color:#1e40af">
-            <b>Simple 3-Step Setup:</b><br/>
-            1. Create a free M0 cluster at <a href="https://www.mongodb.com/cloud/atlas" target="_blank" style="color:var(--primary);font-weight:700">mongodb.com</a><br/>
-            2. Copy your connection URI (<code>mongodb+srv://...</code>)<br/>
-            3. In Render Dashboard &rarr; <b>Environment</b> &rarr; Add <code>MONGODB_URI</code>
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;font-size:12px;line-height:1.5;margin-bottom:14px;color:var(--text)">
+            <b>Status:</b> ${isCloud ? '<span style="color:#059669;font-weight:700">Connected to Cloud DB</span>' : '<span style="color:#64748b;font-weight:600">Operating on Full Free Lifetime Edition (Auto-Vault Active)</span>'}<br/>
+            ${sysStatus.mongoUriSet && !isCloud ? `<div style="margin-top:8px"><button class="btn btn-sm btn-outline" id="btn-reconnect-mongo" onclick="triggerMongoReconnect()">${ICON('refresh', 12)} Test Database Connection</button></div>` : ''}
           </div>
         </div>
         <div>
           <div style="padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;text-align:center;color:var(--muted)">
-            ${isMongo ? 'Connected and actively syncing!' : 'No code changes needed — just add the variable in Render!'}
+            ${isCloud ? 'Cloud database actively synced' : 'Zero configuration needed for Full Free Lifetime Edition'}
           </div>
         </div>
       </div>

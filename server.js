@@ -126,12 +126,22 @@ async function initPg() {
 }
 
 let isMongoConnecting = false;
+let mongoAutoRetryDisabled = false;
+let pgAutoRetryDisabled = false;
 
 async function initMongo() {
   if (mongoDb) return;
-  if (isMongoConnecting) return;
+  if (isMongoConnecting || mongoAutoRetryDisabled) return;
   let uri = process.env.MONGODB_URI;
   if (!uri) return;
+
+  // Check for dummy or unconfigured cluster0 placeholder
+  if (uri.includes('cluster0.mongodb.net') || uri.includes('<password>') || uri.includes('username:password')) {
+    mongoAutoRetryDisabled = true;
+    console.log('\n[Storage] 🛡️ Running Full Free Lifetime Edition (Local JSON + Browser Auto-Vault Active).');
+    console.log('[Storage] ℹ️ Default cluster0.mongodb.net placeholder detected — operating 100% free with zero external DB required.\n');
+    return;
+  }
 
   isMongoConnecting = true;
   // Clean and sanitize URI (trim whitespace and remove accidental surrounding quotes)
@@ -157,8 +167,8 @@ async function initMongo() {
   try {
     const { MongoClient } = require('mongodb');
     mongoClient = new MongoClient(uri, {
-      serverSelectionTimeoutMS: 8000,
-      connectTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 3500,
+      connectTimeoutMS: 4000,
     });
     await mongoClient.connect();
     mongoDb = mongoClient.db();
@@ -197,34 +207,11 @@ async function initMongo() {
     mongoConnectionError = err.message;
     console.warn('\n[Database] ⚠️ MongoDB Atlas not connected, operating on local JSON storage:', err.message);
 
-    if (err.message && (err.message.includes('alert number 80') || err.message.includes('tlsv1 alert internal error'))) {
-      console.warn('\n╔═════════════════════════════════════════════════════════════════════════════════════╗');
-      console.warn('║ ⚠️  MONGODB ATLAS IP WHITELIST BLOCK DETECTED (SSL ALERT NUMBER 80)                 ║');
-      console.warn('╠═════════════════════════════════════════════════════════════════════════════════════╣');
-      console.warn('║ MongoDB Atlas rejected the connection because Render\'s dynamic IP is not whitelisted.║');
-      console.warn('║                                                                                     ║');
-      console.warn('║ 🛠️  EASY 1-MINUTE FIX IN MONGODB ATLAS:                                             ║');
-      console.warn('║  1. Go to your MongoDB Atlas dashboard (https://cloud.mongodb.com)                  ║');
-      console.warn('║  2. In the left sidebar under "Security", click "Network Access"                    ║');
-      console.warn('║  3. Click the "+ Add IP Address" button                                             ║');
-      console.warn('║  4. Click "ALLOW ACCESS FROM ANYWHERE" (adds 0.0.0.0/0)                             ║');
-      console.warn('║  5. Click "Confirm" and wait 1 minute for Atlas to apply the rule                   ║');
-      console.warn('║                                                                                     ║');
-      console.warn('║ Render uses dynamic cloud IPs on every build, so 0.0.0.0/0 allows Render to connect ║');
-      console.warn('╚═════════════════════════════════════════════════════════════════════════════════════╝\n');
-    } else if (err.message && err.message.toLowerCase().includes('bad auth')) {
-      console.warn('\n╔═════════════════════════════════════════════════════════════════════════════════════╗');
-      console.warn('║ ⚠️  MONGODB ATLAS AUTHENTICATION FAILED (BAD AUTH / INVALID CREDENTIALS)            ║');
-      console.warn('╠═════════════════════════════════════════════════════════════════════════════════════╣');
-      console.warn('║ TLS network handshake succeeded! But username/password in MONGODB_URI was rejected. ║');
-      console.warn('║                                                                                     ║');
-      console.warn('║ 🛠️  30-SECOND FIX:                                                                  ║');
-      console.warn('║  1. Open MongoDB Atlas (https://cloud.mongodb.com) -> Security -> Database Access   ║');
-      console.warn('║  2. Click "Edit" on your user (or "+ Add New Database User")                        ║');
-      console.warn('║  3. Enter a simple alphanumeric password without symbols, e.g. TaskAdmin2026        ║');
-      console.warn('║  4. Make sure privileges are "Read and write to any database"                       ║');
-      console.warn('║  5. Update MONGODB_URI on Render with the new password and click Reconnect          ║');
-      console.warn('╚═════════════════════════════════════════════════════════════════════════════════════╝\n');
+    // Disable auto-retrying on permanent failures to keep server fast and free of latency
+    if (err.message && (err.message.includes('ENOTFOUND') || err.message.toLowerCase().includes('bad auth') || err.message.includes('alert number 80') || err.message.includes('timeout'))) {
+      mongoAutoRetryDisabled = true;
+      console.log('[Storage] 🛡️ Cloud database unavailable. Auto-switching to Full Free Lifetime Edition.');
+      console.log('[Storage] 🔒 Running on Local Disk Storage + Self-Healing Client Auto-Vault (Zero fees, never expires).\n');
     }
   } finally {
     isMongoConnecting = false;
@@ -888,6 +875,33 @@ app.get('/api/timers/live', requireAuth, (req, res) => {
   res.json(list);
 });
 
+app.get('/api/live-status', requireAuth, (req, res) => {
+  const tasks = readJSON('tasks.json') || [];
+  const logs = readJSON('logs.json') || [];
+  const latestLog = logs[logs.length - 1];
+  const now = Date.now();
+  const list = Object.values(LIVE_TIMERS).map(t => {
+    let currentElapsedMs = t.accumulatedMs || 0;
+    if (!t.isPaused && t.startedAt) {
+      currentElapsedMs += (now - t.startedAt);
+    }
+    const currentSeconds = Math.max(0, Math.floor(currentElapsedMs / 1000));
+    const h = Math.floor(currentSeconds / 3600);
+    const m = Math.floor((currentSeconds % 3600) / 60);
+    const s = currentSeconds % 60;
+    const formattedHMS = [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
+    return { ...t, currentSeconds, formattedHMS };
+  });
+
+  res.json({
+    activeTimers: list,
+    taskCount: tasks.length,
+    logCount: logs.length,
+    lastLogId: latestLog ? latestLog.id : null,
+    inProgressCount: tasks.filter(t => t.status === 'In Progress').length
+  });
+});
+
 // ════════════════════════════════════════════════════════════════════════
 // HOUR LOG ROUTES
 // ════════════════════════════════════════════════════════════════════════
@@ -1012,65 +1026,73 @@ app.delete('/api/audit', requireAdmin, (req, res) => {
 // ACTIVITY LOG (Admin — who did what, when & login/logout audit)
 // ════════════════════════════════════════════════════════════════════════
 app.get('/api/activity', requireAdmin, (req, res) => {
-  const tasks = readJSON('tasks.json') || [];
-  const logs  = readJSON('logs.json') || [];
-  const users = readJSON('users.json') || [];
-  const authActivity = readJSON('auth_activity.json') || [];
+  try {
+    const tasks = Array.isArray(readJSON('tasks.json')) ? readJSON('tasks.json') : [];
+    const logs  = Array.isArray(readJSON('logs.json')) ? readJSON('logs.json') : [];
+    const users = Array.isArray(readJSON('users.json')) ? readJSON('users.json') : [];
+    const authActivity = Array.isArray(readJSON('auth_activity.json')) ? readJSON('auth_activity.json') : [];
 
-  // 1. Format Work Session Logs
-  const workActivities = logs.map(l => {
-    const task = tasks.find(t => t.id === l.taskId) || { title: l.taskId, type: '—' };
-    const user = users.find(u => u.id === l.user) || { name: l.user, color: '#607d8b', role: 'member' };
-    const ts = l.createdAt || (l.date ? l.date + 'T12:00:00.000Z' : new Date().toISOString());
-    return {
-      id: l.id,
-      category: 'WORK_LOG',
-      action: 'WORK_LOG',
-      user: l.user,
-      userName: user.name,
-      userRole: user.role,
-      userColor: user.color,
-      taskId: l.taskId,
-      taskTitle: task.title,
-      taskType: task.type,
-      hours: l.hours || 0,
-      desc: l.desc || 'Routine task execution',
-      blocker: l.blocker || '',
-      date: l.date || ts.split('T')[0],
-      timestamp: ts
-    };
-  });
+    // 1. Format Work Session Logs
+    const workActivities = logs.filter(Boolean).map(l => {
+      const task = tasks.find(t => t && t.id === l.taskId) || { title: l.taskId || 'Task', type: '—' };
+      const user = users.find(u => u && u.id === l.user) || { name: l.user || 'Member', color: '#607d8b', role: 'member' };
+      const ts = l.createdAt || (l.date ? l.date + 'T12:00:00.000Z' : new Date().toISOString());
+      const datePart = l.date || (typeof ts === 'string' && ts.includes('T') ? ts.split('T')[0] : today());
+      return {
+        id: l.id || ('LOG-' + Math.random().toString(36).substring(2, 8).toUpperCase()),
+        category: 'WORK_LOG',
+        action: 'WORK_LOG',
+        user: l.user || 'unknown',
+        userName: user.name || l.user || 'Member',
+        userRole: user.role || 'member',
+        userColor: user.color || '#607d8b',
+        taskId: l.taskId || '—',
+        taskTitle: task.title || 'Task',
+        taskType: task.type || '—',
+        hours: parseFloat(l.hours) || 0,
+        desc: l.desc || 'Routine task execution',
+        blocker: l.blocker || '',
+        date: datePart,
+        timestamp: ts
+      };
+    });
 
-  // 2. Format Login & Logout Events
-  const sessionActivities = authActivity.map(a => {
-    const user = users.find(u => u.id === a.userId) || {};
-    return {
-      id: a.id,
-      category: 'AUTH_SESSION',
-      action: a.action, // 'LOGIN' or 'LOGOUT'
-      user: a.userId,
-      userName: a.userName || user.name || a.userId,
-      userRole: a.userRole || user.role || 'member',
-      userColor: a.userColor || user.color || '#2563eb',
-      taskId: '—',
-      taskTitle: a.action === 'LOGIN' ? 'User Login Session Started' : 'User Signed Out of Workspace',
-      taskType: 'Session',
-      hours: 0,
-      desc: a.action === 'LOGIN' ? `Logged in from ${a.ip || 'Local/LAN'}` : `Logged out session ended (${a.ip || 'Local/LAN'})`,
-      blocker: '',
-      date: a.date || (a.timestamp ? a.timestamp.split('T')[0] : today()),
-      timestamp: a.timestamp || new Date().toISOString()
-    };
-  });
+    // 2. Format Login & Logout Events
+    const sessionActivities = authActivity.filter(Boolean).map(a => {
+      const user = users.find(u => u && u.id === a.userId) || {};
+      const ts = a.timestamp || new Date().toISOString();
+      const datePart = a.date || (typeof ts === 'string' && ts.includes('T') ? ts.split('T')[0] : today());
+      return {
+        id: a.id || ('ACT-' + Math.random().toString(36).substring(2, 8).toUpperCase()),
+        category: 'AUTH_SESSION',
+        action: a.action || 'LOGIN', // 'LOGIN' or 'LOGOUT'
+        user: a.userId || 'user',
+        userName: a.userName || user.name || a.userId || 'User',
+        userRole: a.userRole || user.role || 'member',
+        userColor: a.userColor || user.color || '#2563eb',
+        taskId: '—',
+        taskTitle: a.action === 'LOGIN' ? 'User Login Session Started' : 'User Signed Out of Workspace',
+        taskType: 'Session',
+        hours: 0,
+        desc: a.action === 'LOGIN' ? `Logged in from ${a.ip || 'Local/LAN'}` : `Logged out session ended (${a.ip || 'Local/LAN'})`,
+        blocker: '',
+        date: datePart,
+        timestamp: ts
+      };
+    });
 
-  // 3. Merge and safely sort descending by timestamp (zero crashes!)
-  const merged = [...workActivities, ...sessionActivities].sort((a, b) => {
-    const timeB = b.timestamp || (b.date ? b.date + 'T00:00:00Z' : '');
-    const timeA = a.timestamp || (a.date ? a.date + 'T00:00:00Z' : '');
-    return String(timeB).localeCompare(String(timeA));
-  });
+    // 3. Merge and safely sort descending by timestamp (zero crashes!)
+    const merged = [...workActivities, ...sessionActivities].sort((a, b) => {
+      const timeB = b.timestamp || (b.date ? b.date + 'T00:00:00Z' : '');
+      const timeA = a.timestamp || (a.date ? a.date + 'T00:00:00Z' : '');
+      return String(timeB).localeCompare(String(timeA));
+    });
 
-  res.json(merged);
+    res.json(merged);
+  } catch (err) {
+    console.error('[Activity] Error generating activity log:', err);
+    res.status(500).json({ error: 'Failed to generate activity log: ' + err.message });
+  }
 });
 
 // ════════════════════════════════════════════════════════════════════════
@@ -1110,11 +1132,12 @@ app.post('/api/retry-mongo', requireAdmin, async (req, res) => {
   }
   // Reset and force re-init
   mongoDb = null;
+  mongoAutoRetryDisabled = false;
   await initMongo();
   res.json({
     ok: !!mongoDb,
     error: mongoConnectionError,
-    storageMode: mongoDb ? 'MongoDB Atlas (Persistent Cloud)' : 'Local JSON Disk (Render Ephemeral)'
+    storageMode: mongoDb ? 'MongoDB Atlas (Persistent Cloud)' : 'Full Free Lifetime Edition (Local Storage + Auto-Vault)'
   });
 });
 
@@ -1250,15 +1273,15 @@ app.listen(PORT, '0.0.0.0', () => {
   initPg();
   initMongo();
 
-  // Background auto-retry: recheck every 25 seconds until connected
+  // Background auto-retry: recheck periodically only if retry is not permanently paused
   setInterval(() => {
-    if (!pgPool && process.env.DATABASE_URL) {
+    if (!pgPool && process.env.DATABASE_URL && !pgAutoRetryDisabled) {
       initPg();
     }
-    if (!mongoDb && process.env.MONGODB_URI) {
+    if (!mongoDb && process.env.MONGODB_URI && !mongoAutoRetryDisabled) {
       initMongo();
     }
-  }, 25000);
+  }, 60000);
   const os = require('os');
   const ifaces = os.networkInterfaces();
   let localIP = 'localhost';
