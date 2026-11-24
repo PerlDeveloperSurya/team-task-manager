@@ -994,6 +994,14 @@ tbody td{padding:12px 14px;vertical-align:middle;}
   transition:color .15s;
 }
 .pass-toggle-btn:hover{color:var(--text);}
+.person-stat{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.2);
+  font-size:13px;
+}
+.person-stat:last-child{border-bottom:none;}
+.ps-label{font-weight:500;opacity:0.95;}
+.ps-val{font-weight:800;font-size:14px;letter-spacing:0.3px;}
 </style>
 </head>
 <body>
@@ -1013,22 +1021,6 @@ tbody td{padding:12px 14px;vertical-align:middle;}
       <div class="login-title">Team Task Manager</div>
       <div class="login-org-pill">WORKSPACE ACCESS PORTAL</div>
       <div class="login-sub">Sign in with your team credentials to access tasks & track work hours</div>
-    </div>
-
-    <!-- Quick Role Credentials Hint Bar -->
-    <div class="quick-access-bar">
-      <div class="quick-access-label">Quick Sign-in:</div>
-      <div class="quick-access-chips">
-        <button type="button" class="qa-chip manager" onclick="quickFillLogin('admin','admin123')">
-          <span class="qa-dot"></span>Manager (admin)
-        </button>
-        <button type="button" class="qa-chip" onclick="quickFillLogin('person1','person1')">
-          <span class="qa-dot"></span>Member 1
-        </button>
-        <button type="button" class="qa-chip" onclick="quickFillLogin('person2','person2')">
-          <span class="qa-dot"></span>Member 2
-        </button>
-      </div>
     </div>
 
     <div class="form-group">
@@ -1556,7 +1548,9 @@ const ICONS = {
   'chevron-down': `<polyline points="6 9 12 15 18 9"/>`,
   'menu': `<line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>`,
   'sidebar': `<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/>`,
-  'lock': `<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>`
+  'lock': `<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>`,
+  'login': `<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>`,
+  'log-in': `<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>`
 };
 
 function ICON(name, size = 16, className = '', color = 'currentColor') {
@@ -1781,7 +1775,10 @@ function startTaskTimer(taskId, taskTitle) {
   localStorage.setItem('ttm_active_timer', JSON.stringify(TIMER_STATE));
   renderTimerBar();
   startTimerTicker();
-  showToast(`⏱️ Timer started for ${taskId}!`, '#1a73e8');
+  showToast(`Timer started for ${taskId}!`, '#1a73e8');
+
+  // Notify server so manager and team see live tracking in real time
+  POST('/api/timer/start', { taskId, taskTitle: TIMER_STATE.taskTitle });
 
   // Also auto-update task status to 'In Progress' if not already
   PUT('/api/tasks/' + taskId, { status: 'In Progress' }).then(() => {
@@ -1865,12 +1862,14 @@ function togglePauseTimer() {
     TIMER_STATE.startedAt = Date.now();
     TIMER_STATE.pausedAt = null;
     showToast('Timer resumed', '#2563eb');
+    POST('/api/timer/pause', { isPaused: false, elapsedMs: TIMER_STATE.accumulatedMs });
   } else {
     TIMER_STATE.accumulatedMs = getTimerElapsedMs();
     TIMER_STATE.isPaused = true;
     TIMER_STATE.startedAt = null;
     TIMER_STATE.pausedAt = Date.now();
     showToast('Timer paused', '#d97706');
+    POST('/api/timer/pause', { isPaused: true, elapsedMs: TIMER_STATE.accumulatedMs });
   }
   localStorage.setItem('ttm_active_timer', JSON.stringify(TIMER_STATE));
   renderTimerBar();
@@ -1891,6 +1890,7 @@ function cancelTimer() {
   if (!TIMER_STATE) return;
   if (confirm(`Discard current live timer for ${TIMER_STATE.taskId} without saving logged hours?`)) {
     if (TIMER_INTERVAL) clearInterval(TIMER_INTERVAL);
+    POST('/api/timer/stop');
     TIMER_STATE = null;
     localStorage.removeItem('ttm_active_timer');
     renderTimerBar();
@@ -3852,6 +3852,7 @@ async function saveLog() {
   // If active timer was running for this task, clean it up
   if(TIMER_STATE && TIMER_STATE.taskId === taskId) {
     if(TIMER_INTERVAL) clearInterval(TIMER_INTERVAL);
+    POST('/api/timer/stop');
     TIMER_STATE = null;
     localStorage.removeItem('ttm_active_timer');
     renderTimerBar();

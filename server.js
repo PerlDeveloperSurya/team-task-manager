@@ -67,7 +67,7 @@ async function initMongo() {
     console.log('\n[Database] ✅ Connected to MongoDB Atlas persistent cloud storage!');
 
     // Sync all collections from MongoDB into local cache
-    const collections = ['users', 'tasks', 'logs', 'audit', 'sessions', 'resets'];
+    const collections = ['users', 'tasks', 'logs', 'audit', 'sessions', 'resets', 'auth_activity', 'active_timers'];
     for (const col of collections) {
       const docs = await mongoDb.collection(col).find({}).toArray();
       if (docs && docs.length > 0) {
@@ -213,8 +213,31 @@ function requireAdmin(req, res, next) {
 }
 
 // ════════════════════════════════════════════════════════════════════════
-// AUTH ROUTES
+// AUTH & ACTIVITY TRACKING
 // ════════════════════════════════════════════════════════════════════════
+function logAuthEvent(action, user, req) {
+  try {
+    const authLogs = readJSON('auth_activity.json') || [];
+    const clientIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1';
+    const now = new Date();
+    authLogs.push({
+      id: 'ACT-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase(),
+      action: action, // 'LOGIN' or 'LOGOUT'
+      userId: user.id,
+      userName: user.name || user.id,
+      userRole: user.role || 'member',
+      userColor: user.color || '#2563eb',
+      ip: String(clientIp).replace('::ffff:', ''),
+      timestamp: now.toISOString(),
+      date: now.toISOString().split('T')[0]
+    });
+    if (authLogs.length > 500) authLogs.splice(0, authLogs.length - 500);
+    writeJSON('auth_activity.json', authLogs);
+  } catch (err) {
+    console.error('Failed to log auth event:', err.message);
+  }
+}
+
 app.post('/api/login', (req, res) => {
   const { userId, username, password } = req.body;
   const q = (username || userId || '').trim().toLowerCase();
@@ -227,7 +250,7 @@ app.post('/api/login', (req, res) => {
 
   // Generate persistent auth token
   const token = uuidv4();
-  const sessions = readJSON('sessions.json');
+  const sessions = readJSON('sessions.json') || {};
   sessions[token] = {
     userId: user.id,
     createdAt: new Date().toISOString(),
@@ -236,6 +259,10 @@ app.post('/api/login', (req, res) => {
   writeJSON('sessions.json', sessions);
 
   req.session.userId = user.id;
+
+  // Log user login activity
+  logAuthEvent('LOGIN', user, req);
+
   res.json({
     id: user.id,
     name: user.name,
@@ -252,11 +279,26 @@ app.post('/api/login', (req, res) => {
 app.post('/api/logout', (req, res) => {
   const token = req.headers['x-auth-token'] || 
     (req.headers['authorization'] ? req.headers['authorization'].replace(/^Bearer\s+/i, '') : null);
+  let loggedOutUser = null;
+  const users = readJSON('users.json') || [];
   if (token) {
-    const sessions = readJSON('sessions.json');
+    const sessions = readJSON('sessions.json') || {};
     if (sessions[token]) {
+      loggedOutUser = users.find(u => u.id === sessions[token].userId);
       delete sessions[token];
       writeJSON('sessions.json', sessions);
+    }
+  } else if (req.session && req.session.userId) {
+    loggedOutUser = users.find(u => u.id === req.session.userId);
+  }
+  if (!loggedOutUser && req.user) {
+    loggedOutUser = req.user;
+  }
+  if (loggedOutUser) {
+    logAuthEvent('LOGOUT', loggedOutUser, req);
+    if (LIVE_TIMERS && LIVE_TIMERS[loggedOutUser.id]) {
+      delete LIVE_TIMERS[loggedOutUser.id];
+      writeJSON('active_timers.json', LIVE_TIMERS);
     }
   }
   if (req.session) req.session.destroy();
@@ -649,6 +691,72 @@ app.delete('/api/tasks/:id', requireAuth, (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════
+// LIVE TIMERS ENGINE (Synchronized across all users & admin views)
+// ════════════════════════════════════════════════════════════════════════
+let LIVE_TIMERS = readJSON('active_timers.json') || {};
+
+app.post('/api/timer/start', requireAuth, (req, res) => {
+  const { taskId, taskTitle } = req.body;
+  const user = req.user || (readJSON('users.json') || []).find(u => u.id === req.session.userId) || {};
+  LIVE_TIMERS[req.session.userId] = {
+    userId: req.session.userId,
+    userName: user.name || req.session.userId,
+    userRole: user.role || 'member',
+    userColor: user.color || '#2563eb',
+    taskId: taskId || '',
+    taskTitle: taskTitle || taskId || '',
+    startedAt: Date.now(),
+    isPaused: false,
+    accumulatedMs: 0,
+    updatedAt: new Date().toISOString()
+  };
+  writeJSON('active_timers.json', LIVE_TIMERS);
+  res.json({ ok: true, timer: LIVE_TIMERS[req.session.userId] });
+});
+
+app.post('/api/timer/pause', requireAuth, (req, res) => {
+  const timer = LIVE_TIMERS[req.session.userId];
+  if (timer) {
+    const { isPaused, elapsedMs } = req.body;
+    timer.isPaused = !!isPaused;
+    timer.accumulatedMs = elapsedMs !== undefined ? elapsedMs : timer.accumulatedMs;
+    timer.startedAt = isPaused ? null : Date.now();
+    timer.updatedAt = new Date().toISOString();
+    writeJSON('active_timers.json', LIVE_TIMERS);
+  }
+  res.json({ ok: true });
+});
+
+app.post('/api/timer/stop', requireAuth, (req, res) => {
+  if (LIVE_TIMERS[req.session.userId]) {
+    delete LIVE_TIMERS[req.session.userId];
+    writeJSON('active_timers.json', LIVE_TIMERS);
+  }
+  res.json({ ok: true });
+});
+
+app.get('/api/timers/live', requireAuth, (req, res) => {
+  const now = Date.now();
+  const list = Object.values(LIVE_TIMERS).map(t => {
+    let currentElapsedMs = t.accumulatedMs || 0;
+    if (!t.isPaused && t.startedAt) {
+      currentElapsedMs += (now - t.startedAt);
+    }
+    const currentSeconds = Math.max(0, Math.floor(currentElapsedMs / 1000));
+    const h = Math.floor(currentSeconds / 3600);
+    const m = Math.floor((currentSeconds % 3600) / 60);
+    const s = currentSeconds % 60;
+    const formattedHMS = [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
+    return {
+      ...t,
+      currentSeconds,
+      formattedHMS
+    };
+  });
+  res.json(list);
+});
+
+// ════════════════════════════════════════════════════════════════════════
 // HOUR LOG ROUTES
 // ════════════════════════════════════════════════════════════════════════
 app.get('/api/logs', requireAuth, (req, res) => {
@@ -769,18 +877,68 @@ app.delete('/api/audit', requireAdmin, (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════
-// ACTIVITY LOG (Admin — who did what, when)
+// ACTIVITY LOG (Admin — who did what, when & login/logout audit)
 // ════════════════════════════════════════════════════════════════════════
 app.get('/api/activity', requireAdmin, (req, res) => {
-  const tasks = readJSON('tasks.json');
-  const logs  = readJSON('logs.json');
-  const users = readJSON('users.json');
-  const activity = logs.map(l => {
-    const task = tasks.find(t=>t.id===l.taskId)||{title:l.taskId,type:'—'};
-    const user = users.find(u=>u.id===l.user)||{name:l.user,color:'#607d8b'};
-    return { ...l, taskTitle:task.title, taskType:task.type, userName:user.name, userColor:user.color };
-  }).sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt||''));
-  res.json(activity);
+  const tasks = readJSON('tasks.json') || [];
+  const logs  = readJSON('logs.json') || [];
+  const users = readJSON('users.json') || [];
+  const authActivity = readJSON('auth_activity.json') || [];
+
+  // 1. Format Work Session Logs
+  const workActivities = logs.map(l => {
+    const task = tasks.find(t => t.id === l.taskId) || { title: l.taskId, type: '—' };
+    const user = users.find(u => u.id === l.user) || { name: l.user, color: '#607d8b', role: 'member' };
+    const ts = l.createdAt || (l.date ? l.date + 'T12:00:00.000Z' : new Date().toISOString());
+    return {
+      id: l.id,
+      category: 'WORK_LOG',
+      action: 'WORK_LOG',
+      user: l.user,
+      userName: user.name,
+      userRole: user.role,
+      userColor: user.color,
+      taskId: l.taskId,
+      taskTitle: task.title,
+      taskType: task.type,
+      hours: l.hours || 0,
+      desc: l.desc || 'Routine task execution',
+      blocker: l.blocker || '',
+      date: l.date || ts.split('T')[0],
+      timestamp: ts
+    };
+  });
+
+  // 2. Format Login & Logout Events
+  const sessionActivities = authActivity.map(a => {
+    const user = users.find(u => u.id === a.userId) || {};
+    return {
+      id: a.id,
+      category: 'AUTH_SESSION',
+      action: a.action, // 'LOGIN' or 'LOGOUT'
+      user: a.userId,
+      userName: a.userName || user.name || a.userId,
+      userRole: a.userRole || user.role || 'member',
+      userColor: a.userColor || user.color || '#2563eb',
+      taskId: '—',
+      taskTitle: a.action === 'LOGIN' ? 'User Login Session Started' : 'User Signed Out of Workspace',
+      taskType: 'Session',
+      hours: 0,
+      desc: a.action === 'LOGIN' ? `Logged in from ${a.ip || 'Local/LAN'}` : `Logged out session ended (${a.ip || 'Local/LAN'})`,
+      blocker: '',
+      date: a.date || (a.timestamp ? a.timestamp.split('T')[0] : today()),
+      timestamp: a.timestamp || new Date().toISOString()
+    };
+  });
+
+  // 3. Merge and safely sort descending by timestamp (zero crashes!)
+  const merged = [...workActivities, ...sessionActivities].sort((a, b) => {
+    const timeB = b.timestamp || (b.date ? b.date + 'T00:00:00Z' : '');
+    const timeA = a.timestamp || (a.date ? a.date + 'T00:00:00Z' : '');
+    return String(timeB).localeCompare(String(timeA));
+  });
+
+  res.json(merged);
 });
 
 // ════════════════════════════════════════════════════════════════════════
