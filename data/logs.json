@@ -70,5 +70,25 @@
     "hours": 3,
     "desc": "Order management endpoints",
     "blocker": ""
+  },
+  {
+    "id": "L-1944DD73",
+    "taskId": "T-DEMO2",
+    "user": "admin",
+    "date": "2026-11-24",
+    "hours": 0.1,
+    "desc": "Work session tracked via live timer (00:00:03)",
+    "blocker": "",
+    "createdAt": "2026-11-24T10:31:13.385Z"
+  },
+  {
+    "id": "L-6B20B2F9",
+    "taskId": "T-DEMO6",
+    "user": "admin",
+    "date": "2026-11-24",
+    "hours": 0.2,
+    "desc": "Work session tracked via live timer (00:11:53)",
+    "blocker": "",
+    "createdAt": "2026-11-24T10:50:13.062Z"
   }
 ]

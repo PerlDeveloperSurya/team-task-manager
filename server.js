@@ -13,6 +13,7 @@ const path     = require('path');
 const { v4: uuidv4 } = require('uuid');
 
 const app  = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 const DATA = path.join(__dirname, 'data');
 
@@ -22,8 +23,81 @@ function ensureFile(file, def) {
   if (!fs.existsSync(fp)) fs.writeFileSync(fp, JSON.stringify(def, null, 2));
 }
 
-function readJSON(file)       { return JSON.parse(fs.readFileSync(path.join(DATA, file), 'utf8')); }
-function writeJSON(file, obj) { fs.writeFileSync(path.join(DATA, file), JSON.stringify(obj, null, 2)); }
+// ── Storage Engine (Local JSON + Optional MongoDB Atlas Persistent Cloud Storage) ──
+let mongoClient = null;
+let mongoDb = null;
+
+function readJSON(file) {
+  const fp = path.join(DATA, file);
+  if (!fs.existsSync(fp)) return null;
+  return JSON.parse(fs.readFileSync(fp, 'utf8'));
+}
+
+function writeJSON(file, obj, syncMongo = true) {
+  fs.writeFileSync(path.join(DATA, file), JSON.stringify(obj, null, 2));
+  if (syncMongo && mongoDb) {
+    const col = file.replace('.json', '');
+    (async () => {
+      try {
+        if (Array.isArray(obj)) {
+          await mongoDb.collection(col).deleteMany({});
+          if (obj.length > 0) {
+            await mongoDb.collection(col).insertMany(obj.map(item => ({ ...item })));
+          }
+        } else if (col === 'sessions') {
+          await mongoDb.collection(col).deleteMany({});
+          const sessArr = Object.entries(obj).map(([token, data]) => ({ token, ...data }));
+          if (sessArr.length > 0) await mongoDb.collection(col).insertMany(sessArr);
+        }
+      } catch (err) {
+        console.error(`[Database] MongoDB sync error for ${col}:`, err.message);
+      }
+    })();
+  }
+}
+
+async function initMongo() {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) return;
+  try {
+    const { MongoClient } = require('mongodb');
+    mongoClient = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
+    await mongoClient.connect();
+    mongoDb = mongoClient.db();
+    console.log('\n[Database] ✅ Connected to MongoDB Atlas persistent cloud storage!');
+
+    // Sync all collections from MongoDB into local cache
+    const collections = ['users', 'tasks', 'logs', 'audit', 'sessions', 'resets'];
+    for (const col of collections) {
+      const docs = await mongoDb.collection(col).find({}).toArray();
+      if (docs && docs.length > 0) {
+        if (col === 'sessions') {
+          const sessObj = {};
+          docs.forEach(({ _id, token, ...data }) => {
+            const key = token || _id;
+            sessObj[key] = data;
+          });
+          writeJSON('sessions.json', sessObj, false);
+        } else {
+          const cleanDocs = docs.map(({ _id, ...d }) => d);
+          writeJSON(col + '.json', cleanDocs, false);
+        }
+        console.log(`[Database] 📦 Preserved ${docs.length} ${col} from MongoDB Atlas`);
+      } else {
+        // First-time seed into MongoDB
+        const localData = readJSON(col + '.json');
+        if (Array.isArray(localData) && localData.length > 0) {
+          await mongoDb.collection(col).insertMany(localData.map(d => ({ ...d })));
+        } else if (col === 'sessions' && Object.keys(localData).length > 0) {
+          const sessArr = Object.entries(localData).map(([token, data]) => ({ token, ...data }));
+          if (sessArr.length > 0) await mongoDb.collection(col).insertMany(sessArr);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('\n[Database] ⚠️ MongoDB Atlas not connected, operating on local JSON storage:', err.message);
+  }
+}
 
 function today() { return new Date().toISOString().split('T')[0]; }
 function daysAgo(n) {
@@ -44,6 +118,12 @@ ensureFile('users.json', [
 
 // Seed audit log (deletions)
 ensureFile('audit.json', []);
+
+// Seed persistent sessions
+ensureFile('sessions.json', {});
+
+// Seed password reset requests
+ensureFile('resets.json', []);
 
 // Seed sample tasks
 ensureFile('tasks.json', [
@@ -78,20 +158,57 @@ app.use(session({
   secret: 'team-task-manager-secret-2024',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 8 * 60 * 60 * 1000 }  // 8 hours
+  proxy: true,
+  cookie: {
+    maxAge: 30 * 24 * 60 * 60 * 1000,  // 30 days
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: 'auto'
+  }
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ── Auth middleware ───────────────────────────────────────────────────────────
+// ── Auth helpers & middleware ──────────────────────────────────────────────────
+function getSessionUser(req) {
+  const users = readJSON('users.json');
+  // 1. Check express-session
+  if (req.session && req.session.userId) {
+    const u = users.find(x => x.id === req.session.userId);
+    if (u) return u;
+  }
+  // 2. Check token in x-auth-token or authorization header or query
+  const token = req.headers['x-auth-token'] || 
+    (req.headers['authorization'] ? req.headers['authorization'].replace(/^Bearer\s+/i, '') : null) || 
+    req.query.token;
+
+  if (token) {
+    const sessions = readJSON('sessions.json');
+    const sess = sessions[token];
+    if (sess && (!sess.expiresAt || sess.expiresAt > Date.now())) {
+      const u = users.find(x => x.id === sess.userId);
+      if (u) {
+        if (req.session) req.session.userId = u.id;
+        return u;
+      }
+    }
+  }
+  return null;
+}
+
 function requireAuth(req, res, next) {
-  if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
+  const user = getSessionUser(req);
+  if (!user) return res.status(401).json({ error: 'Not authenticated' });
+  req.user = user;
+  if (req.session) req.session.userId = user.id;
   next();
 }
+
 function requireAdmin(req, res, next) {
-  if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
-  const users = readJSON('users.json');
-  const user  = users.find(u => u.id === req.session.userId);
-  if (!user || user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  const user = getSessionUser(req);
+  if (!user) return res.status(401).json({ error: 'Not authenticated' });
+  if (user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  req.user = user;
+  if (req.session) req.session.userId = user.id;
   next();
 }
 
@@ -106,21 +223,136 @@ app.post('/api/login', (req, res) => {
     (u.id.toLowerCase() === q || u.name.toLowerCase() === q) && u.password === password
   );
   if (!user) return res.status(401).json({ error: 'Invalid username or password' });
+  if (user.status === 'Inactive') return res.status(403).json({ error: 'Account is deactivated' });
+
+  // Generate persistent auth token
+  const token = uuidv4();
+  const sessions = readJSON('sessions.json');
+  sessions[token] = {
+    userId: user.id,
+    createdAt: new Date().toISOString(),
+    expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000 // 30 days
+  };
+  writeJSON('sessions.json', sessions);
+
   req.session.userId = user.id;
-  res.json({ id: user.id, name: user.name, role: user.role, color: user.color, emoji: user.emoji });
+  res.json({
+    id: user.id,
+    name: user.name,
+    role: user.role,
+    color: user.color,
+    emoji: user.emoji,
+    email: user.email || '',
+    designation: user.designation || '',
+    status: user.status || 'Active',
+    token: token
+  });
 });
 
 app.post('/api/logout', (req, res) => {
-  req.session.destroy();
+  const token = req.headers['x-auth-token'] || 
+    (req.headers['authorization'] ? req.headers['authorization'].replace(/^Bearer\s+/i, '') : null);
+  if (token) {
+    const sessions = readJSON('sessions.json');
+    if (sessions[token]) {
+      delete sessions[token];
+      writeJSON('sessions.json', sessions);
+    }
+  }
+  if (req.session) req.session.destroy();
   res.json({ ok: true });
 });
 
 app.get('/api/me', requireAuth, (req, res) => {
-  const users = readJSON('users.json');
-  const user  = users.find(u => u.id === req.session.userId);
-  if (!user) return res.status(401).json({ error: 'Not found' });
-  const { password: _, ...safeUser } = user;
+  const { password: _, ...safeUser } = req.user;
   res.json(safeUser);
+});
+
+// ════════════════════════════════════════════════════════════════════════
+// FORGOT PASSWORD & PASSWORD RESET
+// ════════════════════════════════════════════════════════════════════════
+app.post('/api/forgot-password', (req, res) => {
+  const { username, contact, note } = req.body;
+  if (!username) return res.status(400).json({ error: 'Username or Login ID is required' });
+  const q = username.trim().toLowerCase();
+  const users = readJSON('users.json') || [];
+  const user = users.find(u => u.id.toLowerCase() === q || u.name.toLowerCase() === q);
+  if (!user) return res.status(404).json({ error: `No account found with username "${username}"` });
+
+  let resets = readJSON('resets.json') || [];
+  const existing = resets.find(r => r.userId === user.id && r.status === 'pending');
+  if (existing) {
+    existing.requestedAt = new Date().toISOString();
+    existing.contact = contact ? contact.trim() : existing.contact;
+    existing.note = note ? note.trim() : existing.note;
+    writeJSON('resets.json', resets);
+    return res.json({ ok: true, message: 'Password reset request refreshed. Your manager has been notified.' });
+  }
+
+  const reqObj = {
+    id: 'RST-' + uuidv4().split('-')[0].toUpperCase(),
+    userId: user.id,
+    userName: user.name,
+    contact: contact ? contact.trim() : (user.email || user.phone || ''),
+    note: note ? note.trim() : '',
+    requestedAt: new Date().toISOString(),
+    status: 'pending'
+  };
+  resets.push(reqObj);
+  writeJSON('resets.json', resets);
+  res.json({ ok: true, message: 'Password reset request submitted. Your manager has been notified and can reset your password from the Admin panel.' });
+});
+
+app.post('/api/admin-recovery', (req, res) => {
+  const { recoveryKey, newPassword } = req.body;
+  const masterKey = process.env.ADMIN_RECOVERY_KEY || 'admin-recovery-2024';
+  if (!recoveryKey || recoveryKey.trim() !== masterKey) {
+    return res.status(403).json({ error: 'Invalid master recovery key. Default key is "admin-recovery-2024" or set via ADMIN_RECOVERY_KEY.' });
+  }
+  if (!newPassword || newPassword.trim().length < 4) {
+    return res.status(400).json({ error: 'New password must be at least 4 characters' });
+  }
+  const users = readJSON('users.json') || [];
+  const admin = users.find(u => u.id === 'admin');
+  if (!admin) return res.status(404).json({ error: 'Admin account not found' });
+  admin.password = newPassword.trim();
+  writeJSON('users.json', users);
+  res.json({ ok: true, message: 'Admin password reset successfully! You can now log in with your new password.' });
+});
+
+app.get('/api/resets', requireAdmin, (req, res) => {
+  const resets = readJSON('resets.json') || [];
+  res.json(resets.filter(r => r.status === 'pending'));
+});
+
+app.post('/api/resets/:id/resolve', requireAdmin, (req, res) => {
+  const { newPassword, resetToDefault } = req.body;
+  const resets = readJSON('resets.json') || [];
+  const reqIdx = resets.findIndex(r => r.id === req.params.id);
+  if (reqIdx < 0) return res.status(404).json({ error: 'Reset request not found' });
+
+  const resetReq = resets[reqIdx];
+  const users = readJSON('users.json') || [];
+  const user = users.find(u => u.id === resetReq.userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  const passToSet = resetToDefault ? user.id : (newPassword ? newPassword.trim() : user.id);
+  user.password = passToSet;
+  writeJSON('users.json', users);
+
+  resetReq.status = 'resolved';
+  resetReq.resolvedAt = new Date().toISOString();
+  resetReq.resolvedBy = req.user.id;
+  writeJSON('resets.json', resets);
+
+  res.json({ ok: true, message: `Password for ${user.name} (${user.id}) reset to: "${passToSet}"` });
+});
+
+app.delete('/api/resets/:id', requireAdmin, (req, res) => {
+  let resets = readJSON('resets.json') || [];
+  resets = resets.filter(r => r.id !== req.params.id);
+  writeJSON('resets.json', resets);
+  res.json({ ok: true });
 });
 
 // ════════════════════════════════════════════════════════════════════════
@@ -139,13 +371,33 @@ app.get('/api/users', requireAuth, (req, res) => {
   res.json(users);
 });
 
+app.get('/api/users/:id', requireAdmin, (req, res) => {
+  const users = readJSON('users.json');
+  const user  = users.find(u => u.id === req.params.id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  const { password: _, ...safeUser } = user;
+  res.json({ ...safeUser, hasPassword: !!user.password });
+});
+
 app.post('/api/users', requireAdmin, (req, res) => {
-  const { name, role, password, color, emoji } = req.body;
+  const { name, role, password, color, emoji, email, phone, designation, status, customId } = req.body;
   if (!name || !password) return res.status(400).json({ error: 'Name and password required' });
   const users = readJSON('users.json');
-  const id = name.toLowerCase().replace(/\s+/g, '');
+  const id = (customId && customId.trim()) ? customId.trim().toLowerCase().replace(/\s+/g, '') : name.toLowerCase().replace(/\s+/g, '');
   if (users.find(u => u.id === id)) return res.status(400).json({ error: 'User ID already exists' });
-  const newUser = { id, name, role: role||'member', password, color: color||'#607d8b', emoji: emoji||'👤', createdAt: today() };
+  const newUser = {
+    id,
+    name: name.trim(),
+    role: role || 'member',
+    password: password.trim(),
+    color: color || '#607d8b',
+    emoji: emoji || '👤',
+    email: email ? email.trim() : '',
+    phone: phone ? phone.trim() : '',
+    designation: designation ? designation.trim() : '',
+    status: status || 'Active',
+    createdAt: today()
+  };
   users.push(newUser);
   writeJSON('users.json', users);
   const { password: _, ...safe } = newUser;
@@ -156,9 +408,96 @@ app.put('/api/users/:id', requireAdmin, (req, res) => {
   const users = readJSON('users.json');
   const idx   = users.findIndex(u => u.id === req.params.id);
   if (idx < 0) return res.status(404).json({ error: 'User not found' });
-  users[idx] = { ...users[idx], ...req.body };
+
+  const current = users[idx];
+  const { name, role, password, color, emoji, email, phone, designation, status, newId } = req.body;
+
+  if (name && !name.trim()) {
+    return res.status(400).json({ error: 'User name cannot be empty' });
+  }
+
+  // Prevent demoting primary 'admin' user role
+  const updatedRole = (req.params.id === 'admin' && role && role !== 'admin')
+    ? 'admin'
+    : (role || current.role);
+
+  const updatedUser = {
+    ...current,
+    name: name ? name.trim() : current.name,
+    role: updatedRole,
+    color: color || current.color,
+    emoji: emoji || current.emoji,
+    email: email !== undefined ? email.trim() : (current.email || ''),
+    phone: phone !== undefined ? phone.trim() : (current.phone || ''),
+    designation: designation !== undefined ? designation.trim() : (current.designation || ''),
+    status: status || current.status || 'Active',
+  };
+
+  // Only update password if a non-empty string is provided
+  if (password && password.trim() !== '') {
+    updatedUser.password = password.trim();
+  }
+
+  // If ID change is requested
+  if (newId && newId.trim() !== '' && newId.trim() !== req.params.id) {
+    const cleanNewId = newId.trim().toLowerCase().replace(/\s+/g, '');
+    if (req.params.id === 'admin') {
+      return res.status(400).json({ error: 'Cannot change root admin ID' });
+    }
+    if (users.find(u => u.id === cleanNewId && u.id !== req.params.id)) {
+      return res.status(400).json({ error: 'User ID "' + cleanNewId + '" is already taken' });
+    }
+    updatedUser.id = cleanNewId;
+
+    // Cascade update in tasks.json
+    let tasks = readJSON('tasks.json');
+    let tasksChanged = false;
+    tasks.forEach(t => {
+      if (t.assignee === req.params.id) { t.assignee = cleanNewId; tasksChanged = true; }
+      if (t.createdBy === req.params.id) { t.createdBy = cleanNewId; tasksChanged = true; }
+    });
+    if (tasksChanged) writeJSON('tasks.json', tasks);
+
+    // Cascade update in logs.json
+    let logs = readJSON('logs.json');
+    let logsChanged = false;
+    logs.forEach(l => {
+      if (l.user === req.params.id) { l.user = cleanNewId; logsChanged = true; }
+    });
+    if (logsChanged) writeJSON('logs.json', logs);
+
+    // Cascade update in audit.json
+    let audit = readJSON('audit.json');
+    let auditChanged = false;
+    audit.forEach(a => {
+      if (a.deletedBy === req.params.id) { a.deletedBy = cleanNewId; auditChanged = true; }
+      if (a.task && a.task.assignee === req.params.id) { a.task.assignee = cleanNewId; auditChanged = true; }
+      if (a.task && a.task.createdBy === req.params.id) { a.task.createdBy = cleanNewId; auditChanged = true; }
+    });
+    if (auditChanged) writeJSON('audit.json', audit);
+
+    // Cascade update in sessions.json
+    const sessions = readJSON('sessions.json');
+    let sessionsChanged = false;
+    Object.keys(sessions).forEach(k => {
+      if (sessions[k].userId === req.params.id) {
+        sessions[k].userId = cleanNewId;
+        sessionsChanged = true;
+      }
+    });
+    if (sessionsChanged) writeJSON('sessions.json', sessions);
+
+    // If current user was renamed
+    if (req.session && req.session.userId === req.params.id) {
+      req.session.userId = cleanNewId;
+    }
+  }
+
+  users[idx] = updatedUser;
   writeJSON('users.json', users);
-  res.json({ ok: true });
+
+  const { password: _, ...safe } = updatedUser;
+  res.json({ ok: true, user: safe });
 });
 
 app.delete('/api/users/:id', requireAdmin, (req, res) => {
@@ -174,7 +513,7 @@ app.delete('/api/users/:id', requireAdmin, (req, res) => {
 // ════════════════════════════════════════════════════════════════════════
 app.get('/api/tasks', requireAuth, (req, res) => {
   let tasks = readJSON('tasks.json');
-  const user = readJSON('users.json').find(u => u.id === req.session.userId);
+  const user = req.user || readJSON('users.json').find(u => u.id === req.session.userId);
   // Members see only their own tasks; admin sees all
   if (user.role !== 'admin') tasks = tasks.filter(t => t.assignee === req.session.userId);
   // Filters
@@ -190,18 +529,30 @@ app.get('/api/tasks', requireAuth, (req, res) => {
 
 app.post('/api/tasks', requireAuth, (req, res) => {
   const tasks = readJSON('tasks.json');
-  const users = readJSON('users.json');
-  const user  = users.find(u => u.id === req.session.userId);
-  const { title, type, desc, priority, status, start, due, planned, notes, assignee } = req.body;
+  const user  = req.user || readJSON('users.json').find(u => u.id === req.session.userId);
+  const { title, type, desc, priority, status, start, startTime, due, planned, notes, assignee, startTimer } = req.body;
   if (!title) return res.status(400).json({ error: 'Title required' });
   const realAssignee = user.role === 'admin' ? (assignee || req.session.userId) : req.session.userId;
+  
+  const now = new Date();
+  const currentHHMM = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  const taskStartTime = startTime || (startTimer ? currentHHMM : '');
+
   const task = {
     id: 'T-' + Date.now().toString(36).toUpperCase(),
-    title, type: type||'Task', desc: desc||'',
-    priority: priority||'Medium', status: status||'Pending',
-    start: start||today(), due: due||'', planned: parseFloat(planned)||0,
-    notes: notes||'', assignee: realAssignee,
-    createdBy: req.session.userId, createdAt: today(),
+    title: title.trim(),
+    type: type || 'Task',
+    desc: desc || '',
+    priority: priority || 'Medium',
+    status: startTimer ? 'In Progress' : (status || 'Pending'),
+    start: start || today(),
+    startTime: taskStartTime,
+    due: due || '',
+    planned: parseFloat(planned) || 0,
+    notes: notes || '',
+    assignee: realAssignee,
+    createdBy: req.session.userId,
+    createdAt: today(),
   };
   tasks.push(task);
   writeJSON('tasks.json', tasks);
@@ -212,11 +563,16 @@ app.put('/api/tasks/:id', requireAuth, (req, res) => {
   const tasks = readJSON('tasks.json');
   const idx   = tasks.findIndex(t => t.id === req.params.id);
   if (idx < 0) return res.status(404).json({ error: 'Task not found' });
-  const user = readJSON('users.json').find(u => u.id === req.session.userId);
+  const user = req.user || readJSON('users.json').find(u => u.id === req.session.userId);
   // Members can only edit their own tasks
   if (user.role !== 'admin' && tasks[idx].assignee !== req.session.userId)
     return res.status(403).json({ error: 'Not your task' });
-  tasks[idx] = { ...tasks[idx], ...req.body, id: req.params.id };
+  tasks[idx] = {
+    ...tasks[idx],
+    ...req.body,
+    startTime: req.body.startTime !== undefined ? req.body.startTime : (tasks[idx].startTime || ''),
+    id: req.params.id
+  };
   writeJSON('tasks.json', tasks);
   res.json(tasks[idx]);
 });
@@ -394,9 +750,155 @@ app.get('/api/activity', requireAdmin, (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════
+// DATA BACKUP & RESTORE (Prevent Data Loss on Render Deploys)
+// ════════════════════════════════════════════════════════════════════════
+app.get('/api/system-status', requireAdmin, (req, res) => {
+  const users = readJSON('users.json') || [];
+  const tasks = readJSON('tasks.json') || [];
+  const logs  = readJSON('logs.json') || [];
+  res.json({
+    hasMongo: !!mongoDb,
+    mongoUriSet: !!process.env.MONGODB_URI,
+    storageMode: mongoDb ? 'MongoDB Atlas (Persistent Cloud)' : 'Local JSON Disk (Render Ephemeral)',
+    uptime: Math.round(process.uptime()),
+    counts: {
+      users: users.length,
+      tasks: tasks.length,
+      logs: logs.length
+    }
+  });
+});
+
+app.get('/api/backup', requireAdmin, (req, res) => {
+  const users   = readJSON('users.json') || [];
+  const tasks   = readJSON('tasks.json') || [];
+  const logs    = readJSON('logs.json') || [];
+  const audit   = readJSON('audit.json') || [];
+  const resets  = readJSON('resets.json') || [];
+
+  const backupData = {
+    appName: 'Team Task Manager',
+    version: '1.0.0',
+    exportedAt: new Date().toISOString(),
+    exportedBy: req.user.id,
+    stats: {
+      usersCount: users.length,
+      tasksCount: tasks.length,
+      logsCount: logs.length,
+      auditCount: audit.length,
+    },
+    users,
+    tasks,
+    logs,
+    audit,
+    resets,
+  };
+
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Disposition', `attachment; filename="ttm_backup_${today()}.json"`);
+  res.json(backupData);
+});
+
+app.post('/api/restore', requireAdmin, (req, res) => {
+  const { mode, data } = req.body;
+  if (!data || (!data.users && !data.tasks)) {
+    return res.status(400).json({ error: 'Invalid backup data format' });
+  }
+
+  const isMerge = mode !== 'replace'; // Default is safe merge!
+
+  let currentUsers = readJSON('users.json') || [];
+  let currentTasks = readJSON('tasks.json') || [];
+  let currentLogs  = readJSON('logs.json') || [];
+  let currentAudit = readJSON('audit.json') || [];
+
+  let addedUsers = 0, updatedUsers = 0;
+  let addedTasks = 0, updatedTasks = 0;
+  let addedLogs = 0;
+
+  if (isMerge) {
+    // 1. Merge Users
+    if (Array.isArray(data.users)) {
+      data.users.forEach(bu => {
+        const idx = currentUsers.findIndex(u => u.id === bu.id);
+        if (idx >= 0) {
+          currentUsers[idx] = {
+            ...currentUsers[idx],
+            ...bu,
+            password: bu.password || currentUsers[idx].password
+          };
+          updatedUsers++;
+        } else {
+          currentUsers.push(bu);
+          addedUsers++;
+        }
+      });
+    }
+
+    // 2. Merge Tasks
+    if (Array.isArray(data.tasks)) {
+      data.tasks.forEach(bt => {
+        const idx = currentTasks.findIndex(t => t.id === bt.id);
+        if (idx >= 0) {
+          currentTasks[idx] = { ...currentTasks[idx], ...bt };
+          updatedTasks++;
+        } else {
+          currentTasks.push(bt);
+          addedTasks++;
+        }
+      });
+    }
+
+    // 3. Merge Logs
+    if (Array.isArray(data.logs)) {
+      data.logs.forEach(bl => {
+        if (!currentLogs.find(l => l.id === bl.id)) {
+          currentLogs.push(bl);
+          addedLogs++;
+        }
+      });
+    }
+
+    // 4. Merge Audit
+    if (Array.isArray(data.audit)) {
+      data.audit.forEach(ba => {
+        if (!currentAudit.find(a => a.id === ba.id)) {
+          currentAudit.push(ba);
+        }
+      });
+    }
+  } else {
+    // Full Replace Mode
+    if (Array.isArray(data.users) && data.users.length > 0) currentUsers = data.users;
+    if (Array.isArray(data.tasks)) currentTasks = data.tasks;
+    if (Array.isArray(data.logs))  currentLogs = data.logs;
+    if (Array.isArray(data.audit)) currentAudit = data.audit;
+  }
+
+  writeJSON('users.json', currentUsers);
+  writeJSON('tasks.json', currentTasks);
+  writeJSON('logs.json', currentLogs);
+  writeJSON('audit.json', currentAudit);
+
+  res.json({
+    ok: true,
+    message: isMerge
+      ? `Data merged safely! Users: +${addedUsers} added, ~${updatedUsers} updated. Tasks: +${addedTasks} added, ~${updatedTasks} updated. Logs: +${addedLogs} added.`
+      : `Full system restore complete! Restored ${currentUsers.length} users, ${currentTasks.length} tasks, and ${currentLogs.length} hour logs.`,
+    summary: {
+      totalUsers: currentUsers.length,
+      totalTasks: currentTasks.length,
+      totalLogs: currentLogs.length,
+      mode: isMerge ? 'merge' : 'replace'
+    }
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════
 // START
 // ════════════════════════════════════════════════════════════════════════
 app.listen(PORT, '0.0.0.0', () => {
+  initMongo();
   const os = require('os');
   const ifaces = os.networkInterfaces();
   let localIP = 'localhost';

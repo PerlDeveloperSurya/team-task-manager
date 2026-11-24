@@ -6,7 +6,9 @@
     "password": "admin123",
     "color": "#9c27b0",
     "emoji": "👑",
-    "createdAt": "2026-11-18"
+    "designation": "Team Manager",
+    "createdAt": "2026-11-18",
+    "status": "Active"
   },
   {
     "id": "person1",
@@ -15,7 +17,9 @@
     "password": "person1",
     "color": "#1a73e8",
     "emoji": "👤",
-    "createdAt": "2026-11-18"
+    "designation": "Frontend Developer",
+    "createdAt": "2026-11-18",
+    "status": "Active"
   },
   {
     "id": "person2",
@@ -24,6 +28,8 @@
     "password": "person2",
     "color": "#34a853",
     "emoji": "👤",
-    "createdAt": "2026-11-18"
+    "designation": "Backend Developer",
+    "createdAt": "2026-11-18",
+    "status": "Active"
   }
 ]

@@ -4,164 +4,771 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Team Task Manager</title>
+<script>
+  (function(){
+    try {
+      if (localStorage.getItem('ttm_user') && localStorage.getItem('ttm_token')) {
+        document.documentElement.classList.add('has-session');
+      }
+    } catch(e) {}
+  })();
+</script>
 <style>
+/* SESSION ANTI-FLICKER (Eliminates login window flash on refresh) */
+html.has-session #login-page { display: none !important; }
+html.has-session #app { display: block !important; }
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
 :root{
-  --primary:#1a73e8;--primary-dark:#1557b0;--accent:#34a853;
-  --warn:#f9ab00;--danger:#ea4335;--purple:#9c27b0;--teal:#00897b;
-  --bg:#f0f4f8;--card:#fff;--border:#e0e0e0;--text:#202124;--muted:#6b7280;
-  --shadow:0 2px 10px rgba(0,0,0,.08);--radius:12px;--radius-sm:8px;
+  --primary:#2563eb;
+  --primary-dark:#1d4ed8;
+  --primary-light:#eff6ff;
+  --accent:#10b981;
+  --warn:#f59e0b;
+  --danger:#ef4444;
+  --purple:#8b5cf6;
+  --teal:#06b6d4;
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --border:#e2e8f0;
+  --border-light:#f1f5f9;
+  --text:#0f172a;
+  --text-secondary:#475569;
+  --muted:#64748b;
+  --radius-lg:16px;
+  --radius:12px;
+  --radius-sm:8px;
+  --shadow-xs:0 1px 2px 0 rgba(0,0,0,0.05);
+  --shadow:0 1px 3px 0 rgba(0,0,0,0.08),0 1px 2px -1px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,0.08),0 2px 4px -2px rgba(0,0,0,0.06);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.08),0 4px 6px -4px rgba(0,0,0,0.04);
+  --shadow-xl:0 20px 25px -5px rgba(0,0,0,0.1),0 8px 10px -6px rgba(0,0,0,0.06);
 }
+
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+body{
+  font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
 
 /* LOGIN */
-#login-page{min-height:100vh;background:linear-gradient(135deg,#1a73e8 0%,#0d47a1 50%,#1a237e 100%);display:flex;align-items:center;justify-content:center;}
-.login-box{background:#fff;border-radius:20px;padding:48px 40px;width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center;}
-.login-logo{font-size:48px;margin-bottom:8px;}
-.login-title{font-size:24px;font-weight:700;margin-bottom:4px;}
-.login-sub{color:var(--muted);margin-bottom:28px;font-size:14px;}
-.user-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px;margin-bottom:24px;max-height:200px;overflow-y:auto;}
-.user-card{padding:12px 8px;border:2px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all .2s;text-align:center;}
-.user-card:hover,.user-card.selected{border-color:var(--primary);background:#e8f0fe;}
-.uc-avatar{font-size:26px;}
-.uc-name{font-size:11px;font-weight:700;margin-top:4px;}
-.uc-role{font-size:10px;color:var(--muted);}
-.form-group{margin-bottom:16px;text-align:left;}
-.form-label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;}
-.form-control{width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:14px;outline:none;transition:border-color .2s;font-family:inherit;}
-.form-control:focus{border-color:var(--primary);}
-textarea.form-control{resize:vertical;min-height:70px;}
-.btn{padding:10px 20px;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:7px;}
-.btn-primary{background:var(--primary);color:#fff;}
-.btn-primary:hover{background:var(--primary-dark);}
-.btn-primary:disabled{background:#90caf9;cursor:not-allowed;}
-.btn-success{background:var(--accent);color:#fff;}
-.btn-success:hover{background:#2d9348;}
-.btn-danger{background:var(--danger);color:#fff;}
-.btn-danger:hover{background:#c62828;}
-.btn-outline{background:transparent;border:2px solid var(--primary);color:var(--primary);}
-.btn-outline:hover{background:var(--primary);color:#fff;}
+#login-page{
+  min-height:100vh;
+  background:radial-gradient(circle at 50% 15%, #1e293b 0%, #0f172a 100%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.login-box{
+  background:#ffffff;
+  border-radius:24px;
+  padding:44px 38px;
+  width:440px;
+  max-width:100%;
+  box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);
+  border:1px solid rgba(255,255,255,0.2);
+  text-align:center;
+}
+.login-logo-wrap{
+  width:64px;
+  height:64px;
+  border-radius:18px;
+  background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);
+  border:1px solid #bfdbfe;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:32px;
+  margin:0 auto 16px;
+  box-shadow:var(--shadow-sm);
+}
+.login-title{
+  font-size:24px;
+  font-weight:800;
+  color:var(--text);
+  letter-spacing:-0.5px;
+  margin-bottom:6px;
+}
+.login-sub{
+  color:var(--muted);
+  margin-bottom:28px;
+  font-size:14px;
+  line-height:1.5;
+}
+.form-group{margin-bottom:18px;text-align:left;}
+.form-label{
+  display:block;
+  font-size:12px;
+  font-weight:700;
+  color:var(--text-secondary);
+  margin-bottom:7px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+}
+.form-control{
+  width:100%;
+  padding:11px 14px;
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  font-size:14px;
+  outline:none;
+  transition:all .15s ease;
+  font-family:inherit;
+  background:#ffffff;
+  color:var(--text);
+}
+.form-control:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(37,99,235,0.15);
+}
+textarea.form-control{resize:vertical;min-height:75px;}
+.pass-toggle-btn{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  background:none;
+  border:none;
+  cursor:pointer;
+  font-size:16px;
+  color:var(--muted);
+  padding:5px 7px;
+  border-radius:6px;
+  line-height:1;
+  transition:all .15s;
+}
+.pass-toggle-btn:hover{color:var(--text);background:#f1f5f9;}
+
+/* BUTTONS */
+.btn{
+  padding:9px 18px;
+  border:none;
+  border-radius:var(--radius-sm);
+  font-size:13.5px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .15s ease;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font-family:inherit;
+  box-shadow:var(--shadow-xs);
+  text-decoration:none;
+}
+.btn:active{transform:scale(0.98);}
+.btn-primary{
+  background:linear-gradient(180deg,#2563eb 0%,#1d4ed8 100%);
+  color:#fff;
+  border:1px solid #1e40af;
+}
+.btn-primary:hover{
+  background:#1d4ed8;
+  box-shadow:0 4px 10px rgba(37,99,235,0.25);
+}
+.btn-primary:disabled{background:#93c5fd;border-color:#93c5fd;cursor:not-allowed;}
+.btn-success{
+  background:linear-gradient(180deg,#10b981 0%,#059669 100%);
+  color:#fff;
+  border:1px solid #047857;
+}
+.btn-success:hover{background:#059669;box-shadow:0 4px 10px rgba(16,185,129,0.25);}
+.btn-danger{
+  background:linear-gradient(180deg,#ef4444 0%,#dc2626 100%);
+  color:#fff;
+  border:1px solid #b91c1c;
+}
+.btn-danger:hover{background:#dc2626;}
+.btn-outline{
+  background:#fff;
+  border:1.5px solid var(--border);
+  color:var(--text);
+  box-shadow:var(--shadow-xs);
+}
+.btn-outline:hover{
+  border-color:var(--primary);
+  color:var(--primary);
+  background:var(--primary-light);
+}
 .btn-warn{background:var(--warn);color:#fff;}
-.btn-sm{padding:5px 12px;font-size:12px;}
-.btn-full{width:100%;justify-content:center;}
-.err-msg{color:#ea4335;font-size:13px;margin-bottom:12px;display:none;}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:6px;}
+.btn-full{width:100%;justify-content:center;padding:12px;}
+.err-msg{
+  color:#ef4444;
+  font-size:13px;
+  margin-bottom:14px;
+  display:none;
+  background:#fef2f2;
+  border:1px solid #fecaca;
+  padding:10px 12px;
+  border-radius:8px;
+}
 
 /* APP SHELL */
 #app{display:none;}
-.topbar{background:var(--primary);color:#fff;padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(26,115,232,.4);position:sticky;top:0;z-index:100;}
-.topbar-brand{font-size:17px;font-weight:700;display:flex;align-items:center;gap:10px;}
-.topbar-right{display:flex;align-items:center;gap:14px;}
-.avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;}
-.user-info .uname{font-weight:600;font-size:14px;}
-.user-info .urole{font-size:11px;opacity:.8;}
-.btn-logout{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:7px 14px;font-size:13px;border-radius:6px;cursor:pointer;}
-.btn-logout:hover{background:rgba(255,255,255,.3);}
+.topbar{
+  background:rgba(15,23,42,0.96);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  color:#fff;
+  padding:0 20px;
+  height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+.topbar-brand{
+  font-size:16px;
+  font-weight:800;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  letter-spacing:-0.3px;
+}
+.brand-icon{font-size:22px;}
+.brand-pill{
+  font-size:10px;
+  font-weight:700;
+  background:rgba(37,99,235,0.3);
+  color:#93c5fd;
+  border:1px solid rgba(147,197,253,0.3);
+  padding:2px 7px;
+  border-radius:9999px;
+  letter-spacing:0.5px;
+}
+.mobile-menu-btn{
+  display:none;
+  background:rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,0.15);
+  color:#fff;
+  font-size:18px;
+  width:38px;
+  height:38px;
+  border-radius:8px;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:all .15s;
+}
+.mobile-menu-btn:hover{background:rgba(255,255,255,0.2);}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.user-pill{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.12);
+  padding:5px 12px 5px 6px;
+  border-radius:9999px;
+}
+.avatar{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  font-size:15px;
+  color:#fff;
+  flex-shrink:0;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2);
+}
+.user-info{line-height:1.2;}
+.user-info .uname{font-weight:700;font-size:13px;color:#f8fafc;}
+.user-info .urole{font-size:10.5px;color:#94a3b8;font-weight:500;}
+.btn-logout{
+  background:rgba(239,68,68,0.15);
+  color:#fca5a5;
+  border:1px solid rgba(239,68,68,0.3);
+  padding:7px 12px;
+  font-size:12.5px;
+  font-weight:600;
+  border-radius:8px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  transition:all .15s;
+}
+.btn-logout:hover{
+  background:rgba(239,68,68,0.3);
+  color:#fff;
+}
 
 /* LAYOUT */
-.layout{display:flex;min-height:calc(100vh - 60px);}
-.sidebar{width:220px;background:#fff;border-right:1px solid var(--border);padding:20px 0;flex-shrink:0;overflow-y:auto;}
-.sidebar-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;padding:0 20px;margin:16px 0 6px;letter-spacing:.5px;}
+.layout{display:flex;min-height:calc(100vh - 64px);position:relative;}
+.sidebar{
+  width:240px;
+  background:#ffffff;
+  border-right:1px solid var(--border);
+  padding:20px 0;
+  flex-shrink:0;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+}
+.sidebar-mobile-header{
+  display:none;
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+  align-items:center;
+  justify-content:space-between;
+}
+.sidebar-close-btn{
+  background:none;
+  border:none;
+  font-size:18px;
+  color:var(--muted);
+  cursor:pointer;
+  padding:4px;
+}
+.sidebar-label{
+  font-size:11px;
+  font-weight:800;
+  color:var(--muted);
+  text-transform:uppercase;
+  padding:0 20px;
+  margin:16px 0 8px;
+  letter-spacing:.6px;
+}
 .sidebar-label:first-child{margin-top:0;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--muted);transition:all .15s;border-left:3px solid transparent;}
-.nav-item:hover{background:#f1f3f4;color:var(--text);}
-.nav-item.active{background:#e8f0fe;color:var(--primary);border-left-color:var(--primary);font-weight:600;}
-.nav-icon{font-size:17px;width:22px;}
-.content{flex:1;padding:24px;overflow-y:auto;}
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px 16px;
+  margin:2px 10px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--text-secondary);
+  transition:all .15s ease;
+}
+.nav-item:hover{background:#f1f5f9;color:var(--text);}
+.nav-item.active{
+  background:var(--primary-light);
+  color:var(--primary);
+  font-weight:700;
+}
+.nav-icon{font-size:18px;width:22px;display:flex;align-items:center;justify-content:center;}
+.content{
+  flex:1;
+  padding:28px;
+  overflow-y:auto;
+  max-width:1600px;
+}
+.sidebar-backdrop{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,0.6);
+  backdrop-filter:blur(4px);
+  z-index:998;
+}
 
 /* CARDS */
-.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
-.section-title{font-size:20px;font-weight:700;}
-.section-sub{font-size:13px;color:var(--muted);margin-top:2px;}
-.card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:20px;}
-.card-title{font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.section-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:22px;
+  flex-wrap:wrap;
+  gap:12px;
+}
+.section-title{
+  font-size:22px;
+  font-weight:800;
+  letter-spacing:-0.5px;
+  color:var(--text);
+}
+.section-sub{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:3px;
+}
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:22px;
+  box-shadow:var(--shadow);
+  border:1px solid var(--border);
+  margin-bottom:22px;
+  transition:box-shadow .2s;
+}
+.card-title{
+  font-size:16px;
+  font-weight:800;
+  color:var(--text);
+  margin-bottom:18px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  letter-spacing:-0.3px;
+}
 
 /* KPI GRID */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:22px;}
-.kpi-card{background:#fff;border-radius:var(--radius);padding:18px 14px;box-shadow:var(--shadow);border-top:4px solid;text-align:center;transition:transform .2s;}
-.kpi-card:hover{transform:translateY(-2px);}
-.kpi-icon{font-size:26px;margin-bottom:6px;}
-.kpi-val{font-size:30px;font-weight:800;line-height:1;}
-.kpi-label{font-size:11px;color:var(--muted);margin-top:5px;font-weight:600;}
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:14px;
+  margin-bottom:24px;
+}
+.kpi-card{
+  background:#fff;
+  border-radius:var(--radius);
+  padding:16px 14px;
+  box-shadow:var(--shadow);
+  border:1px solid var(--border);
+  border-top:4px solid;
+  text-align:center;
+  transition:all .2s ease;
+}
+.kpi-card:hover{
+  transform:translateY(-2px);
+  box-shadow:var(--shadow-md);
+}
+.kpi-icon{font-size:24px;margin-bottom:6px;}
+.kpi-val{font-size:28px;font-weight:800;line-height:1.1;letter-spacing:-0.5px;}
+.kpi-label{font-size:11.5px;color:var(--muted);margin-top:6px;font-weight:600;}
 
 /* TABLE */
-.table-wrap{overflow-x:auto;border-radius:var(--radius-sm);}
-table{width:100%;border-collapse:collapse;font-size:13px;}
-thead th{background:#f8f9fa;padding:11px 13px;text-align:left;font-weight:700;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid var(--border);white-space:nowrap;}
-tbody tr{border-bottom:1px solid #f0f0f0;transition:background .15s;}
-tbody tr:hover{background:#fafbff;}
-tbody td{padding:11px 13px;vertical-align:middle;}
-.no-data{text-align:center;padding:36px;color:var(--muted);font-size:14px;}
+.table-wrap{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--border);
+  background:#fff;
+  margin-bottom:14px;
+}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:620px;}
+thead th{
+  background:#f8fafc;
+  padding:12px 14px;
+  text-align:left;
+  font-weight:700;
+  font-size:11px;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  border-bottom:1.5px solid var(--border);
+  white-space:nowrap;
+}
+tbody tr{border-bottom:1px solid #f1f5f9;transition:background .15s;}
+tbody tr:hover{background:#f8fafc;}
+tbody td{padding:12px 14px;vertical-align:middle;}
+.no-data{text-align:center;padding:40px;color:var(--muted);font-size:14px;}
 
 /* BADGES */
-.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;}
-.b-completed{background:#e6f4ea;color:#1e7e34;}
-.b-inprogress{background:#e8f0fe;color:#1557b0;}
-.b-pending{background:#fff8e1;color:#e65100;}
-.b-upcoming{background:#f3e5f5;color:#7b1fa2;}
-.b-blocked{background:#fce8e8;color:#c62828;}
-.b-review{background:#e0f7fa;color:#006064;}
-.b-task{background:#e3f2fd;color:#1565c0;}
-.b-requirement{background:#f3e5f5;color:#6a1b9a;}
-.b-enhancement{background:#e8f5e9;color:#2e7d32;}
-.b-bug{background:#fce8e8;color:#b71c1c;}
-.b-high{background:#fce8e8;color:#c62828;}
-.b-medium{background:#fff8e1;color:#f57f17;}
-.b-low{background:#f1f8e9;color:#558b2f;}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:3px 10px;
+  border-radius:9999px;
+  font-size:11px;
+  font-weight:700;
+  white-space:nowrap;
+  border:1px solid transparent;
+}
+.b-completed{background:#ecfdf5;color:#065f46;border-color:#a7f3d0;}
+.b-inprogress{background:#eff6ff;color:#1e40af;border-color:#bfdbfe;}
+.b-pending{background:#fffbeb;color:#92400e;border-color:#fde68a;}
+.b-upcoming{background:#faf5ff;color:#6b21a8;border-color:#e9d5ff;}
+.b-blocked{background:#fef2f2;color:#991b1b;border-color:#fecaca;}
+.b-review{background:#ecfeff;color:#155e75;border-color:#a5f3fc;}
+.b-task{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe;}
+.b-requirement{background:#faf5ff;color:#7e22ce;border-color:#e9d5ff;}
+.b-enhancement{background:#f0fdf4;color:#166534;border-color:#bbf7d0;}
+.b-bug{background:#fef2f2;color:#b91c1c;border-color:#fecaca;}
+.b-high{background:#fef2f2;color:#b91c1c;border-color:#fecaca;}
+.b-medium{background:#fffbeb;color:#b45309;border-color:#fde68a;}
+.b-low{background:#f0fdf4;color:#15803d;border-color:#bbf7d0;}
 
 /* PROGRESS */
-.progress-wrap{background:#e9ecef;border-radius:10px;height:7px;overflow:hidden;min-width:70px;}
-.progress-bar{height:100%;border-radius:10px;}
+.progress-wrap{background:#e2e8f0;border-radius:9999px;height:8px;overflow:hidden;min-width:70px;}
+.progress-bar{height:100%;border-radius:9999px;}
 
 /* MODAL */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;}
+.modal-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,0.65);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  z-index:1000;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+}
 .modal-overlay.open{display:flex;}
-.modal{background:#fff;border-radius:16px;padding:28px;width:540px;max-width:95vw;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:modalIn .2s ease;}
-@keyframes modalIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
-.modal-title{font-size:17px;font-weight:700;}
-.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);}
-.modal-close:hover{color:var(--danger);}
-.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
+.modal{
+  background:#fff;
+  border-radius:20px;
+  padding:28px;
+  width:540px;
+  max-width:100%;
+  max-height:90vh;
+  overflow-y:auto;
+  box-shadow:0 25px 50px -12px rgba(0,0,0,0.3);
+  border:1px solid var(--border);
+  animation:modalIn .2s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes modalIn{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.modal-title{font-size:18px;font-weight:800;letter-spacing:-0.4px;color:var(--text);}
+.modal-close{
+  background:none;
+  border:none;
+  font-size:20px;
+  cursor:pointer;
+  color:var(--muted);
+  width:32px;
+  height:32px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all .15s;
+}
+.modal-close:hover{background:#f1f5f9;color:var(--danger);}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 
 /* FILTER BAR */
-.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
-.filter-select,.search-input{padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;outline:none;background:#fff;transition:border-color .2s;}
-.filter-select:focus,.search-input:focus{border-color:var(--primary);}
-.search-input{min-width:200px;font-weight:400;}
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+.filter-select,.search-input{
+  padding:9px 13px;
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  outline:none;
+  background:#fff;
+  color:var(--text);
+  transition:all .15s;
+  box-shadow:var(--shadow-xs);
+  font-family:inherit;
+}
+.filter-select:focus,.search-input:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(37,99,235,0.15);
+}
+.search-input{min-width:220px;font-weight:400;}
 
 /* TOAST */
-.toast{position:fixed;bottom:24px;right:24px;z-index:9999;padding:13px 20px;border-radius:10px;font-size:14px;font-weight:500;box-shadow:0 8px 30px rgba(0,0,0,.2);animation:toastIn .3s ease;display:flex;align-items:center;gap:10px;color:#fff;max-width:300px;}
+.toast{
+  position:fixed;
+  bottom:24px;
+  right:24px;
+  z-index:9999;
+  padding:14px 20px;
+  border-radius:12px;
+  font-size:13.5px;
+  font-weight:600;
+  box-shadow:var(--shadow-xl);
+  animation:toastIn .25s ease;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:#fff;
+  max-width:340px;
+}
 @keyframes toastIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
 
-/* PERSON CARDS */
-.person-stat{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.2);}
-.person-stat:last-child{border-bottom:none;}
-.ps-label{font-size:12px;opacity:.85;}
-.ps-val{font-size:17px;font-weight:800;}
-
-/* LOG ENTRY */
-.log-entry{display:flex;align-items:center;gap:12px;padding:11px;border-radius:8px;border:1px solid var(--border);margin-bottom:8px;}
-.log-info{flex:1;}
-.log-task{font-weight:600;font-size:13px;}
-.log-meta{font-size:11px;color:var(--muted);margin-top:2px;}
-.log-hours{font-size:20px;font-weight:800;color:var(--primary);}
-
 /* TABS */
-.tab-buttons{display:flex;gap:4px;background:#f1f3f4;padding:4px;border-radius:10px;margin-bottom:18px;}
-.tab-btn{flex:1;padding:8px;border:none;background:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .2s;}
-.tab-btn.active{background:#fff;color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,.1);}
+.tab-buttons{
+  display:flex;
+  gap:4px;
+  background:#f1f5f9;
+  padding:5px;
+  border-radius:10px;
+  margin-bottom:18px;
+  border:1px solid var(--border);
+}
+.tab-btn{
+  flex:1;
+  padding:8px 12px;
+  border:none;
+  background:none;
+  border-radius:7px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  color:var(--muted);
+  transition:all .15s;
+  font-family:inherit;
+}
+.tab-btn.active{
+  background:#fff;
+  color:var(--primary);
+  box-shadow:0 1px 3px rgba(0,0,0,0.08);
+}
 
 /* ONLINE DOT */
-.online-dot{width:9px;height:9px;border-radius:50%;background:#34a853;display:inline-block;margin-right:4px;box-shadow:0 0 0 2px #e6f4ea;}
+.online-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#10b981;
+  display:inline-block;
+  margin-right:6px;
+  box-shadow:0 0 0 2px #d1fae5;
+}
 
-.hidden{display:none!important;}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-@media(max-width:700px){.two-col{grid-template-columns:1fr;}.form-row{grid-template-columns:1fr;}.sidebar{width:60px;}.nav-item span:not(.nav-icon){display:none;}.sidebar-label{display:none;}}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
 
 /* USER MANAGEMENT */
-.user-row-card{display:flex;align-items:center;gap:14px;padding:14px;border-radius:10px;border:1px solid var(--border);margin-bottom:10px;background:#fff;}
-.user-row-actions{display:flex;gap:8px;margin-left:auto;}
+.user-row-card{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:16px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  margin-bottom:12px;
+  background:#fff;
+  transition:all .15s ease;
+}
+.user-row-card:hover{border-color:#cbd5e1;box-shadow:var(--shadow-sm);}
+.user-row-actions{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;}
+
+/* ACTIVE TIMER BAR */
+.active-timer-bar{
+  background:linear-gradient(90deg,#090d16 0%,#1e1b4b 60%,#090d16 100%);
+  color:#fff;
+  padding:10px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow:0 4px 15px rgba(0,0,0,0.25);
+  font-size:13px;
+  border-bottom:1px solid rgba(99,102,241,0.3);
+  position:sticky;
+  top:64px;
+  z-index:99;
+  flex-wrap:wrap;
+  gap:12px;
+}
+.timer-pulse-dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#10b981;
+  display:inline-block;
+  box-shadow:0 0 0 0 rgba(16,185,129,0.7);
+  animation:pulse-green 1.5s infinite;
+  flex-shrink:0;
+}
+@keyframes pulse-green{
+  0%{transform:scale(.95);box-shadow:0 0 0 0 rgba(16,185,129,0.7);}
+  70%{transform:scale(1);box-shadow:0 0 0 8px rgba(16,185,129,0);}
+  100%{transform:scale(.95);box-shadow:0 0 0 0 rgba(16,185,129,0);}
+}
+.timer-pulse-dot.paused{background:#f59e0b;animation:none;}
+.timer-badge{
+  font-weight:700;
+  font-size:10px;
+  letter-spacing:0.8px;
+  background:rgba(255,255,255,0.15);
+  color:#e2e8f0;
+  padding:3px 8px;
+  border-radius:9999px;
+  border:1px solid rgba(255,255,255,0.2);
+}
+.timer-task-title{
+  max-width:260px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  color:#cbd5e1;
+}
+.timer-digits{
+  font-family:'JetBrains Mono',ui-monospace,monospace;
+  font-size:16px;
+  font-weight:700;
+  letter-spacing:1px;
+  background:rgba(0,0,0,0.6);
+  padding:4px 10px;
+  border-radius:8px;
+  color:#6ee7b7;
+  border:1px solid rgba(52,211,153,0.3);
+  box-shadow:inset 0 1px 3px rgba(0,0,0,0.4);
+}
+.timer-actions{display:flex;align-items:center;gap:8px;}
+
+/* PALETTE & EMOJI */
+.palette-swatches{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.palette-swatch{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  border:2.5px solid #fff;
+  box-shadow:0 1px 4px rgba(0,0,0,0.25);
+  cursor:pointer;
+  transition:transform .15s;
+}
+.palette-swatch:hover{transform:scale(1.2);}
+.emoji-picker-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.emoji-btn{
+  padding:5px 9px;
+  background:#f8fafc;
+  border:1.5px solid var(--border);
+  border-radius:8px;
+  cursor:pointer;
+  font-size:17px;
+  transition:all .15s;
+}
+.emoji-btn:hover{background:#eff6ff;border-color:var(--primary);}
+
+/* RESPONSIVE BREAKPOINTS */
+@media(max-width:860px){
+  .mobile-menu-btn{display:inline-flex;}
+  .topbar-brand .brand-text{display:none;}
+  .user-info{display:none;}
+  .sidebar{
+    position:fixed;
+    top:0;
+    left:0;
+    bottom:0;
+    width:280px;
+    z-index:1000;
+    transform:translateX(-100%);
+    transition:transform 0.25s cubic-bezier(0.16,1,0.3,1);
+    box-shadow:var(--shadow-xl);
+    padding:0;
+  }
+  .sidebar.mobile-open{transform:translateX(0);}
+  .sidebar-backdrop.open{display:block;}
+  .sidebar-mobile-header{display:flex;}
+  .content{padding:18px 14px;}
+  .two-col{grid-template-columns:1fr;}
+  .section-title{font-size:19px;}
+}
+
+@media(max-width:640px){
+  .topbar{padding:0 14px;}
+  .form-row{grid-template-columns:1fr;}
+  .user-row-card{flex-direction:column;align-items:flex-start;}
+  .user-row-actions{margin-left:0;width:100%;justify-content:flex-end;}
+  .timer-task-title{max-width:140px;}
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:10px;}
+  .kpi-card{padding:14px 10px;}
+  .kpi-val{font-size:24px;}
+  .login-box{padding:32px 22px;}
+}
 </style>
 </head>
 <body>
@@ -169,16 +776,22 @@ tbody td{padding:11px 13px;vertical-align:middle;}
 <!-- ══ LOGIN ══ -->
 <div id="login-page">
   <div class="login-box">
-    <div class="login-logo">🗂️</div>
+    <div class="login-logo-wrap">🗂️</div>
     <div class="login-title">Team Task Manager</div>
-    <div class="login-sub">Enter your username and password to sign in</div>
+    <div class="login-sub">Sign in with your team credentials</div>
     <div class="form-group">
-      <label class="form-label">Username</label>
+      <label class="form-label">Username / Login ID</label>
       <input type="text" class="form-control" id="login-user" placeholder="e.g. admin, person1" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()"/>
     </div>
     <div class="form-group">
-      <label class="form-label">Password</label>
-      <input type="password" class="form-control" id="login-pass" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+        <label class="form-label" style="margin-bottom:0">Password</label>
+        <a href="javascript:void(0)" onclick="openForgotPasswordModal()" style="font-size:12px;color:var(--primary);text-decoration:none;font-weight:600">Forgot password?</a>
+      </div>
+      <div style="position:relative">
+        <input type="password" class="form-control" id="login-pass" placeholder="Enter your password" autocomplete="current-password" style="padding-right:42px" onkeydown="if(event.key==='Enter')doLogin()"/>
+        <button type="button" class="pass-toggle-btn" id="login-pass-toggle" onclick="toggleLoginPassword()" title="Show/Hide Password">👁️</button>
+      </div>
     </div>
     <div class="err-msg" id="login-err">❌ Invalid username or password. Please try again.</div>
     <button class="btn btn-primary btn-full" onclick="doLogin()">🔐 Sign In</button>
@@ -188,19 +801,49 @@ tbody td{padding:11px 13px;vertical-align:middle;}
 <!-- ══ APP ══ -->
 <div id="app">
   <div class="topbar">
-    <div class="topbar-brand">🗂️ Team Task Manager</div>
-    <div class="topbar-right">
-      <div class="user-info" style="text-align:right">
-        <div class="uname" id="tb-name"></div>
-        <div class="urole" id="tb-role"></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileSidebar()" aria-label="Toggle Navigation">☰</button>
+      <div class="topbar-brand">
+        <span class="brand-icon">🗂️</span>
+        <span class="brand-text">Team Task Manager</span>
+        <span class="brand-pill">v1.2</span>
       </div>
-      <div class="avatar" id="tb-avatar"></div>
-      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+    <div class="topbar-right">
+      <div class="user-pill">
+        <div class="avatar" id="tb-avatar"></div>
+        <div class="user-info">
+          <div class="uname" id="tb-name"></div>
+          <div class="urole" id="tb-role"></div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()" title="Sign Out">
+        <span>🚪</span> <span class="logout-text">Logout</span>
+      </button>
     </div>
   </div>
+
+  <!-- ══ ACTIVE TIMER BAR ══ -->
+  <div id="active-timer-bar" class="active-timer-bar" style="display:none">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span class="timer-pulse-dot" id="tb-timer-pulse"></span>
+      <span class="timer-badge">LIVE TRACKING</span>
+      <b id="tb-timer-task-id" style="color:#93c5fd"></b>
+      <span id="tb-timer-task-title" class="timer-task-title"></span>
+      <span class="timer-digits" id="tb-timer-digits">00:00:00</span>
+    </div>
+    <div class="timer-actions">
+      <button class="btn btn-sm btn-outline" id="tb-timer-pause-btn" style="color:#fff;border-color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.1)" onclick="togglePauseTimer()">⏸️ Pause</button>
+      <button class="btn btn-sm btn-success" onclick="stopAndLogTimer()">⏹️ Stop & Log</button>
+      <button class="btn btn-sm btn-danger" style="padding:6px 10px;font-size:12px" onclick="cancelTimer()" title="Discard Timer">✕</button>
+    </div>
+  </div>
+
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
+
   <div class="layout">
-    <div class="sidebar" id="sidebar"></div>
-    <div class="content" id="content"></div>
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="content" id="content"></main>
   </div>
 </div>
 
@@ -251,15 +894,25 @@ tbody td{padding:11px 13px;vertical-align:middle;}
         </select>
       </div>
     </div>
-    <div class="form-row">
+    <div class="form-row" style="grid-template-columns:1fr 1fr 1fr">
       <div class="form-group">
         <label class="form-label">Start Date</label>
         <input type="date" class="form-control" id="t-start"/>
       </div>
       <div class="form-group">
+        <label class="form-label">Start Time</label>
+        <input type="time" class="form-control" id="t-start-time"/>
+      </div>
+      <div class="form-group">
         <label class="form-label">Due Date</label>
         <input type="date" class="form-control" id="t-due"/>
       </div>
+    </div>
+    <div id="t-timer-option-box" style="background:#e8f0fe;border:1px solid #c2e7ff;border-radius:10px;padding:12px 14px;margin-bottom:14px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:600;font-size:13px;color:#174ea6;margin:0">
+        <input type="checkbox" id="t-auto-start-timer" style="width:18px;height:18px;cursor:pointer;accent-color:#1a73e8"/>
+        <span>⏱️ <b>Start live work timer now</b> for this task (sets status to In Progress)</span>
+      </label>
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -361,13 +1014,190 @@ tbody td{padding:11px 13px;vertical-align:middle;}
   </div>
 </div>
 
+<!-- ══ EDIT USER MODAL (Admin Edit User Details) ══ -->
+<div class="modal-overlay" id="edit-user-modal">
+  <div class="modal" style="width:500px">
+    <div class="modal-header">
+      <div class="modal-title" id="eu-modal-title">✏️ Edit Team Member</div>
+      <button class="modal-close" onclick="closeModal('edit-user-modal')">✕</button>
+    </div>
+    
+    <div style="background:#f8f9fa;border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;align-items:center;gap:14px;margin-bottom:16px">
+      <div class="avatar" id="eu-preview-avatar" style="width:44px;height:44px;font-size:20px;background:#1a73e8">👤</div>
+      <div>
+        <div style="font-weight:700;font-size:15px" id="eu-preview-name">—</div>
+        <div style="font-size:12px;color:var(--muted)">User ID: <code id="eu-id-display"></code></div>
+      </div>
+    </div>
+
+    <input type="hidden" id="eu-id"/>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Full Name *</label>
+        <input class="form-control" id="eu-name" placeholder="Full name" oninput="updateEditAvatarPreview()"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select class="form-control" id="eu-role">
+          <option value="member">👤 Member</option>
+          <option value="admin">👑 Admin (Manager)</option>
+        </select>
+        <div id="eu-role-hint" style="font-size:11px;color:var(--muted);margin-top:4px;display:none">Root admin role cannot be changed</div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Designation / Title</label>
+        <input class="form-control" id="eu-designation" placeholder="e.g. Lead Engineer, Designer"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-control" id="eu-status">
+          <option value="Active">🟢 Active</option>
+          <option value="Inactive">⚪ Inactive / Deactivated</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-control" id="eu-email" placeholder="name@company.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input type="tel" class="form-control" id="eu-phone" placeholder="+1234567890"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Change Password</label>
+      <div style="display:flex;gap:8px">
+        <input type="password" class="form-control" id="eu-pass" placeholder="Leave blank to keep existing password"/>
+        <button type="button" class="btn btn-outline" style="padding:0 12px" onclick="togglePassVisibility('eu-pass')">👁️</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Only fill if resetting or changing the user's password.</div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Avatar Emoji</label>
+        <input class="form-control" id="eu-emoji" placeholder="👤" maxlength="4" oninput="updateEditAvatarPreview()"/>
+        <div class="emoji-picker-row">
+          <button type="button" class="emoji-btn" onclick="selectEditEmoji('👤')">👤</button>
+          <button type="button" class="emoji-btn" onclick="selectEditEmoji('👑')">👑</button>
+          <button type="button" class="emoji-btn" onclick="selectEditEmoji('💻')">💻</button>
+          <button type="button" class="emoji-btn" onclick="selectEditEmoji('🎨')">🎨</button>
+          <button type="button" class="emoji-btn" onclick="selectEditEmoji('🚀')">🚀</button>
+          <button type="button" class="emoji-btn" onclick="selectEditEmoji('📊')">📊</button>
+          <button type="button" class="emoji-btn" onclick="selectEditEmoji('⚡')">⚡</button>
+          <button type="button" class="emoji-btn" onclick="selectEditEmoji('🛠️')">🛠️</button>
+          <button type="button" class="emoji-btn" onclick="selectEditEmoji('🎯')">🎯</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Color Theme</label>
+        <input type="color" class="form-control" id="eu-color" value="#1a73e8" style="height:42px;cursor:pointer;" oninput="updateEditAvatarPreview()"/>
+        <div class="palette-swatches">
+          <div class="palette-swatch" style="background:#1a73e8" onclick="selectEditColor('#1a73e8')"></div>
+          <div class="palette-swatch" style="background:#34a853" onclick="selectEditColor('#34a853')"></div>
+          <div class="palette-swatch" style="background:#9c27b0" onclick="selectEditColor('#9c27b0')"></div>
+          <div class="palette-swatch" style="background:#ea4335" onclick="selectEditColor('#ea4335')"></div>
+          <div class="palette-swatch" style="background:#ff6d00" onclick="selectEditColor('#ff6d00')"></div>
+          <div class="palette-swatch" style="background:#00897b" onclick="selectEditColor('#00897b')"></div>
+          <div class="palette-swatch" style="background:#3f51b5" onclick="selectEditColor('#3f51b5')"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('edit-user-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditUser()">💾 Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FORGOT PASSWORD MODAL ══ -->
+<div class="modal-overlay" id="forgot-modal">
+  <div class="modal" style="width:460px">
+    <div class="modal-header">
+      <div class="modal-title">🔑 Password Assistance</div>
+      <button class="modal-close" onclick="closeModal('forgot-modal')">✕</button>
+    </div>
+    
+    <div class="tab-buttons" style="margin-bottom:18px">
+      <button class="tab-btn active" id="tab-btn-mem-reset" onclick="switchForgotTab('member')">👤 Team Member</button>
+      <button class="tab-btn" id="tab-btn-adm-reset" onclick="switchForgotTab('admin')">👑 Admin Recovery</button>
+    </div>
+
+    <!-- Panel 1: Team Member Reset Request -->
+    <div id="forgot-panel-member">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">
+        Enter your Username or Login ID. A password reset request will be sent to your Team Manager to reset your password.
+      </p>
+      <div class="form-group">
+        <label class="form-label">Username / Login ID *</label>
+        <input class="form-control" id="fp-user" placeholder="e.g. person1, person2"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Your Email or Phone (Optional)</label>
+        <input class="form-control" id="fp-contact" placeholder="Where manager can confirm or reach you"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note for Manager (Optional)</label>
+        <input class="form-control" id="fp-note" placeholder="e.g. Forgot my login password"/>
+      </div>
+      <div id="fp-msg" style="display:none;font-size:13px;padding:10px 14px;border-radius:8px;margin-bottom:14px"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('forgot-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitForgotPassword()">📨 Send Request to Admin</button>
+      </div>
+    </div>
+
+    <!-- Panel 2: Admin Master Recovery -->
+    <div id="forgot-panel-admin" style="display:none">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">
+        Reset the primary Administrator account password using your Master Recovery Key.
+      </p>
+      <div class="form-group">
+        <label class="form-label">Master Recovery Key *</label>
+        <div style="position:relative">
+          <input type="password" class="form-control" id="ar-key" placeholder="Enter recovery key" style="padding-right:42px"/>
+          <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('ar-key')">👁️</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Default key: <code>admin-recovery-2024</code> (or configured in Render env)</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">New Admin Password *</label>
+        <div style="position:relative">
+          <input type="password" class="form-control" id="ar-new-pass" placeholder="At least 4 characters" style="padding-right:42px"/>
+          <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('ar-new-pass')">👁️</button>
+        </div>
+      </div>
+      <div id="ar-msg" style="display:none;font-size:13px;padding:10px 14px;border-radius:8px;margin-bottom:14px"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('forgot-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitAdminRecovery()">🔑 Reset Admin Password</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ══════════════════════════════════════════════════════
-// STATE
+// STATE & SESSION PERSISTENCE
 // ══════════════════════════════════════════════════════
 let ME = null;        // current user object
 let ALL_USERS = [];   // cached user list
 let CURRENT_VIEW = '';
+let AUTH_TOKEN = localStorage.getItem('ttm_token') || null;
+
+try {
+  const cachedUser = localStorage.getItem('ttm_user');
+  if (cachedUser) ME = JSON.parse(cachedUser);
+} catch(e) {}
 
 const today = () => new Date().toISOString().split('T')[0];
 const fmtDate = d => {
@@ -380,19 +1210,35 @@ const daysLeft = d => {
 };
 
 // ══════════════════════════════════════════════════════
-// API HELPER
+// API HELPER (with x-auth-token header)
 // ══════════════════════════════════════════════════════
 async function api(method, url, body) {
-  const opts = { method, credentials:'include', headers:{'Content-Type':'application/json'} };
+  const headers = { 'Content-Type': 'application/json' };
+  if (AUTH_TOKEN) headers['x-auth-token'] = AUTH_TOKEN;
+  const opts = { method, credentials: 'include', headers };
   if (body) opts.body = JSON.stringify(body);
-  const r = await fetch(url, opts);
-  if (r.status === 401) { showLogin(); return null; }
-  return r.json();
+  try {
+    const r = await fetch(url, opts);
+    if (r.status === 401) {
+      if (url !== '/api/login') {
+        localStorage.removeItem('ttm_user');
+        localStorage.removeItem('ttm_token');
+        AUTH_TOKEN = null;
+        ME = null;
+        showLogin();
+      }
+      return null;
+    }
+    return await r.json();
+  } catch(e) {
+    console.warn('Network request failed for ' + url, e);
+    return null;
+  }
 }
-const GET  = url        => api('GET', url);
-const POST = (url, b)   => api('POST', url, b);
-const PUT  = (url, b)   => api('PUT', url, b);
-const DEL  = url        => api('DELETE', url);
+const GET  = url      => api('GET', url);
+const POST = (url, b) => api('POST', url, b);
+const PUT  = (url, b) => api('PUT', url, b);
+const DEL  = url      => api('DELETE', url);
 
 // ══════════════════════════════════════════════════════
 // HELPERS
@@ -449,7 +1295,159 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 function setContent(html) { document.getElementById('content').innerHTML=html; }
 
 // ══════════════════════════════════════════════════════
-// LOGIN / LOGOUT
+// LIVE TASK TIMER ENGINE
+// ══════════════════════════════════════════════════════
+let TIMER_STATE = null; // { taskId, taskTitle, startedAt, isPaused, pausedAt, accumulatedMs }
+let TIMER_INTERVAL = null;
+
+function initTimer() {
+  try {
+    const raw = localStorage.getItem('ttm_active_timer');
+    if (raw) {
+      TIMER_STATE = JSON.parse(raw);
+      renderTimerBar();
+      startTimerTicker();
+    }
+  } catch (e) {}
+}
+
+function startTaskTimer(taskId, taskTitle) {
+  if (TIMER_STATE && TIMER_STATE.taskId && TIMER_STATE.taskId !== taskId) {
+    if (!confirm(`A timer is already active for task ${TIMER_STATE.taskId} ("${TIMER_STATE.taskTitle}").\n\nDo you want to switch and track "${taskTitle || taskId}" instead?`)) {
+      return;
+    }
+  }
+
+  TIMER_STATE = {
+    taskId,
+    taskTitle: taskTitle || taskId,
+    startedAt: Date.now(),
+    isPaused: false,
+    pausedAt: null,
+    accumulatedMs: 0
+  };
+
+  localStorage.setItem('ttm_active_timer', JSON.stringify(TIMER_STATE));
+  renderTimerBar();
+  startTimerTicker();
+  showToast(`⏱️ Timer started for ${taskId}!`, '#1a73e8');
+
+  // Also auto-update task status to 'In Progress' if not already
+  PUT('/api/tasks/' + taskId, { status: 'In Progress' }).then(() => {
+    if (CURRENT_VIEW === 'all-tasks') renderAllTasks();
+    else if (CURRENT_VIEW === 'my-tasks') renderMyTasks();
+  });
+}
+
+function getTimerElapsedMs() {
+  if (!TIMER_STATE) return 0;
+  let elapsed = TIMER_STATE.accumulatedMs || 0;
+  if (!TIMER_STATE.isPaused && TIMER_STATE.startedAt) {
+    elapsed += (Date.now() - TIMER_STATE.startedAt);
+  }
+  return elapsed;
+}
+
+function formatHMS(totalSeconds) {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  return [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
+}
+
+function startTimerTicker() {
+  if (TIMER_INTERVAL) clearInterval(TIMER_INTERVAL);
+  updateTimerDigits();
+  TIMER_INTERVAL = setInterval(updateTimerDigits, 1000);
+}
+
+function updateTimerDigits() {
+  if (!TIMER_STATE) {
+    if (TIMER_INTERVAL) clearInterval(TIMER_INTERVAL);
+    return;
+  }
+  const totalMs = getTimerElapsedMs();
+  const totalSecs = Math.floor(totalMs / 1000);
+  const formatted = formatHMS(totalSecs);
+
+  const el = document.getElementById('tb-timer-digits');
+  if (el) el.textContent = formatted;
+
+  // Update any live timers shown inside task table rows
+  document.querySelectorAll(`.live-timer-for-${TIMER_STATE.taskId}`).forEach(node => {
+    node.textContent = formatted;
+  });
+}
+
+function renderTimerBar() {
+  const bar = document.getElementById('active-timer-bar');
+  if (!bar) return;
+  if (!TIMER_STATE) {
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+  const idEl = document.getElementById('tb-timer-task-id');
+  const titleEl = document.getElementById('tb-timer-task-title');
+  if (idEl) idEl.textContent = TIMER_STATE.taskId;
+  if (titleEl) titleEl.textContent = TIMER_STATE.taskTitle;
+  
+  const dot = document.getElementById('tb-timer-pulse');
+  const pauseBtn = document.getElementById('tb-timer-pause-btn');
+  if (TIMER_STATE.isPaused) {
+    if (dot) dot.classList.add('paused');
+    if (pauseBtn) pauseBtn.innerHTML = '▶️ Resume';
+  } else {
+    if (dot) dot.classList.remove('paused');
+    if (pauseBtn) pauseBtn.innerHTML = '⏸️ Pause';
+  }
+  updateTimerDigits();
+}
+
+function togglePauseTimer() {
+  if (!TIMER_STATE) return;
+  if (TIMER_STATE.isPaused) {
+    TIMER_STATE.isPaused = false;
+    TIMER_STATE.startedAt = Date.now();
+    TIMER_STATE.pausedAt = null;
+    showToast('▶️ Timer resumed', '#1a73e8');
+  } else {
+    TIMER_STATE.accumulatedMs = getTimerElapsedMs();
+    TIMER_STATE.isPaused = true;
+    TIMER_STATE.startedAt = null;
+    TIMER_STATE.pausedAt = Date.now();
+    showToast('⏸️ Timer paused', '#f57c00');
+  }
+  localStorage.setItem('ttm_active_timer', JSON.stringify(TIMER_STATE));
+  renderTimerBar();
+}
+
+function stopAndLogTimer() {
+  if (!TIMER_STATE) return;
+  const totalMs = getTimerElapsedMs();
+  const totalSeconds = Math.max(1, Math.floor(totalMs / 1000));
+  const hours = Math.max(0.1, parseFloat((totalSeconds / 3600).toFixed(2)));
+  const taskId = TIMER_STATE.taskId;
+  const hms = formatHMS(totalSeconds);
+
+  openLogModal(taskId, hours, `Work session tracked via live timer (${hms})`);
+}
+
+function cancelTimer() {
+  if (!TIMER_STATE) return;
+  if (confirm(`Discard current live timer for ${TIMER_STATE.taskId} without saving logged hours?`)) {
+    if (TIMER_INTERVAL) clearInterval(TIMER_INTERVAL);
+    TIMER_STATE = null;
+    localStorage.removeItem('ttm_active_timer');
+    renderTimerBar();
+    showToast('⏹️ Timer discarded', '#607d8b');
+    if (CURRENT_VIEW === 'all-tasks') renderAllTasks();
+    else if (CURRENT_VIEW === 'my-tasks') renderMyTasks();
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// LOGIN / LOGOUT & SESSION
 // ══════════════════════════════════════════════════════
 async function doLogin() {
   const user = document.getElementById('login-user').value.trim();
@@ -458,21 +1456,39 @@ async function doLogin() {
   if (!pass) { showToast('Please enter your password', '#f57c00'); return; }
   const data = await POST('/api/login', { username: user, password: pass });
   if (!data || data.error) {
-    document.getElementById('login-err').style.display = 'block';
+    const errEl = document.getElementById('login-err');
+    errEl.textContent = '❌ ' + (data?.error || 'Invalid username or password. Please try again.');
+    errEl.style.display = 'block';
     return;
   }
   document.getElementById('login-err').style.display = 'none';
   ME = data;
+  if (data.token) {
+    AUTH_TOKEN = data.token;
+    localStorage.setItem('ttm_token', data.token);
+  }
+  localStorage.setItem('ttm_user', JSON.stringify(data));
+  document.documentElement.classList.add('has-session');
   enterApp();
 }
 
 async function doLogout() {
   await POST('/api/logout');
   ME = null;
+  AUTH_TOKEN = null;
+  localStorage.removeItem('ttm_token');
+  localStorage.removeItem('ttm_user');
+  localStorage.removeItem('ttm_last_view');
+  if (TIMER_INTERVAL) clearInterval(TIMER_INTERVAL);
+  TIMER_STATE = null;
+  localStorage.removeItem('ttm_active_timer');
+  renderTimerBar();
+  document.documentElement.classList.remove('has-session');
   showLogin();
 }
 
 function showLogin() {
+  document.documentElement.classList.remove('has-session');
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-page').style.display = 'flex';
   document.getElementById('login-user').value = '';
@@ -480,23 +1496,183 @@ function showLogin() {
   document.getElementById('login-err').style.display = 'none';
 }
 
-async function enterApp() {
-  ALL_USERS = await GET('/api/users') || [];
-  document.getElementById('login-page').style.display='none';
-  document.getElementById('app').style.display='block';
+function toggleLoginPassword() {
+  const p = document.getElementById('login-pass');
+  const btn = document.getElementById('login-pass-toggle');
+  if (!p) return;
+  if (p.type === 'password') {
+    p.type = 'text';
+    if (btn) btn.textContent = '🙈';
+  } else {
+    p.type = 'password';
+    if (btn) btn.textContent = '👁️';
+  }
+}
+
+function openForgotPasswordModal() {
+  document.getElementById('fp-user').value = '';
+  document.getElementById('fp-contact').value = '';
+  document.getElementById('fp-note').value = '';
+  document.getElementById('fp-msg').style.display = 'none';
+  document.getElementById('ar-key').value = '';
+  document.getElementById('ar-new-pass').value = '';
+  document.getElementById('ar-msg').style.display = 'none';
+  switchForgotTab('member');
+  openModal('forgot-modal');
+}
+
+function switchForgotTab(tab) {
+  const isMember = tab === 'member';
+  const memP = document.getElementById('forgot-panel-member');
+  const admP = document.getElementById('forgot-panel-admin');
+  const memB = document.getElementById('tab-btn-mem-reset');
+  const admB = document.getElementById('tab-btn-adm-reset');
+  if (memP) memP.style.display = isMember ? 'block' : 'none';
+  if (admP) admP.style.display = isMember ? 'none' : 'block';
+  if (memB) memB.classList.toggle('active', isMember);
+  if (admB) admB.classList.toggle('active', !isMember);
+}
+
+async function submitForgotPassword() {
+  const username = document.getElementById('fp-user').value.trim();
+  const contact = document.getElementById('fp-contact').value.trim();
+  const note = document.getElementById('fp-note').value.trim();
+  const msgEl = document.getElementById('fp-msg');
+  if (!username) {
+    msgEl.style.display = 'block';
+    msgEl.style.background = '#fce8e6';
+    msgEl.style.color = '#c5221f';
+    msgEl.textContent = 'Please enter your Username or Login ID';
+    return;
+  }
+  msgEl.style.display = 'block';
+  msgEl.style.background = '#e8f0fe';
+  msgEl.style.color = '#174ea6';
+  msgEl.textContent = 'Submitting request...';
+  const r = await POST('/api/forgot-password', { username, contact, note });
+  if (!r || r.error) {
+    msgEl.style.background = '#fce8e6';
+    msgEl.style.color = '#c5221f';
+    msgEl.textContent = r?.error || 'Failed to submit request';
+  } else {
+    msgEl.style.background = '#e6f4ea';
+    msgEl.style.color = '#137333';
+    msgEl.textContent = '✅ ' + (r.message || 'Request submitted successfully! Notify your manager.');
+    showToast('✅ Reset request sent to Admin!', '#34a853');
+  }
+}
+
+async function submitAdminRecovery() {
+  const recoveryKey = document.getElementById('ar-key').value.trim();
+  const newPassword = document.getElementById('ar-new-pass').value.trim();
+  const msgEl = document.getElementById('ar-msg');
+  if (!recoveryKey) {
+    msgEl.style.display = 'block';
+    msgEl.style.background = '#fce8e6';
+    msgEl.style.color = '#c5221f';
+    msgEl.textContent = 'Please enter your master recovery key';
+    return;
+  }
+  if (!newPassword || newPassword.length < 4) {
+    msgEl.style.display = 'block';
+    msgEl.style.background = '#fce8e6';
+    msgEl.style.color = '#c5221f';
+    msgEl.textContent = 'New password must be at least 4 characters';
+    return;
+  }
+  msgEl.style.display = 'block';
+  msgEl.style.background = '#e8f0fe';
+  msgEl.style.color = '#174ea6';
+  msgEl.textContent = 'Verifying key and resetting password...';
+  const r = await POST('/api/admin-recovery', { recoveryKey, newPassword });
+  if (!r || r.error) {
+    msgEl.style.background = '#fce8e6';
+    msgEl.style.color = '#c5221f';
+    msgEl.textContent = r?.error || 'Invalid recovery key';
+  } else {
+    msgEl.style.background = '#e6f4ea';
+    msgEl.style.color = '#137333';
+    msgEl.textContent = '✅ ' + (r.message || 'Admin password reset! You can now log in.');
+    showToast('✅ Admin password reset!', '#34a853');
+    setTimeout(() => {
+      closeModal('forgot-modal');
+      document.getElementById('login-user').value = 'admin';
+      document.getElementById('login-pass').value = newPassword;
+    }, 1200);
+  }
+}
+
+async function resolveResetRequest(id, resetToDefault = false) {
+  let newPassword = null;
+  if (!resetToDefault) {
+    newPassword = prompt('Enter new password for this user (or leave blank to set to their User ID):');
+    if (newPassword === null) return; // User cancelled
+  }
+  const r = await POST(`/api/resets/${id}/resolve`, {
+    resetToDefault: resetToDefault || !newPassword,
+    newPassword: newPassword || undefined
+  });
+  if (!r || r.error) {
+    showToast('❌ ' + (r?.error || 'Failed to resolve reset request'), '#ea4335');
+    return;
+  }
+  showToast(r.message || '✅ Password reset successfully!', '#34a853');
+  if (CURRENT_VIEW === 'dashboard') renderAdminDashboard();
+  else if (CURRENT_VIEW === 'users') renderUsers();
+}
+
+async function dismissResetRequest(id) {
+  if (!confirm('Dismiss this password reset request?')) return;
+  const r = await DEL(`/api/resets/${id}`);
+  if (!r || r.error) {
+    showToast('❌ ' + (r?.error || 'Failed to dismiss request'), '#ea4335');
+    return;
+  }
+  showToast('Dismissed reset request', '#5f6368');
+  if (CURRENT_VIEW === 'dashboard') renderAdminDashboard();
+  else if (CURRENT_VIEW === 'users') renderUsers();
+}
+
+async function enterApp(isCached = false) {
+  document.documentElement.classList.add('has-session');
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
   document.getElementById('tb-name').textContent = ME.name;
-  document.getElementById('tb-role').textContent = ME.role==='admin'?'Manager':'Team Member';
+  document.getElementById('tb-role').textContent = ME.role === 'admin' ? 'Manager' : 'Team Member';
   const av = document.getElementById('tb-avatar');
-  av.textContent = ME.emoji||'👤';
-  av.style.background = ME.color||'#607d8b';
+  av.textContent = ME.emoji || '👤';
+  av.style.background = ME.color || '#607d8b';
   buildSidebar();
-  if (ME.role==='admin') showView('dashboard');
-  else showView('my-dashboard');
+  renderTimerBar();
+
+  const savedView = localStorage.getItem('ttm_last_view');
+  const adminViews = ['dashboard', 'all-tasks', 'hours', 'pending', 'activity', 'users', 'deleted', 'backup'];
+  const memberViews = ['my-dashboard', 'my-tasks', 'log-hours', 'my-history'];
+  const allowed = ME.role === 'admin' ? adminViews : memberViews;
+
+  const targetView = (savedView && allowed.includes(savedView)) ? savedView : (ME.role === 'admin' ? 'dashboard' : 'my-dashboard');
+  showView(targetView);
+
+  ALL_USERS = await GET('/api/users') || [];
 }
 
 // ══════════════════════════════════════════════════════
-// SIDEBAR
+// SIDEBAR & MOBILE NAVIGATION
 // ══════════════════════════════════════════════════════
+function toggleMobileSidebar() {
+  const sb = document.getElementById('sidebar');
+  const bd = document.getElementById('sidebar-backdrop');
+  if (sb) sb.classList.toggle('mobile-open');
+  if (bd) bd.classList.toggle('open');
+}
+
+function closeMobileSidebar() {
+  const sb = document.getElementById('sidebar');
+  const bd = document.getElementById('sidebar-backdrop');
+  if (sb) sb.classList.remove('mobile-open');
+  if (bd) bd.classList.remove('open');
+}
+
 function buildSidebar() {
   const isAdmin = ME.role==='admin';
   const navs = isAdmin ? [
@@ -507,6 +1683,7 @@ function buildSidebar() {
     { view:'activity',     icon:'📝', label:'Activity Log' },
     { view:'users',        icon:'👥', label:'Manage Users' },
     { view:'deleted',      icon:'🗑', label:'Deleted Tasks' },
+    { view:'backup',       icon:'💾', label:'Backup & Sync' },
   ] : [
     { view:'my-dashboard', icon:'🏠', label:'My Dashboard' },
     { view:'my-tasks',     icon:'📋', label:'My Tasks' },
@@ -514,14 +1691,28 @@ function buildSidebar() {
     { view:'my-history',   icon:'📅', label:'My History' },
   ];
   document.getElementById('sidebar').innerHTML = `
-    <div class="sidebar-label">Menu</div>
+    <div class="sidebar-mobile-header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:20px">🗂️</span>
+        <span style="font-weight:800;font-size:15px;color:var(--text)">Task Manager</span>
+      </div>
+      <button class="sidebar-close-btn" onclick="closeMobileSidebar()">✕</button>
+    </div>
+    <div class="sidebar-label">Navigation Menu</div>
     ${navs.map(n=>`<div class="nav-item" data-view="${n.view}" onclick="showView('${n.view}')">
-      <span class="nav-icon">${n.icon}</span>${n.label}
-    </div>`).join('')}`;
+      <span class="nav-icon">${n.icon}</span>
+      <span class="nav-label">${n.label}</span>
+    </div>`).join('')}
+    <div style="margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);font-size:11.5px;color:var(--muted)">
+      <div style="font-weight:700;color:var(--text);margin-bottom:2px">Team Task Manager</div>
+      <div><span class="online-dot"></span>System Active</div>
+    </div>`;
 }
 
 function showView(view) {
   CURRENT_VIEW = view;
+  closeMobileSidebar();
+  localStorage.setItem('ttm_last_view', view);
   document.querySelectorAll('.nav-item').forEach(el=>{
     el.classList.toggle('active', el.dataset.view===view);
   });
@@ -533,6 +1724,7 @@ function showView(view) {
     'activity':     renderActivity,
     'users':        renderUsers,
     'deleted':      renderDeletedTasks,
+    'backup':       renderBackupSync,
     'my-dashboard': renderMyDashboard,
     'my-tasks':     renderMyTasks,
     'log-hours':    renderLogHoursPage,
@@ -546,10 +1738,31 @@ function showView(view) {
 // ══════════════════════════════════════════════════════
 async function renderAdminDashboard() {
   setContent('<div style="text-align:center;padding:40px;color:var(--muted)">📊 Loading dashboard...</div>');
-  const [stats, tasks, logs] = await Promise.all([
-    GET('/api/stats'), GET('/api/tasks'), GET('/api/logs')
+  const [stats, tasks, logs, resets] = await Promise.all([
+    GET('/api/stats'), GET('/api/tasks'), GET('/api/logs'), GET('/api/resets')
   ]);
   if (!stats) return;
+
+  if (typeof saveClientVault === 'function') {
+    saveClientVault(ALL_USERS, tasks || [], logs || []);
+  }
+
+  const pendingResets = Array.isArray(resets) ? resets : [];
+  const resetBanner = pendingResets.length > 0 ? `
+    <div style="background:#fef7e0;border:1px solid #f9ab00;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 2px 8px rgba(249,171,0,0.15)">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:26px">🔑</div>
+        <div>
+          <div style="font-weight:700;color:#b06000;font-size:14px">${pendingResets.length} Pending Password Reset Request${pendingResets.length > 1 ? 's' : ''}</div>
+          <div style="font-size:12px;color:#5f6368;margin-top:2px">
+            ${pendingResets.map(r => `<b>${r.userName} (${r.userId})</b>`).join(', ')} requested password assistance.
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm btn-primary" onclick="showView('users')">Manage in Users ➔</button>
+      </div>
+    </div>` : '';
 
   const kpis = [
     { icon:'📋', val:stats.totalTasks,                label:'Total Tasks',    col:'#1a73e8' },
@@ -569,6 +1782,7 @@ async function renderAdminDashboard() {
       <div><div class="section-title">📊 Admin Dashboard</div><div class="section-sub">Live overview of your team's work</div></div>
       <button class="btn btn-primary btn-sm" onclick="openAddTask()">➕ Add Task</button>
     </div>
+    ${resetBanner}
     <div class="kpi-grid">${kpis.map(k=>`
       <div class="kpi-card" style="border-top-color:${k.col}">
         <div class="kpi-icon">${k.icon}</div>
@@ -668,6 +1882,9 @@ async function renderAllTasks(fs) {
     const spent = hoursForTask(logs,t.id);
     const pp = pct(t,logs);
     const uc = userColor(t.assignee);
+    const isRunning = TIMER_STATE && TIMER_STATE.taskId === t.id;
+    const startStr = t.start ? (fmtDate(t.start) + (t.startTime ? `<br><small style="color:var(--muted)">🕒 ${t.startTime}</small>` : '')) : '—';
+    const cleanTitle = (t.title||'').replace(/'/g, "\\'");
     return `<tr>
       <td><b style="color:var(--primary)">${t.id}</b></td>
       <td><div style="font-weight:600">${t.title}</div>${t.desc?`<div style="font-size:11px;color:var(--muted)">${t.desc.substring(0,50)}</div>`:''}</td>
@@ -675,10 +1892,15 @@ async function renderAllTasks(fs) {
       <td><span style="color:${uc};font-weight:600">${userName(t.assignee)}</span></td>
       <td>${sBadge(t.status)}</td>
       <td>${pBadge(t.priority)}</td>
+      <td>${startStr}</td>
       <td>${fmtDate(t.due)}<br><small>${dlBadge(t.due)}</small></td>
       <td><b>${spent}h</b>/${t.planned||0}h<br>${bar(pp)}</td>
       <td>
-        <div style="display:flex;gap:5px">
+        <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+          ${isRunning
+            ? `<button class="btn btn-sm btn-warn" onclick="stopAndLogTimer()" title="Timer running! Click to Stop & Log">⏹️ <span class="live-timer-for-${t.id}">${formatHMS(Math.floor(getTimerElapsedMs()/1000))}</span></button>`
+            : `<button class="btn btn-sm btn-outline" style="border-color:#34a853;color:#2d9348" onclick="startTaskTimer('${t.id}','${cleanTitle}')" title="Start Live Timer">▶️ Timer</button>`
+          }
           <button class="btn btn-sm btn-outline" onclick="editTask('${t.id}')">✏️</button>
           <button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')">🗑</button>
         </div>
@@ -711,8 +1933,8 @@ async function renderAllTasks(fs) {
     </div>
     <div class="card">
       <div class="table-wrap"><table>
-        <thead><tr><th>ID</th><th>Task</th><th>Type</th><th>Assigned To</th><th>Status</th><th>Priority</th><th>Due</th><th>Hours</th><th>Actions</th></tr></thead>
-        <tbody>${rows||`<tr><td colspan="9"><div class="no-data">📭 No tasks found</div></td></tr>`}</tbody>
+        <thead><tr><th>ID</th><th>Task</th><th>Type</th><th>Assigned To</th><th>Status</th><th>Priority</th><th>Start</th><th>Due</th><th>Hours</th><th>Actions</th></tr></thead>
+        <tbody>${rows||`<tr><td colspan="10"><div class="no-data">📭 No tasks found</div></td></tr>`}</tbody>
       </table></div>
     </div>`);
 }
@@ -888,36 +2110,188 @@ async function renderActivity() {
 // ══════════════════════════════════════════════════════
 async function renderUsers() {
   setContent('<div style="text-align:center;padding:40px;color:var(--muted)">👥 Loading users...</div>');
-  const users = await GET('/api/users');
+  const [users, resets] = await Promise.all([
+    GET('/api/users'),
+    GET('/api/resets')
+  ]);
   ALL_USERS = users || [];
   if (!users) return;
 
-  const cards = users.map(u=>`
-    <div class="user-row-card">
-      <div class="avatar" style="background:${u.color};width:44px;height:44px;font-size:18px">${u.emoji||'👤'}</div>
-      <div style="flex:1">
-        <div style="font-weight:700;font-size:15px">${u.name}</div>
-        <div style="font-size:12px;color:var(--muted)">ID: <code>${u.id}</code> &nbsp;•&nbsp; ${u.role==='admin'?'👑 Manager':'👤 Member'}</div>
-        <div style="font-size:12px;color:var(--muted)">Joined: ${u.createdAt||'—'}</div>
+  const pendingResets = Array.isArray(resets) ? resets : [];
+  let resetSectionHtml = '';
+  if (pendingResets.length > 0) {
+    resetSectionHtml = `
+      <div class="card" style="border:2px solid #f9ab00;background:#fffdf6;margin-bottom:20px">
+        <div class="card-title" style="color:#b06000;display:flex;align-items:center;gap:8px">
+          🔑 Pending Password Reset Requests (${pendingResets.length})
+        </div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px">
+          The following team members requested password assistance. You can reset their password to their User ID or specify a new custom password.
+        </div>
+        ${pendingResets.map(r => `
+          <div style="background:#fff;border:1px solid #fedc97;border-radius:8px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="font-weight:700;font-size:14px;color:#202124">👤 ${r.userName} <code style="font-weight:normal;color:#1a73e8">(${r.userId})</code></div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">
+                Requested: ${new Date(r.requestedAt).toLocaleString()}
+                ${r.contact ? ` &nbsp;•&nbsp; Contact: <b>${r.contact}</b>` : ''}
+                ${r.note ? ` &nbsp;•&nbsp; Note: <i>"${r.note}"</i>` : ''}
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn btn-sm btn-primary" onclick="resolveResetRequest('${r.id}', true)">🔄 Reset to Default ID</button>
+              <button class="btn btn-sm btn-outline" style="border-color:#1a73e8;color:#1a73e8" onclick="resolveResetRequest('${r.id}', false)">✏️ Custom Password</button>
+              <button class="btn btn-sm btn-danger" onclick="dismissResetRequest('${r.id}')">✕ Dismiss</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>`;
+  }
+
+  const cards = users.map(u=>{
+    const isRootAdmin = u.id === 'admin';
+    const isInactive = u.status === 'Inactive';
+    const statusBadge = isInactive
+      ? `<span class="badge b-blocked" style="font-size:10px">⚪ Inactive</span>`
+      : `<span class="badge b-completed" style="font-size:10px">🟢 Active</span>`;
+    const designationStr = u.designation ? ` &nbsp;•&nbsp; <span style="color:#1565c0;font-weight:600">${u.designation}</span>` : '';
+    const contactStr = (u.email || u.phone)
+      ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">${[u.email, u.phone].filter(Boolean).join(' &nbsp;•&nbsp; ')}</div>`
+      : '';
+
+    return `
+    <div class="user-row-card" style="${isInactive ? 'opacity:0.75;background:#f9fafb;' : ''}">
+      <div class="avatar" style="background:${u.color||'#607d8b'};width:46px;height:46px;font-size:20px;flex-shrink:0">${u.emoji||'👤'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-weight:700;font-size:15px">${u.name}</span>
+          ${statusBadge}
+          ${u.role==='admin' ? '<span class="badge b-requirement" style="font-size:10px">👑 Admin</span>' : '<span class="badge b-task" style="font-size:10px">👤 Member</span>'}
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">ID: <code>${u.id}</code>${designationStr} &nbsp;•&nbsp; Joined: ${u.createdAt||'—'}</div>
+        ${contactStr}
       </div>
       <div class="user-row-actions">
-        ${u.id!=='admin'?`<button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}','${u.name}')">🗑 Remove</button>`:'<span style="font-size:12px;color:var(--muted)">System Admin</span>'}
+        <button class="btn btn-sm btn-outline" style="border-color:#1a73e8;color:#1a73e8" onclick="openEditUserModal('${u.id}')">✏️ Edit Details</button>
+        ${!isRootAdmin ? `<button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}','${u.name}')">🗑 Remove</button>` : '<span class="badge b-completed" style="font-size:11px;margin-left:4px">Primary Admin</span>'}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   setContent(`
     <div class="section-header">
-      <div><div class="section-title">👥 Manage Users</div><div class="section-sub">${users.length} users registered</div></div>
+      <div><div class="section-title">👥 Manage Users</div><div class="section-sub">${users.length} users registered & managed</div></div>
       <button class="btn btn-primary btn-sm" onclick="openModal('user-modal')">➕ Add User</button>
     </div>
+    ${resetSectionHtml}
     <div class="card">
       <div class="card-title">Team Members</div>
       ${cards}
-      <div style="margin-top:16px;padding:12px;background:#fff8e1;border-radius:8px;font-size:13px;color:#e65100">
-        💡 <b>Tip:</b> Share your server address with team members so they can log in from their own devices.
-        Your network IP is shown in the server console when you start the server.
+      <div style="margin-top:16px;padding:12px;background:#e8f0fe;border:1px solid #c2e7ff;border-radius:8px;font-size:13px;color:#174ea6">
+        💡 <b>Admin User Management:</b> Click <b>✏️ Edit Details</b> on any user to update their Name, Role, Password, Title, Contact Info, Avatar Emoji, Color, or Status.
       </div>
     </div>`);
+}
+
+function openEditUserModal(userId) {
+  const user = ALL_USERS.find(u => u.id === userId);
+  if (!user) return;
+  document.getElementById('eu-id').value = user.id;
+  document.getElementById('eu-id-display').textContent = user.id;
+  document.getElementById('eu-name').value = user.name || '';
+  document.getElementById('eu-role').value = user.role || 'member';
+  document.getElementById('eu-designation').value = user.designation || '';
+  document.getElementById('eu-status').value = user.status || 'Active';
+  document.getElementById('eu-email').value = user.email || '';
+  document.getElementById('eu-phone').value = user.phone || '';
+  document.getElementById('eu-pass').value = '';
+  document.getElementById('eu-pass').type = 'password';
+  document.getElementById('eu-emoji').value = user.emoji || '👤';
+  document.getElementById('eu-color').value = user.color || '#1a73e8';
+
+  // Root admin protection
+  if (user.id === 'admin') {
+    document.getElementById('eu-role').disabled = true;
+    document.getElementById('eu-role-hint').style.display = 'block';
+  } else {
+    document.getElementById('eu-role').disabled = false;
+    document.getElementById('eu-role-hint').style.display = 'none';
+  }
+
+  updateEditAvatarPreview();
+  openModal('edit-user-modal');
+}
+
+function togglePassVisibility(id) {
+  const el = document.getElementById(id);
+  if (el) el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+function selectEditEmoji(emoji) {
+  document.getElementById('eu-emoji').value = emoji;
+  updateEditAvatarPreview();
+}
+
+function selectEditColor(color) {
+  document.getElementById('eu-color').value = color;
+  updateEditAvatarPreview();
+}
+
+function updateEditAvatarPreview() {
+  const emoji = document.getElementById('eu-emoji').value || '👤';
+  const color = document.getElementById('eu-color').value || '#1a73e8';
+  const name = document.getElementById('eu-name').value || 'User';
+  const av = document.getElementById('eu-preview-avatar');
+  if (av) {
+    av.textContent = emoji;
+    av.style.background = color;
+  }
+  const nameEl = document.getElementById('eu-preview-name');
+  if (nameEl) nameEl.textContent = name;
+}
+
+async function saveEditUser() {
+  const id = document.getElementById('eu-id').value;
+  const name = document.getElementById('eu-name').value.trim();
+  if (!name) { showToast('Name is required', '#f57c00'); return; }
+
+  const body = {
+    name,
+    role: document.getElementById('eu-role').value,
+    designation: document.getElementById('eu-designation').value,
+    status: document.getElementById('eu-status').value,
+    email: document.getElementById('eu-email').value,
+    phone: document.getElementById('eu-phone').value,
+    emoji: document.getElementById('eu-emoji').value || '👤',
+    color: document.getElementById('eu-color').value,
+  };
+
+  const pass = document.getElementById('eu-pass').value;
+  if (pass && pass.trim()) body.password = pass.trim();
+
+  const r = await PUT('/api/users/' + id, body);
+  if (!r || r.error) {
+    showToast('❌ ' + (r?.error || 'Failed to update user'), '#ea4335');
+    return;
+  }
+
+  showToast('✅ User details updated!', '#34a853');
+  closeModal('edit-user-modal');
+
+  ALL_USERS = await GET('/api/users') || [];
+
+  // If the edited user is ME, update ME object and topbar
+  if (ME && ME.id === id) {
+    ME = { ...ME, ...r.user };
+    localStorage.setItem('ttm_user', JSON.stringify(ME));
+    document.getElementById('tb-name').textContent = ME.name;
+    document.getElementById('tb-role').textContent = ME.role === 'admin' ? 'Manager' : 'Team Member';
+    const av = document.getElementById('tb-avatar');
+    av.textContent = ME.emoji || '👤';
+    av.style.background = ME.color || '#607d8b';
+  }
+
+  renderUsers();
 }
 
 async function saveUser() {
@@ -1038,16 +2412,24 @@ async function renderMyTasks(fs) {
 
   const rows = tasks.map(t=>{
     const spent=hoursForTask(logs,t.id); const pp=pct(t,logs);
+    const isRunning = TIMER_STATE && TIMER_STATE.taskId === t.id;
+    const startStr = t.start ? (fmtDate(t.start) + (t.startTime ? `<br><small style="color:var(--muted)">🕒 ${t.startTime}</small>` : '')) : '—';
+    const cleanTitle = (t.title||'').replace(/'/g, "\\'");
     return `<tr>
       <td><b style="color:var(--primary)">${t.id}</b></td>
       <td style="font-weight:600">${t.title}</td>
       <td>${tBadge(t.type)}</td>
       <td>${sBadge(t.status)}</td>
       <td>${pBadge(t.priority)}</td>
+      <td>${startStr}</td>
       <td>${fmtDate(t.due)}<br><small>${dlBadge(t.due)}</small></td>
       <td><b>${spent}h</b>/${t.planned||0}h<br>${bar(pp,color)}</td>
       <td>
-        <div style="display:flex;gap:5px">
+        <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+          ${isRunning
+            ? `<button class="btn btn-sm btn-warn" onclick="stopAndLogTimer()" title="Timer running! Click to Stop & Log">⏹️ <span class="live-timer-for-${t.id}">${formatHMS(Math.floor(getTimerElapsedMs()/1000))}</span></button>`
+            : `<button class="btn btn-sm btn-outline" style="border-color:#34a853;color:#2d9348" onclick="startTaskTimer('${t.id}','${cleanTitle}')" title="Start Live Timer">▶️ Timer</button>`
+          }
           <button class="btn btn-sm btn-outline" onclick="editTask('${t.id}')">✏️</button>
           <button class="btn btn-sm btn-success" onclick="quickLog('${t.id}')">⏱</button>
           <button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')">🗑</button>
@@ -1073,8 +2455,8 @@ async function renderMyTasks(fs) {
     </div>
     <div class="card">
       <div class="table-wrap"><table>
-        <thead><tr><th>ID</th><th>Task</th><th>Type</th><th>Status</th><th>Priority</th><th>Due</th><th>Hours</th><th>Actions</th></tr></thead>
-        <tbody>${rows||`<tr><td colspan="8"><div class="no-data">📭 No tasks yet</div></td></tr>`}</tbody>
+        <thead><tr><th>ID</th><th>Task</th><th>Type</th><th>Status</th><th>Priority</th><th>Start</th><th>Due</th><th>Hours</th><th>Actions</th></tr></thead>
+        <tbody>${rows||`<tr><td colspan="9"><div class="no-data">📭 No tasks yet</div></td></tr>`}</tbody>
       </table></div>
     </div>`);
 }
@@ -1287,6 +2669,281 @@ async function clearAuditLog() {
 }
 
 // ══════════════════════════════════════════════════════
+// ADMIN — DATA BACKUP & SYNC (Zero Data Loss Protection)
+// ══════════════════════════════════════════════════════
+function saveClientVault(users, tasks, logs) {
+  try {
+    if (!users && !tasks) return;
+    const existingRaw = localStorage.getItem('ttm_client_vault');
+    let vault = existingRaw ? JSON.parse(existingRaw) : {};
+    if (users && users.length) vault.users = users;
+    if (tasks && tasks.length) vault.tasks = tasks;
+    if (logs && logs.length) vault.logs = logs;
+    vault.savedAt = new Date().toISOString();
+    localStorage.setItem('ttm_client_vault', JSON.stringify(vault));
+  } catch(e) {
+    console.warn('Could not save client vault:', e);
+  }
+}
+
+function getClientVault() {
+  try {
+    const raw = localStorage.getItem('ttm_client_vault');
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) {
+    return null;
+  }
+}
+
+async function renderBackupSync() {
+  setContent('<div style="text-align:center;padding:40px;color:var(--muted)">💾 Loading Backup & Sync center...</div>');
+  const [stats, statusRes, tasks] = await Promise.all([
+    GET('/api/stats'),
+    GET('/api/system-status'),
+    GET('/api/tasks')
+  ]);
+  const sysStatus = statusRes || { hasMongo: false, storageMode: 'Local JSON Disk (Render Ephemeral)' };
+  const currentTasks = tasks || [];
+  const vault = getClientVault();
+
+  // Update vault now if we have data
+  if (ALL_USERS.length || currentTasks.length) {
+    saveClientVault(ALL_USERS, currentTasks, null);
+  }
+
+  const vaultUsersCount = vault?.users?.length || ALL_USERS.length || 0;
+  const vaultTasksCount = vault?.tasks?.length || currentTasks.length || 0;
+  const vaultSavedAt = vault?.savedAt ? new Date(vault.savedAt).toLocaleString() : 'Just now';
+
+  const isMongo = !!sysStatus.hasMongo;
+  const storageBadge = isMongo
+    ? `<span style="background:#e6f4ea;color:#137333;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">🟢 Persistent Cloud (MongoDB Atlas Active)</span>`
+    : `<span style="background:#fef7e0;color:#b06000;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">🟡 Ephemeral Disk (Render Free Tier)</span>`;
+
+  setContent(`
+    <div class="section-header">
+      <div>
+        <div class="section-title">💾 Backup, Restore & Deploy Protection</div>
+        <div class="section-sub">Protect your users, tasks, and hour logs from being lost on Render redeployments</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="downloadSystemBackup()">📥 Download Backup Now</button>
+    </div>
+
+    <!-- Storage Status Alert Banner -->
+    <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:var(--shadow);margin-bottom:20px;border-left:5px solid ${isMongo ? '#34a853' : '#f9ab00'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <span style="font-size:20px">${isMongo ? '🛡️' : '⚠️'}</span>
+            <span style="font-size:16px;font-weight:800;color:#202124">Current Storage Mode:</span>
+            ${storageBadge}
+          </div>
+          <p style="font-size:13px;color:#5f6368;margin-bottom:0;line-height:1.6">
+            ${isMongo 
+              ? '<b>Zero-data-loss active:</b> MongoDB Atlas cloud storage is connected. All new users, tasks, and hour logs are permanently preserved in the cloud across every new Render build and restart!'
+              : '<b>Important Render Notice:</b> On Render\'s free tier, local disk files reset when a new build or deploy happens. Use the <b>1-Click Backup</b> or <b>Browser Vault</b> below before deploying, or connect <b>Free MongoDB Atlas</b> for 100% automated persistence.'}
+          </p>
+        </div>
+        <div style="display:flex;gap:16px;text-align:right">
+          <div><div style="font-size:22px;font-weight:800;color:var(--primary)">${ALL_USERS.length}</div><div style="font-size:11px;color:var(--muted)">Active Users</div></div>
+          <div><div style="font-size:22px;font-weight:800;color:#34a853">${currentTasks.length}</div><div style="font-size:11px;color:var(--muted)">Total Tasks</div></div>
+          <div><div style="font-size:22px;font-weight:800;color:#9c27b0">${stats?.totalHrs || 0}h</div><div style="font-size:11px;color:var(--muted)">Hours Logged</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 Data Preservation Options Grid -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:20px;margin-bottom:24px">
+
+      <!-- OPTION 1: 1-Click Backup & Safe Merge Restore -->
+      <div class="card" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <span style="font-size:24px">📦</span>
+            <div>
+              <div style="font-weight:800;font-size:15px;color:#202124">Option 1: 1-Click JSON Backup & Merge</div>
+              <div style="font-size:12px;color:var(--muted)">Manual snapshot file • Works anytime</div>
+            </div>
+          </div>
+          <p style="font-size:13px;color:#5f6368;line-height:1.5;margin-bottom:16px">
+            Download a full <code>.json</code> snapshot containing all users, tasks, logs, and audit records to your computer. After any new deploy, upload it using <b>Safe Merge</b> to restore all data without overwriting existing items.
+          </p>
+        </div>
+        <div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn btn-primary" onclick="downloadSystemBackup()" style="width:100%">
+              📥 Download Backup (.json)
+            </button>
+            <div style="display:flex;gap:8px">
+              <input type="file" id="restore-file-input" accept=".json" style="display:none" onchange="handleRestoreFile(event)"/>
+              <button class="btn btn-outline" onclick="triggerRestoreFileInput('merge')" style="flex:1;border-color:#1a73e8;color:#1a73e8;font-weight:700">
+                🔄 Safe Merge Upload
+              </button>
+              <button class="btn btn-outline" onclick="triggerRestoreFileInput('replace')" style="color:#ea4335;border-color:#ea4335" title="Replaces entire system database with file data">
+                ⚠️ Replace
+              </button>
+            </div>
+            <div style="font-size:11px;color:var(--muted);text-align:center">
+              💡 <b>Safe Merge:</b> Adds new users and tasks without deleting anything.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OPTION 2: Browser Local Vault Auto-Cache -->
+      <div class="card" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <span style="font-size:24px">⚡</span>
+            <div>
+              <div style="font-weight:800;font-size:15px;color:#202124">Option 2: Automatic Browser Vault</div>
+              <div style="font-size:12px;color:var(--muted)">Cached in this browser • Instant recovery</div>
+            </div>
+          </div>
+          <p style="font-size:13px;color:#5f6368;line-height:1.5;margin-bottom:14px">
+            Your browser automatically caches a live copy of all users and tasks while you work. If Render resets after a fresh deploy, click below to push your cached vault directly back into the live server!
+          </p>
+          <div style="background:#f8f9fa;border:1px solid #e0e0e0;border-radius:8px;padding:12px;font-size:12px;margin-bottom:16px">
+            <div style="font-weight:700;color:#202124;margin-bottom:4px">📱 Browser Vault Status:</div>
+            <div>• Cached Users: <b>${vaultUsersCount}</b></div>
+            <div>• Cached Tasks: <b>${vaultTasksCount}</b></div>
+            <div>• Last Synced: <b>${vaultSavedAt}</b></div>
+          </div>
+        </div>
+        <div>
+          <button class="btn btn-outline" style="width:100%;border-color:#34a853;color:#34a853;font-weight:700" onclick="restoreFromBrowserVault()">
+            ⚡ Restore Server from Browser Vault
+          </button>
+          <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">
+            Safe merge: will sync missing users and tasks to server.
+          </div>
+        </div>
+      </div>
+
+      <!-- OPTION 3: MongoDB Atlas Permanent Cloud Storage -->
+      <div class="card" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <span style="font-size:24px">☁️</span>
+            <div>
+              <div style="font-weight:800;font-size:15px;color:#202124">Option 3: Permanent Cloud Database</div>
+              <div style="font-size:12px;color:var(--muted)">MongoDB Atlas (Free Forever M0) • Zero manual work</div>
+            </div>
+          </div>
+          <p style="font-size:13px;color:#5f6368;line-height:1.5;margin-bottom:12px">
+            Your code is already pre-configured to automatically sync with <b>MongoDB Atlas</b>. Once configured, every deploy automatically retains 100% of tasks and users with zero risk of data loss.
+          </p>
+          <div style="background:#e8f0fe;border:1px solid #c2e7ff;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;margin-bottom:14px;color:#174ea6">
+            <b>Simple 3-Step Setup:</b><br/>
+            1. Create a free M0 cluster at <a href="https://www.mongodb.com/cloud/atlas" target="_blank" style="color:#1a73e8;font-weight:700">mongodb.com</a><br/>
+            2. Copy your connection URI (<code>mongodb+srv://...</code>)<br/>
+            3. In Render Dashboard ➔ <b>Environment</b> ➔ Add <code>MONGODB_URI</code>
+          </div>
+        </div>
+        <div>
+          <div style="padding:10px;background:#f8f9fa;border-radius:8px;font-size:12px;text-align:center;color:var(--muted)">
+            ${isMongo ? '✅ Connected and actively syncing!' : '💡 No code changes needed — just add the variable in Render!'}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  `);
+}
+
+let RESTORE_MODE = 'merge';
+
+function triggerRestoreFileInput(mode) {
+  RESTORE_MODE = mode;
+  const input = document.getElementById('restore-file-input');
+  if (input) {
+    input.value = '';
+    input.click();
+  }
+}
+
+async function handleRestoreFile(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data || (!data.users && !data.tasks)) {
+        showToast('❌ Invalid backup file format', '#ea4335');
+        return;
+      }
+
+      const modeTitle = RESTORE_MODE === 'replace' ? '⚠️ FULL REPLACE' : '🔄 Safe Merge';
+      const confirmMsg = RESTORE_MODE === 'replace'
+        ? `Are you sure you want to completely replace all current users and tasks with data from "${file.name}"? This cannot be undone.`
+        : `Merge data from "${file.name}"? This will safely add any missing users and tasks without deleting your current work.`;
+
+      if (!confirm(`${modeTitle}:\n\n${confirmMsg}`)) return;
+
+      showToast('⏳ Uploading and restoring data...', '#1a73e8');
+      const res = await POST('/api/restore', { mode: RESTORE_MODE, data });
+      if (!res || res.error) {
+        showToast('❌ Restore failed: ' + (res?.error || 'Unknown error'), '#ea4335');
+        return;
+      }
+
+      showToast(`✅ ${res.message || 'Data restored successfully!'}`, '#34a853');
+      ALL_USERS = await GET('/api/users') || [];
+      renderBackupSync();
+    } catch (err) {
+      showToast('❌ Error parsing JSON file: ' + err.message, '#ea4335');
+    }
+  };
+  reader.readAsText(file);
+}
+
+async function downloadSystemBackup() {
+  showToast('📦 Preparing backup...', '#1a73e8');
+  const backup = await GET('/api/backup');
+  if (!backup || backup.error) {
+    showToast('❌ Backup failed: ' + (backup?.error || 'Unknown error'), '#ea4335');
+    return;
+  }
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `team_task_manager_backup_${today()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✅ Backup downloaded successfully!', '#34a853');
+}
+
+async function restoreFromBrowserVault() {
+  const vault = getClientVault();
+  if (!vault || (!vault.users?.length && !vault.tasks?.length)) {
+    showToast('⚠️ No cached data found in this browser vault.', '#f57c00');
+    return;
+  }
+
+  const uCount = vault.users?.length || 0;
+  const tCount = vault.tasks?.length || 0;
+  if (!confirm(`Restore ${uCount} user(s) and ${tCount} task(s) cached in your browser from ${new Date(vault.savedAt).toLocaleString()} to the server?`)) {
+    return;
+  }
+
+  showToast('⏳ Syncing browser vault to server...', '#1a73e8');
+  const res = await POST('/api/restore', { mode: 'merge', data: vault });
+  if (!res || res.error) {
+    showToast('❌ Vault restore failed: ' + (res?.error || 'Unknown error'), '#ea4335');
+    return;
+  }
+
+  showToast(`✅ Vault synced! ${res.message || ''}`, '#34a853');
+  ALL_USERS = await GET('/api/users') || [];
+  renderBackupSync();
+}
+
+// ══════════════════════════════════════════════════════
 // TASK CRUD
 // ══════════════════════════════════════════════════════
 async function openAddTask() {
@@ -1296,9 +2953,23 @@ async function openAddTask() {
   document.getElementById('t-priority').value='Medium';
   document.getElementById('t-status').value='Pending';
   document.getElementById('t-start').value=today();
+
+  // Set default start time to current HH:mm
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  document.getElementById('t-start-time').value = `${hh}:${mm}`;
+
   document.getElementById('t-due').value='';
   document.getElementById('t-planned').value='';
   document.getElementById('t-edit-id').value='';
+  
+  // Show the timer start checkbox for new tasks
+  const timerBox = document.getElementById('t-timer-option-box');
+  if (timerBox) timerBox.style.display = 'block';
+  const timerCheck = document.getElementById('t-auto-start-timer');
+  if (timerCheck) timerCheck.checked = false;
+
   const ag=document.getElementById('assign-group');
   if (ME.role==='admin') {
     ag.style.display='block';
@@ -1321,10 +2992,16 @@ async function editTask(id) {
   document.getElementById('t-priority').value=t.priority;
   document.getElementById('t-status').value=t.status;
   document.getElementById('t-start').value=t.start||'';
+  document.getElementById('t-start-time').value=t.startTime||'';
   document.getElementById('t-due').value=t.due||'';
   document.getElementById('t-planned').value=t.planned||'';
   document.getElementById('t-notes').value=t.notes||'';
   document.getElementById('t-edit-id').value=id;
+
+  // Hide the auto start timer checkbox on edit mode
+  const timerBox = document.getElementById('t-timer-option-box');
+  if (timerBox) timerBox.style.display = 'none';
+
   const ag=document.getElementById('assign-group');
   if (ME.role==='admin') {
     ag.style.display='block';
@@ -1339,21 +3016,35 @@ async function saveTask() {
   const title=document.getElementById('t-title').value.trim();
   if(!title){showToast('Title is required','#f57c00');return;}
   const editId=document.getElementById('t-edit-id').value;
+  const timerCheck = document.getElementById('t-auto-start-timer');
+  const startTimerChecked = !editId && timerCheck && timerCheck.checked;
+
   const body={
-    title, type:document.getElementById('t-type').value,
+    title,
+    type:document.getElementById('t-type').value,
     desc:document.getElementById('t-desc').value,
     priority:document.getElementById('t-priority').value,
-    status:document.getElementById('t-status').value,
+    status:startTimerChecked ? 'In Progress' : document.getElementById('t-status').value,
     start:document.getElementById('t-start').value,
+    startTime:document.getElementById('t-start-time').value,
     due:document.getElementById('t-due').value,
     planned:parseFloat(document.getElementById('t-planned').value)||0,
     notes:document.getElementById('t-notes').value,
+    startTimer:startTimerChecked
   };
   if (ME.role==='admin') body.assignee=document.getElementById('t-assign').value;
   const r = editId ? await PUT('/api/tasks/'+editId,body) : await POST('/api/tasks',body);
   if(!r||r.error){showToast('❌ '+(r?.error||'Error'),'#ea4335');return;}
-  showToast(editId?'✅ Task updated!':'✅ Task added!','#34a853');
+
   closeModal('task-modal');
+
+  if(startTimerChecked && r.id) {
+    startTaskTimer(r.id, r.title);
+    showToast(`⏱️ Task added & live timer started!`, '#1a73e8');
+  } else {
+    showToast(editId?'✅ Task updated!':'✅ Task added!','#34a853');
+  }
+
   if(ME.role==='admin') renderAllTasks(); else renderMyTasks();
 }
 
@@ -1368,13 +3059,13 @@ async function deleteTask(id) {
 // ══════════════════════════════════════════════════════
 // HOUR LOG
 // ══════════════════════════════════════════════════════
-async function openLogModal(preTaskId) {
+async function openLogModal(preTaskId, preHours, preDesc) {
   const tasks=await GET('/api/tasks'); if(!tasks) return;
   const sel=document.getElementById('log-task-id');
   sel.innerHTML=tasks.map(t=>`<option value="${t.id}" ${t.id===preTaskId?'selected':''}>${t.id} — ${t.title}</option>`).join('');
   document.getElementById('log-date').value=today();
-  document.getElementById('log-hours').value='';
-  document.getElementById('log-desc').value='';
+  document.getElementById('log-hours').value=preHours !== undefined ? preHours : '';
+  document.getElementById('log-desc').value=preDesc || '';
   document.getElementById('log-blocker').value='';
   openModal('log-modal');
 }
@@ -1384,7 +3075,7 @@ async function saveLog() {
   const taskId=document.getElementById('log-task-id').value;
   const hours=parseFloat(document.getElementById('log-hours').value);
   if(!taskId){showToast('Select a task','#f57c00');return;}
-  if(isNaN(hours)||hours<0){showToast('Enter valid hours','#f57c00');return;}
+  if(isNaN(hours)||hours<=0){showToast('Enter valid hours','#f57c00');return;}
   const r=await POST('/api/logs',{
     taskId, hours,
     date:document.getElementById('log-date').value,
@@ -1394,9 +3085,22 @@ async function saveLog() {
   if(!r||r.error){showToast('❌ '+(r?.error||'Error'),'#ea4335');return;}
   showToast(`✅ ${hours}h logged!`,'#34a853');
   closeModal('log-modal');
+
+  // If active timer was running for this task, clean it up
+  if(TIMER_STATE && TIMER_STATE.taskId === taskId) {
+    if(TIMER_INTERVAL) clearInterval(TIMER_INTERVAL);
+    TIMER_STATE = null;
+    localStorage.removeItem('ttm_active_timer');
+    renderTimerBar();
+  }
+
   if(CURRENT_VIEW==='log-hours'||CURRENT_VIEW==='my-dashboard') {
     if(ME.role==='admin') renderAdminDashboard(); else
       CURRENT_VIEW==='log-hours'?renderLogHoursPage():renderMyDashboard();
+  } else if(CURRENT_VIEW==='all-tasks') {
+    renderAllTasks();
+  } else if(CURRENT_VIEW==='my-tasks') {
+    renderMyTasks();
   }
 }
 
@@ -1406,11 +3110,43 @@ document.querySelectorAll('.modal-overlay').forEach(o=>{
 });
 
 // ══════════════════════════════════════════════════════
-// CHECK SESSION ON LOAD
+// CHECK SESSION ON LOAD (Instant Restore - No Login Flash on Refresh)
 // ══════════════════════════════════════════════════════
 (async function init() {
-  const me = await GET('/api/me');
-  if (me && !me.error) { ME = me; enterApp(); }
+  initTimer();
+
+  const cached = localStorage.getItem('ttm_user');
+  const token = localStorage.getItem('ttm_token');
+  if (cached && token) {
+    try {
+      ME = JSON.parse(cached);
+      AUTH_TOKEN = token;
+      enterApp(true);
+    } catch(e) {}
+  } else {
+    showLogin();
+  }
+
+  // Silently verify session with server in background
+  try {
+    const me = await GET('/api/me');
+    if (me && !me.error) {
+      ME = me;
+      localStorage.setItem('ttm_user', JSON.stringify(me));
+      document.getElementById('tb-name').textContent = ME.name;
+      document.getElementById('tb-role').textContent = ME.role === 'admin' ? 'Manager' : 'Team Member';
+      const av = document.getElementById('tb-avatar');
+      av.textContent = ME.emoji || '👤';
+      av.style.background = ME.color || '#607d8b';
+      if (document.getElementById('app').style.display !== 'block') {
+        enterApp(false);
+      }
+    } else if (me && me.error) {
+      showLogin();
+    }
+  } catch(e) {
+    console.warn('Background session verify exception:', e);
+  }
 })();
 </script>
 </body>

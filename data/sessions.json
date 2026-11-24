@@ -1,0 +1,32 @@
+{
+  "e8846194-c7e5-440a-bb8d-0dacf5b3d8be": {
+    "userId": "admin",
+    "createdAt": "2026-11-24T10:15:07.396Z",
+    "expiresAt": 1798107307396
+  },
+  "f431817c-783f-4814-b1b8-b4481dde8b7a": {
+    "userId": "admin",
+    "createdAt": "2026-11-24T10:19:01.448Z",
+    "expiresAt": 1798107541448
+  },
+  "a52cf0ba-ca35-4e31-9f43-48a56a6bcc2e": {
+    "userId": "person1",
+    "createdAt": "2026-11-24T10:19:17.004Z",
+    "expiresAt": 1798107557004
+  },
+  "aa5e9801-4c47-43ec-83fc-cc967ce4a4bc": {
+    "userId": "admin",
+    "createdAt": "2026-11-24T10:51:30.066Z",
+    "expiresAt": 1798109490066
+  },
+  "f4585bb4-c774-45a8-bead-0c38b55b6abd": {
+    "userId": "admin",
+    "createdAt": "2026-11-24T10:56:53.428Z",
+    "expiresAt": 1798109813428
+  },
+  "4f0d6fac-8262-4f1c-b8be-d54aa60cead1": {
+    "userId": "admin",
+    "createdAt": "2026-11-24T11:10:39.656Z",
+    "expiresAt": 1798110639656
+  }
+}
