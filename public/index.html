@@ -2046,9 +2046,15 @@ function stopAndLogTimer() {
   if (!TIMER_STATE) return;
   const totalMs = getTimerElapsedMs();
   const totalSeconds = Math.max(1, Math.floor(totalMs / 1000));
-  const hours = Math.max(0.1, parseFloat((totalSeconds / 3600).toFixed(2)));
+  // Exact 2-decimal tracking accuracy with minimum 0.01h (36s)
+  const hours = Math.max(0.01, parseFloat((totalSeconds / 3600).toFixed(2)));
   const taskId = TIMER_STATE.taskId;
   const hms = formatHMS(totalSeconds);
+
+  // Auto-pause timer so time is frozen precisely while filling the log modal
+  if (!TIMER_STATE.isPaused) {
+    togglePauseTimer();
+  }
 
   openLogModal(taskId, hours, `Work session tracked via live timer (${hms})`);
 }
@@ -2279,6 +2285,28 @@ async function enterApp(isCached = false) {
   renderTimerBar();
   startLiveSyncPoll();
 
+  // Seamlessly restore active live timer from server if not found in local storage
+  if (!TIMER_STATE && ME) {
+    GET('/api/timers/live').then(timers => {
+      if (Array.isArray(timers)) {
+        const myTimer = timers.find(t => t.userId === ME.id);
+        if (myTimer) {
+          TIMER_STATE = {
+            taskId: myTimer.taskId,
+            taskTitle: myTimer.taskTitle,
+            startedAt: myTimer.startedAt,
+            isPaused: myTimer.isPaused,
+            pausedAt: myTimer.isPaused ? Date.now() : null,
+            accumulatedMs: myTimer.accumulatedMs || 0
+          };
+          localStorage.setItem('ttm_active_timer', JSON.stringify(TIMER_STATE));
+          renderTimerBar();
+          startTimerTicker();
+        }
+      }
+    }).catch(() => {});
+  }
+
   if (localStorage.getItem('ttm_sidebar_collapsed') === 'true') {
     const sb = document.getElementById('sidebar');
     if (sb) sb.classList.add('collapsed');
@@ -2347,7 +2375,7 @@ function buildSidebar() {
     { view:'pending',      icon:'calendar',  label:'Pending & Upcoming' },
     { view:'activity',     icon:'activity',  label:'Activity Log' },
     { view:'users',        icon:'users',     label:'Manage Users' },
-    { view:'deleted',      icon:'trash',     label:'Deleted Tasks' },
+    { view:'deleted',      icon:'trash',     label:'Deleted & Restore' },
     { view:'backup',       icon:'backup',    label:'Backup & Sync' },
     { view:'profile',      icon:'user',      label:'My Profile' },
   ] : [
@@ -2435,18 +2463,21 @@ async function renderAdminDashboard() {
   const allLogs = logs || [];
   const pendingResets = Array.isArray(resets) ? resets : [];
   const activeTimers = Array.isArray(liveTimers) ? liveTimers : [];
+  const displayedTimers = DASHBOARD_MEMBER_FILTER !== 'all'
+    ? activeTimers.filter(lt => lt.userId === DASHBOARD_MEMBER_FILTER)
+    : activeTimers;
 
-  const liveSessionsHtml = activeTimers.length > 0 ? `
+  const liveSessionsHtml = displayedTimers.length > 0 ? `
     <div class="card" style="border:1.5px solid #10b981;background:#f0fdf4;margin-bottom:20px;border-radius:14px;box-shadow:var(--shadow-xs)">
       <div class="card-title" style="color:#065f46;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:8px">
           <span class="live-pulse"></span>
-          <span style="font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:0.5px">Active Live Work Sessions (${activeTimers.length})</span>
+          <span style="font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:0.5px">Active Live Work Sessions (${displayedTimers.length})</span>
         </div>
         <span style="font-size:12px;color:#047857;font-weight:600">Syncing live from member timers</span>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:10px">
-        ${activeTimers.map(lt => `
+        ${displayedTimers.map(lt => `
           <div style="background:#ffffff;border:1px solid #bbf7d0;border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
             <div style="display:flex;align-items:center;gap:10px">
               ${userAvatarHtml(lt.userId, 32)}
@@ -3664,6 +3695,30 @@ async function renderMyDashboard() {
 
   const recentLogs = [...myLogs].sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || '').localeCompare(a.createdAt || '')).slice(0, 4);
 
+  const myLiveTimerCard = TIMER_STATE ? `
+    <div class="card" style="border:1.5px solid #2563eb;background:linear-gradient(135deg,#eff6ff 0%,#f0fdf4 100%);margin-bottom:20px;border-radius:14px;box-shadow:var(--shadow-xs)">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="live-pulse" style="width:12px;height:12px;background:#2563eb"></span>
+          <div>
+            <div style="font-weight:800;font-size:15px;color:#1e3a8a">Active Live Work Session</div>
+            <div style="font-size:13px;color:#1e40af;margin-top:2px">
+              <b style="font-family:'JetBrains Mono',monospace">${TIMER_STATE.taskId}</b> &bull; ${TIMER_STATE.taskTitle}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:800;color:#1e3a8a;background:#dbeafe;padding:4px 14px;border-radius:8px">
+            <span class="live-timer-for-${TIMER_STATE.taskId}">${formatHMS(Math.floor(getTimerElapsedMs()/1000))}</span>
+          </div>
+          <button class="btn btn-sm btn-outline" onclick="togglePauseTimer()">${TIMER_STATE.isPaused ? 'Resume' : 'Pause'}</button>
+          <button class="btn btn-sm btn-success" onclick="stopAndLogTimer()">${ICON('check', 14)} Stop & Log</button>
+          <button class="btn btn-sm btn-danger" onclick="cancelTimer()" title="Discard">✕</button>
+        </div>
+      </div>
+    </div>
+  ` : '';
+
   setContent(`
     <div class="section-header">
       <div>
@@ -3675,6 +3730,7 @@ async function renderMyDashboard() {
         <button class="btn btn-primary btn-sm" onclick="openAddTask()">${ICON('plus', 14)} Add Task</button>
       </div>
     </div>
+    ${myLiveTimerCard}
     <div class="kpi-grid">${kpis.map(k=>`
       <div class="kpi-card" style="border-top-color:${k.col}">
         <div class="kpi-icon" style="color:${k.col};display:flex;justify-content:center">${ICON(k.icon, 22, '', k.col)}</div>
@@ -3807,6 +3863,30 @@ async function renderLogHoursPage() {
   const weekHrs   = Math.round(myLogs.filter(l=>new Date(l.date)>=new Date(Date.now()-7*86400000)).reduce((a,l)=>a+(parseFloat(l.hours)||0),0) * 10) / 10;
   const activeTasks = myTasks.filter(t=>t.status!=='Completed');
 
+  const myLiveTimerCard = TIMER_STATE ? `
+    <div class="card" style="border:1.5px solid #2563eb;background:linear-gradient(135deg,#eff6ff 0%,#f0fdf4 100%);margin-bottom:20px;border-radius:14px;box-shadow:var(--shadow-xs)">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="live-pulse" style="width:12px;height:12px;background:#2563eb"></span>
+          <div>
+            <div style="font-weight:800;font-size:15px;color:#1e3a8a">Active Live Work Session</div>
+            <div style="font-size:13px;color:#1e40af;margin-top:2px">
+              <b style="font-family:'JetBrains Mono',monospace">${TIMER_STATE.taskId}</b> &bull; ${TIMER_STATE.taskTitle}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:800;color:#1e3a8a;background:#dbeafe;padding:4px 14px;border-radius:8px">
+            <span class="live-timer-for-${TIMER_STATE.taskId}">${formatHMS(Math.floor(getTimerElapsedMs()/1000))}</span>
+          </div>
+          <button class="btn btn-sm btn-outline" onclick="togglePauseTimer()">${TIMER_STATE.isPaused ? 'Resume' : 'Pause'}</button>
+          <button class="btn btn-sm btn-success" onclick="stopAndLogTimer()">${ICON('check', 14)} Stop & Log</button>
+          <button class="btn btn-sm btn-danger" onclick="cancelTimer()" title="Discard">✕</button>
+        </div>
+      </div>
+    </div>
+  ` : '';
+
   setContent(`
     <div class="section-header">
       <div>
@@ -3815,6 +3895,7 @@ async function renderLogHoursPage() {
       </div>
       <button class="btn btn-success" onclick="openLogModal()">${ICON('plus', 14)} Log Time</button>
     </div>
+    ${myLiveTimerCard}
     <div class="two-col">
       <div>
         <div class="card">
@@ -3908,23 +3989,31 @@ async function renderMyHistory() {
 }
 
 // ══════════════════════════════════════════════════════
-// ADMIN — DELETED TASKS AUDIT LOG
+// ADMIN — DELETED ITEMS AUDIT TRAIL & 1-CLICK RESTORE HUB
 // ══════════════════════════════════════════════════════
+let DELETED_FILTER_TAB = 'all'; // 'all' | 'tasks' | 'users'
+
+function setDeletedFilterTab(tab) {
+  DELETED_FILTER_TAB = tab;
+  renderDeletedTasks();
+}
+
 async function renderDeletedTasks() {
   setContent('<div style="text-align:center;padding:40px;color:var(--muted)">Loading deletion audit trail...</div>');
   const audit = await GET('/api/audit');
   if (!audit) return;
 
+  const tasksAudit = audit.filter(a => a.action === 'DELETE_TASK' && a.task);
+  const usersAudit = audit.filter(a => a.action === 'DELETE_USER');
+
   const statCards = [
-    { icon:'trash',          val: audit.length,                                              label:'Total Deletions',      col:'#dc2626' },
-    { icon:'users',          val: [...new Set(audit.map(a=>a.deletedBy))].length,            label:'Users Who Deleted',    col:'#ea580c' },
-    { icon:'tasks',          val: audit.filter(a=>a.task?.type==='Task').length,             label:'Tasks Deleted',        col:'#2563eb' },
-    { icon:'file-text',      val: audit.filter(a=>a.task?.type==='Requirement').length,      label:'Requirements Deleted', col:'#8b5cf6' },
-    { icon:'sparkles',       val: audit.filter(a=>a.task?.type==='Enhancement').length,      label:'Enhancements Deleted', col:'#10b981' },
-    { icon:'bug',            val: audit.filter(a=>a.task?.type==='Bug').length,              label:'Bugs Deleted',         col:'#dc2626' },
+    { icon:'trash',          val: audit.length,                                              label:'Total Deletions',       col:'#dc2626' },
+    { icon:'tasks',          val: tasksAudit.length,                                         label:'Tasks Deleted',         col:'#2563eb' },
+    { icon:'users',          val: usersAudit.length,                                         label:'Users Deleted',         col:'#ea580c' },
+    { icon:'users',          val: [...new Set(audit.map(a=>a.deletedBy))].length,            label:'Users Who Deleted',     col:'#8b5cf6' },
   ];
 
-  const auditRows = audit.map(a => {
+  const taskRows = tasksAudit.map(a => {
     const dt     = new Date(a.deletedAt);
     const dtStr  = dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})
                  + ' ' + dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
@@ -3955,16 +4044,58 @@ async function renderDeletedTasks() {
           <span style="color:${a.task?.assigneeColor||'#64748b'};font-weight:600">${a.task?.assigneeName||'—'}</span>
         </div>
       </td>
-      <td style="font-size:12px;color:var(--muted)">${a.task?.createdByName||'—'}</td>
       <td>${delLabel}</td>
+      <td>
+        <button class="btn btn-sm btn-success" style="display:inline-flex;align-items:center;gap:6px;font-weight:700;white-space:nowrap" onclick="restoreDeletedTask('${a.id}','${a.task?.id}')" title="Restore task back to database">
+          ${ICON('refresh', 13)} Restore Task
+        </button>
+      </td>
     </tr>`;
   }).join('');
+
+  const userRows = usersAudit.map(a => {
+    const dt     = new Date(a.deletedAt);
+    const dtStr  = dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})
+                 + ' ' + dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    const u = a.user || { id: a.userId, name: a.userId, role: 'member' };
+    return `<tr>
+      <td style="font-size:11px;white-space:nowrap;color:var(--muted)">${dtStr}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:7px">
+          ${userAvatarHtml(a.deletedBy, 22, a.deletedByColor)}
+          <span style="font-weight:700;color:${a.deletedByColor}">${a.deletedByName}</span>
+        </div>
+      </td>
+      <td><b style="color:#ea580c;font-family:'JetBrains Mono',monospace">${u.id}</b></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${userAvatarHtml(u, 26)}
+          <div>
+            <div style="font-weight:700;color:var(--text)">${u.name}</div>
+            <div style="font-size:11px;color:var(--muted)">${u.role === 'admin' ? 'Manager' : 'Team Member'}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="badge b-task">${u.designation || 'Team Member'}</span></td>
+      <td style="font-size:12px;color:var(--muted)">
+        ${u.email || u.phone ? `${u.email||''} ${u.phone?`&bull; ${u.phone}`:''}` : '<span style="color:var(--muted)">Standard Account</span>'}
+      </td>
+      <td>
+        <button class="btn btn-sm btn-success" style="display:inline-flex;align-items:center;gap:6px;font-weight:700;white-space:nowrap" onclick="restoreDeletedUser('${a.id}','${u.id}')" title="Restore user account back to database">
+          ${ICON('refresh', 13)} Restore User
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const showTasksSection = (DELETED_FILTER_TAB === 'all' || DELETED_FILTER_TAB === 'tasks');
+  const showUsersSection = (DELETED_FILTER_TAB === 'all' || DELETED_FILTER_TAB === 'users');
 
   setContent(`
     <div class="section-header">
       <div>
-        <div class="section-title">🗑 Deleted Tasks Audit Trail</div>
-        <div class="section-sub">Full audit trail &bull; every task deleted by any user is recorded with timestamp and ownership</div>
+        <div class="section-title">🗑️ Deleted Items & Restore Hub</div>
+        <div class="section-sub">Comprehensive audit trail of deleted tasks and users &bull; Restore any item back to the database with 1-click</div>
       </div>
       ${audit.length?`<button class="btn btn-danger btn-sm" onclick="clearAuditLog()">${ICON('trash', 14)} Clear Log</button>`:''}
     </div>
@@ -3978,32 +4109,144 @@ async function renderDeletedTasks() {
         </div>`).join('')}
     </div>
 
-    ${audit.length ? `
-    <div class="card" style="border-left:4px solid #dc2626">
-      <div class="card-title" style="color:#dc2626">
-        📋 Deletion History
-        <span style="font-size:12px;font-weight:400;color:var(--muted);margin-left:10px">
-          Highlighted rows = user deleted someone else's task
-        </span>
+    <!-- Filter Tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:18px;border-bottom:1px solid var(--border);padding-bottom:12px;flex-wrap:wrap">
+      <button class="btn btn-sm ${DELETED_FILTER_TAB==='all'?'btn-primary':'btn-outline'}" onclick="setDeletedFilterTab('all')">
+        All Deleted Items (${audit.length})
+      </button>
+      <button class="btn btn-sm ${DELETED_FILTER_TAB==='tasks'?'btn-primary':'btn-outline'}" onclick="setDeletedFilterTab('tasks')">
+        ${ICON('tasks', 14)} Deleted Tasks (${tasksAudit.length})
+      </button>
+      <button class="btn btn-sm ${DELETED_FILTER_TAB==='users'?'btn-primary':'btn-outline'}" onclick="setDeletedFilterTab('users')">
+        ${ICON('users', 14)} Deleted Team Members (${usersAudit.length})
+      </button>
+    </div>
+
+    ${showTasksSection ? `
+      <div class="card" style="border-left:4px solid #dc2626;margin-bottom:24px">
+        <div class="card-title" style="color:#dc2626;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px">
+            ${ICON('tasks', 16, '', '#dc2626')}
+            <span>Deleted Tasks (${tasksAudit.length})</span>
+          </div>
+          <span style="font-size:12px;font-weight:400;color:var(--muted)">
+            Click "Restore Task" to re-insert task into database & active sprint
+          </span>
+        </div>
+        ${tasksAudit.length ? `
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th>Deleted At</th><th>Deleted By</th><th>Task ID</th><th>Task Title</th>
+              <th>Type</th><th>Was Status</th><th>Priority</th>
+              <th>Assigned To</th><th>Ownership</th><th style="text-align:right">Restore Action</th>
+            </tr></thead>
+            <tbody>${taskRows}</tbody>
+          </table></div>
+        ` : `
+          <div class="no-data" style="padding:30px">No deleted tasks in record.</div>
+        `}
       </div>
-      <div class="table-wrap"><table>
-        <thead><tr>
-          <th>Deleted At</th><th>Deleted By</th><th>Task ID</th><th>Task Title</th>
-          <th>Type</th><th>Was Status</th><th>Priority</th>
-          <th>Assigned To</th><th>Created By</th><th>Ownership</th>
-        </tr></thead>
-        <tbody>${auditRows}</tbody>
-      </table></div>
-    </div>` : `
-    <div class="card">
-      <div class="no-data" style="padding:60px">
-        <div style="font-size:16px;font-weight:700">No tasks have been deleted yet!</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:8px">
-          Every task deletion by any user will be automatically logged here.
+    ` : ''}
+
+    ${showUsersSection ? `
+      <div class="card" style="border-left:4px solid #ea580c;margin-bottom:24px">
+        <div class="card-title" style="color:#ea580c;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px">
+            ${ICON('users', 16, '', '#ea580c')}
+            <span>Deleted Team Members (${usersAudit.length})</span>
+          </div>
+          <span style="font-size:12px;font-weight:400;color:var(--muted)">
+            Click "Restore User" to re-activate member login & user profile
+          </span>
+        </div>
+        ${usersAudit.length ? `
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th>Deleted At</th><th>Deleted By</th><th>User ID</th><th>Member Profile</th>
+              <th>Designation</th><th>Contact / Role</th><th style="text-align:right">Restore Action</th>
+            </tr></thead>
+            <tbody>${userRows}</tbody>
+          </table></div>
+        ` : `
+          <div class="no-data" style="padding:30px">No deleted team members in record.</div>
+        `}
+      </div>
+    ` : ''}
+
+    ${!audit.length ? `
+      <div class="card">
+        <div class="no-data" style="padding:60px">
+          <div style="font-size:16px;font-weight:700">No tasks or users have been deleted yet!</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:8px">
+            Every task and user deletion will be logged here with 1-click restore capability.
+          </div>
         </div>
       </div>
-    </div>`}
+    ` : ''}
   `);
+}
+
+async function restoreDeletedTask(auditId, taskId) {
+  if (!confirm(`Restore task ${taskId} back to active tasks?`)) return;
+  const res = await POST(`/api/audit/restore-task/${auditId}`);
+  if (!res || res.error) {
+    showToast('Failed to restore task: ' + (res?.error || 'Error'), '#dc2626');
+    return;
+  }
+
+  // 1. Remove from local deleted blacklist
+  try {
+    const del = JSON.parse(localStorage.getItem('ttm_deleted_tasks') || '[]');
+    const next = del.filter(id => id !== taskId);
+    localStorage.setItem('ttm_deleted_tasks', JSON.stringify(next));
+  } catch(e) {}
+
+  // 2. Add back to vault
+  try {
+    const vault = getClientVault();
+    if (vault && vault.tasks && res.task) {
+      if (!vault.tasks.some(t => t.id === res.task.id)) {
+        vault.tasks.push(res.task);
+        localStorage.setItem('ttm_client_vault', JSON.stringify(vault));
+      }
+    }
+  } catch(e) {}
+
+  showToast(`♻️ Task ${taskId} restored successfully!`, '#10b981');
+  renderDeletedTasks();
+}
+
+async function restoreDeletedUser(auditId, userId) {
+  if (!confirm(`Restore member "${userId}" back to active team?`)) return;
+  const res = await POST(`/api/audit/restore-user/${auditId}`);
+  if (!res || res.error) {
+    showToast('Failed to restore user: ' + (res?.error || 'Error'), '#dc2626');
+    return;
+  }
+
+  // 1. Remove from local deleted blacklist
+  try {
+    const del = JSON.parse(localStorage.getItem('ttm_deleted_users') || '[]');
+    const next = del.filter(id => id !== userId);
+    localStorage.setItem('ttm_deleted_users', JSON.stringify(next));
+  } catch(e) {}
+
+  // 2. Add back to vault
+  try {
+    const vault = getClientVault();
+    if (vault && vault.users && res.user) {
+      if (!vault.users.some(u => u.id === res.user.id)) {
+        vault.users.push(res.user);
+        localStorage.setItem('ttm_client_vault', JSON.stringify(vault));
+      }
+    }
+  } catch(e) {}
+
+  // 3. Reload ALL_USERS
+  ALL_USERS = await GET('/api/users') || [];
+
+  showToast(`♻️ User "${res.user?.name || userId}" restored successfully!`, '#10b981');
+  renderDeletedTasks();
 }
 
 async function clearAuditLog() {

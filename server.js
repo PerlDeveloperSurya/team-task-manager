@@ -697,8 +697,11 @@ app.delete('/api/users/:id', requireAdmin, (req, res) => {
   const uid = req.params.id;
   const deleteTasks = req.query.deleteTasks === 'true' || req.body?.deleteTasks === true;
 
-  // 1. Remove user from users.json (and cloud database)
   let users = readJSON('users.json') || [];
+  const targetUser = users.find(u => u.id === uid);
+  if (!targetUser) return res.status(404).json({ error: 'User not found' });
+
+  // 1. Remove user from users.json (and cloud database)
   users = users.filter(u => u.id !== uid);
   writeJSON('users.json', users);
 
@@ -730,18 +733,31 @@ app.delete('/api/users/:id', requireAdmin, (req, res) => {
   }
   writeJSON('tasks.json', tasks);
 
-  // 5. Audit record for deleted user
+  // 5. Audit record for deleted user (stores full user profile for 1-click restore)
+  const delUserObj = (readJSON('users.json') || []).find(u => u.id === req.session.userId) || {};
   let audit = readJSON('audit.json') || [];
   audit.push({
     id: 'AUD-' + uuidv4().split('-')[0].toUpperCase(),
     action: 'DELETE_USER',
     deletedBy: req.session.userId,
+    deletedByName: delUserObj.name || req.session.userId,
     deletedAt: new Date().toISOString(),
-    userId: uid
+    userId: uid,
+    user: {
+      id: targetUser.id,
+      name: targetUser.name,
+      role: targetUser.role || 'member',
+      color: targetUser.color || '#2563eb',
+      emoji: targetUser.emoji || '👤',
+      designation: targetUser.designation || 'Team Member',
+      email: targetUser.email || '',
+      phone: targetUser.phone || '',
+      password: targetUser.password
+    }
   });
   writeJSON('audit.json', audit);
 
-  console.log(`[Database] 🗑️ Deleted user ${uid} and updated all storage tables.`);
+  console.log(`[Database] 🗑️ Deleted user ${uid} and recorded in audit log with restore profile.`);
   res.json({ ok: true, message: `User ${uid} permanently deleted from database.` });
 });
 
@@ -1051,27 +1067,98 @@ app.get('/api/stats', requireAdmin, (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════
-// AUDIT LOG — Task Deletions (Admin only)
+// AUDIT LOG & ONE-CLICK RESTORE (Admin only)
 // ════════════════════════════════════════════════════════════════════════
 app.get('/api/audit', requireAdmin, (req, res) => {
-  const users = readJSON('users.json');
-  const audit = readJSON('audit.json').map(a => {
+  const users = readJSON('users.json') || [];
+  const rawAudit = readJSON('audit.json') || [];
+  const audit = rawAudit.map(a => {
     const delUser = users.find(u => u.id === a.deletedBy) || {};
-    const assUser = users.find(u => u.id === a.task?.assignee) || {};
-    const creUser = users.find(u => u.id === a.task?.createdBy) || {};
+    const assUser = a.task?.assignee ? (users.find(u => u.id === a.task.assignee) || {}) : {};
+    const creUser = a.task?.createdBy ? (users.find(u => u.id === a.task.createdBy) || {}) : {};
     return {
       ...a,
+      deletedByName: a.deletedByName || delUser.name || a.deletedBy,
       deletedByColor: delUser.color || '#607d8b',
       deletedByEmoji: delUser.emoji || '👤',
-      task: {
+      task: a.task ? {
         ...a.task,
-        assigneeName:  assUser.name  || a.task?.assignee,
+        assigneeName:  assUser.name  || a.task.assignee,
         assigneeColor: assUser.color || '#607d8b',
-        createdByName: creUser.name  || a.task?.createdBy,
-      },
+        createdByName: creUser.name  || a.task.createdBy,
+      } : null,
+      user: a.user || (a.action === 'DELETE_USER' ? {
+        id: a.userId,
+        name: a.userId,
+        role: 'member',
+        color: '#2563eb',
+        emoji: '👤'
+      } : null)
     };
-  }).sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
+  }).sort((a, b) => (b.deletedAt || '').localeCompare(a.deletedAt || ''));
   res.json(audit);
+});
+
+app.post('/api/audit/restore-task/:auditId', requireAdmin, (req, res) => {
+  let audit = readJSON('audit.json') || [];
+  const auditIndex = audit.findIndex(a => a.id === req.params.auditId && a.action === 'DELETE_TASK');
+  if (auditIndex < 0) return res.status(404).json({ error: 'Deleted task record not found in audit log' });
+
+  const record = audit[auditIndex];
+  const taskToRestore = record.task;
+  if (!taskToRestore || !taskToRestore.id) {
+    return res.status(400).json({ error: 'Invalid task data in audit log' });
+  }
+
+  let tasks = readJSON('tasks.json') || [];
+  const existingIdx = tasks.findIndex(t => t.id === taskToRestore.id);
+  if (existingIdx >= 0) {
+    tasks[existingIdx] = taskToRestore;
+  } else {
+    tasks.push(taskToRestore);
+  }
+  writeJSON('tasks.json', tasks);
+
+  // Remove deletion record from audit log
+  audit.splice(auditIndex, 1);
+  writeJSON('audit.json', audit);
+
+  console.log(`[Database] ♻️ Restored task ${taskToRestore.id} ("${taskToRestore.title}") by ${req.session.userId}`);
+  res.json({ ok: true, message: `Task ${taskToRestore.id} restored successfully!`, task: taskToRestore });
+});
+
+app.post('/api/audit/restore-user/:auditId', requireAdmin, (req, res) => {
+  let audit = readJSON('audit.json') || [];
+  const auditIndex = audit.findIndex(a => a.id === req.params.auditId && a.action === 'DELETE_USER');
+  if (auditIndex < 0) return res.status(404).json({ error: 'Deleted user record not found in audit log' });
+
+  const record = audit[auditIndex];
+  const userToRestore = record.user || {
+    id: record.userId,
+    name: record.userId,
+    role: 'member',
+    color: '#2563eb',
+    emoji: '👤',
+    designation: 'Team Member',
+    password: hashPassword('password123')
+  };
+
+  let users = readJSON('users.json') || [];
+  const existingIdx = users.findIndex(u => u.id === userToRestore.id);
+  if (existingIdx >= 0) {
+    users[existingIdx] = userToRestore;
+  } else {
+    users.push(userToRestore);
+  }
+  writeJSON('users.json', users);
+
+  // Remove deletion record from audit log
+  audit.splice(auditIndex, 1);
+  writeJSON('audit.json', audit);
+
+  console.log(`[Database] ♻️ Restored user ${userToRestore.id} ("${userToRestore.name}") by ${req.session.userId}`);
+  const { password: _, ...safeUser } = userToRestore;
+  res.json({ ok: true, message: `User ${userToRestore.name} restored successfully!`, user: safeUser });
 });
 
 app.delete('/api/audit', requireAdmin, (req, res) => {
