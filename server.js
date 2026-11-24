@@ -694,10 +694,55 @@ app.put('/api/users/:id', requireAdmin, (req, res) => {
 
 app.delete('/api/users/:id', requireAdmin, (req, res) => {
   if (req.params.id === 'admin') return res.status(400).json({ error: 'Cannot delete admin' });
-  let users = readJSON('users.json');
-  users = users.filter(u => u.id !== req.params.id);
+  const uid = req.params.id;
+  const deleteTasks = req.query.deleteTasks === 'true' || req.body?.deleteTasks === true;
+
+  // 1. Remove user from users.json (and cloud database)
+  let users = readJSON('users.json') || [];
+  users = users.filter(u => u.id !== uid);
   writeJSON('users.json', users);
-  res.json({ ok: true });
+
+  // 2. Clear active sessions for this user
+  let sessions = readJSON('sessions.json') || {};
+  let sessionModified = false;
+  Object.keys(sessions).forEach(token => {
+    if (sessions[token]?.userId === uid) {
+      delete sessions[token];
+      sessionModified = true;
+    }
+  });
+  if (sessionModified) writeJSON('sessions.json', sessions);
+
+  // 3. Clear active timers for this user
+  if (LIVE_TIMERS && LIVE_TIMERS[uid]) {
+    delete LIVE_TIMERS[uid];
+    writeJSON('active_timers.json', LIVE_TIMERS);
+  }
+
+  // 4. Handle tasks assigned to this user
+  let tasks = readJSON('tasks.json') || [];
+  if (deleteTasks) {
+    tasks = tasks.filter(t => t.assignee !== uid);
+  } else {
+    tasks.forEach(t => {
+      if (t.assignee === uid) t.assignee = 'unassigned';
+    });
+  }
+  writeJSON('tasks.json', tasks);
+
+  // 5. Audit record for deleted user
+  let audit = readJSON('audit.json') || [];
+  audit.push({
+    id: 'AUD-' + uuidv4().split('-')[0].toUpperCase(),
+    action: 'DELETE_USER',
+    deletedBy: req.session.userId,
+    deletedAt: new Date().toISOString(),
+    userId: uid
+  });
+  writeJSON('audit.json', audit);
+
+  console.log(`[Database] 🗑️ Deleted user ${uid} and updated all storage tables.`);
+  res.json({ ok: true, message: `User ${uid} permanently deleted from database.` });
 });
 
 // ════════════════════════════════════════════════════════════════════════
@@ -806,7 +851,19 @@ app.delete('/api/tasks/:id', requireAuth, (req, res) => {
 
   tasks = tasks.filter(t => t.id !== req.params.id);
   writeJSON('tasks.json', tasks);
-  res.json({ ok: true });
+
+  // ── Remove from active live timers ───────────────────────────────────
+  let timerChanged = false;
+  Object.keys(LIVE_TIMERS).forEach(uId => {
+    if (LIVE_TIMERS[uId]?.taskId === req.params.id) {
+      delete LIVE_TIMERS[uId];
+      timerChanged = true;
+    }
+  });
+  if (timerChanged) writeJSON('active_timers.json', LIVE_TIMERS);
+
+  console.log(`[Database] 🗑️ Deleted task ${req.params.id} and updated all storage tables.`);
+  res.json({ ok: true, message: `Task ${req.params.id} permanently deleted from database.` });
 });
 
 // ════════════════════════════════════════════════════════════════════════
@@ -1189,9 +1246,18 @@ app.post('/api/restore', requireAdmin, (req, res) => {
   let addedLogs = 0;
 
   if (isMerge) {
-    // 1. Merge Users
+    // Collect set of deleted task IDs and deleted user IDs from audit log so they are NEVER resurrected
+    const deletedTaskIds = new Set(
+      currentAudit.filter(a => a.action === 'DELETE_TASK' && a.task?.id).map(a => a.task.id)
+    );
+    const deletedUserIds = new Set(
+      currentAudit.filter(a => a.action === 'DELETE_USER' && a.userId).map(a => a.userId)
+    );
+
+    // 1. Merge Users (skip permanently deleted users)
     if (Array.isArray(data.users)) {
       data.users.forEach(bu => {
+        if (deletedUserIds.has(bu.id)) return;
         const idx = currentUsers.findIndex(u => u.id === bu.id);
         if (idx >= 0) {
           currentUsers[idx] = {
@@ -1207,9 +1273,10 @@ app.post('/api/restore', requireAdmin, (req, res) => {
       });
     }
 
-    // 2. Merge Tasks
+    // 2. Merge Tasks (skip permanently deleted tasks)
     if (Array.isArray(data.tasks)) {
       data.tasks.forEach(bt => {
+        if (deletedTaskIds.has(bt.id)) return;
         const idx = currentTasks.findIndex(t => t.id === bt.id);
         if (idx >= 0) {
           currentTasks[idx] = { ...currentTasks[idx], ...bt };

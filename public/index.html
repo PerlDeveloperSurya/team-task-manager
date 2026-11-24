@@ -3596,11 +3596,37 @@ async function saveUser() {
 }
 
 async function deleteUser(id, name) {
-  if (!confirm(`Remove user "${name}"? Their tasks and logs will remain.`)) return;
-  const r = await DEL('/api/users/'+id);
-  if (!r||r.error) { showToast('Error: '+(r?.error||'Failed to delete user'),'#dc2626'); return; }
-  showToast('User removed','#dc2626');
-  ALL_USERS = await GET('/api/users')||[];
+  if (!confirm(`Delete user "${name}" from workspace and database?`)) return;
+  const deleteTasksToo = confirm(`Do you also want to permanently delete all tasks assigned to "${name}" from the database?\n\n• Click OK to delete user AND delete all their tasks from database\n• Click Cancel to delete user but keep their tasks (reassign to unassigned)`);
+
+  const r = await DEL('/api/users/' + id + (deleteTasksToo ? '?deleteTasks=true' : ''));
+  if (!r || r.error) {
+    showToast('Error: ' + (r?.error || 'Failed to delete user'), '#dc2626');
+    return;
+  }
+
+  // Record user deletion in local blacklist so auto-vault never resurrects them
+  try {
+    const deletedUsers = JSON.parse(localStorage.getItem('ttm_deleted_users') || '[]');
+    if (!deletedUsers.includes(id)) {
+      deletedUsers.push(id);
+      localStorage.setItem('ttm_deleted_users', JSON.stringify(deletedUsers));
+    }
+    // Update local client vault
+    const vault = getClientVault();
+    if (vault) {
+      if (Array.isArray(vault.users)) {
+        vault.users = vault.users.filter(u => u.id !== id);
+      }
+      if (deleteTasksToo && Array.isArray(vault.tasks)) {
+        vault.tasks = vault.tasks.filter(t => t.assignee !== id);
+      }
+      localStorage.setItem('ttm_client_vault', JSON.stringify(vault));
+    }
+  } catch(e) {}
+
+  showToast(`User "${name}" deleted from database!`, '#dc2626');
+  ALL_USERS = await GET('/api/users') || [];
   renderUsers();
 }
 
@@ -4020,23 +4046,35 @@ async function autoSyncVaultIfReset() {
   if (!vault || (!vault.tasks?.length && !vault.users?.length)) return;
 
   try {
+    const deletedTaskIds = JSON.parse(localStorage.getItem('ttm_deleted_tasks') || '[]');
+    const deletedUserIds = JSON.parse(localStorage.getItem('ttm_deleted_users') || '[]');
+
+    // 1. Purge any deleted items from local vault so they are never re-uploaded
+    let vaultTasks = (vault.tasks || []).filter(t => !deletedTaskIds.includes(t.id));
+    let vaultUsers = (vault.users || []).filter(u => !deletedUserIds.includes(u.id));
+
     const [currentTasks, currentUsers] = await Promise.all([
       GET('/api/tasks'),
       GET('/api/users')
     ]);
     if (!currentTasks || !currentUsers) return;
 
-    const vaultTaskCount = vault.tasks?.length || 0;
-    const serverTaskCount = currentTasks.length || 0;
-    const vaultUserCount = vault.users?.length || 0;
-    const serverUserCount = currentUsers.length || 0;
+    // 2. Identify custom tasks/users that exist in vault but are missing from server
+    // (Happens only when Render ephemeral container restarts with default demo seed)
+    const missingTasks = vaultTasks.filter(vt => !currentTasks.some(ct => ct.id === vt.id));
+    const missingUsers = vaultUsers.filter(vu => !currentUsers.some(cu => cu.id === vu.id));
 
-    // If server has fewer tasks or users than the local browser vault, a deploy wiped ephemeral disk!
-    if (vaultTaskCount > serverTaskCount || vaultUserCount > serverUserCount) {
-      console.log(`[Auto-Vault] Detected fresh server deploy. Auto-restoring ${vaultTaskCount} tasks and ${vaultUserCount} users from browser vault...`);
-      const res = await POST('/api/restore', { mode: 'merge', data: vault });
+    // Only restore if custom non-deleted items were wiped by a server deploy
+    if (missingTasks.length > 0 || missingUsers.length > 0) {
+      console.log(`[Auto-Vault] Detected fresh deploy wipe. Restoring ${missingTasks.length} tasks and ${missingUsers.length} users...`);
+      const restorePayload = {
+        users: missingUsers,
+        tasks: missingTasks,
+        logs: vault.logs || []
+      };
+      const res = await POST('/api/restore', { mode: 'merge', data: restorePayload });
       if (res && res.ok) {
-        showToast('🛡️ Auto-Vault: Successfully restored your tasks & users after redeployment!', '#10b981');
+        showToast('🛡️ Auto-Vault: Successfully restored missing workspace data!', '#10b981');
         if (CURRENT_VIEW === 'dashboard') renderAdminDashboard();
         else if (CURRENT_VIEW === 'all-tasks') renderAllTasks();
       }
@@ -4458,10 +4496,35 @@ async function saveTask() {
 }
 
 async function deleteTask(id) {
-  if(!confirm('Delete this task? It will be archived in the deletion audit log.')) return;
-  const r=await DEL('/api/tasks/'+id);
-  if(!r||r.error){showToast('Failed to delete task: '+(r?.error||'Unknown error'),'#dc2626');return;}
-  showToast('Task deleted','#dc2626');
+  if(!confirm('Permanently delete this task from workspace and database?')) return;
+  const r = await DEL('/api/tasks/'+id);
+  if(!r || r.error) {
+    showToast('Failed to delete task: '+(r?.error||'Unknown error'),'#dc2626');
+    return;
+  }
+
+  // Record task deletion in local blacklist so auto-vault never resurrects it
+  try {
+    const deletedTasks = JSON.parse(localStorage.getItem('ttm_deleted_tasks') || '[]');
+    if (!deletedTasks.includes(id)) {
+      deletedTasks.push(id);
+      localStorage.setItem('ttm_deleted_tasks', JSON.stringify(deletedTasks));
+    }
+    // Update local client vault
+    const vault = getClientVault();
+    if (vault && Array.isArray(vault.tasks)) {
+      vault.tasks = vault.tasks.filter(t => t.id !== id);
+      localStorage.setItem('ttm_client_vault', JSON.stringify(vault));
+    }
+    // Stop local active timer if this task was running
+    if (TIMER_STATE && TIMER_STATE.taskId === id) {
+      TIMER_STATE = null;
+      localStorage.removeItem('ttm_active_timer');
+      renderTimerBar();
+    }
+  } catch(e) {}
+
+  showToast('Task permanently deleted from database!', '#dc2626');
   if(ME.role==='admin') renderAllTasks(); else renderMyTasks();
 }
 
