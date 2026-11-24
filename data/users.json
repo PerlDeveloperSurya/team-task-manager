@@ -4,15 +4,17 @@
     "name": "Admin",
     "role": "admin",
     "password": "admin123",
-    "color": "#9c27b0",
+    "color": "#2563eb",
     "emoji": "👑",
-    "designation": "Team Manager",
+    "designation": "Workspace Administrator",
     "createdAt": "2026-11-18",
-    "status": "Active"
+    "status": "Active",
+    "email": "",
+    "phone": ""
   },
   {
     "id": "person1",
-    "name": "Person 1",
+    "name": "Alex Rivera",
     "role": "member",
     "password": "person1",
     "color": "#1a73e8",

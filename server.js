@@ -268,6 +268,37 @@ app.get('/api/me', requireAuth, (req, res) => {
   res.json(safeUser);
 });
 
+app.put('/api/me', requireAuth, (req, res) => {
+  const users = readJSON('users.json');
+  const idx   = users.findIndex(u => u.id === req.session.userId);
+  if (idx < 0) return res.status(404).json({ error: 'User not found' });
+
+  const current = users[idx];
+  const { name, email, phone, designation, color, currentPassword, newPassword } = req.body;
+
+  if (newPassword && newPassword.trim()) {
+    if (current.password && current.password !== (currentPassword || '').trim()) {
+      return res.status(400).json({ error: 'Current password does not match' });
+    }
+    if (newPassword.trim().length < 3) {
+      return res.status(400).json({ error: 'New password must be at least 3 characters' });
+    }
+    current.password = newPassword.trim();
+  }
+
+  if (name && name.trim()) current.name = name.trim();
+  if (email !== undefined) current.email = email.trim();
+  if (phone !== undefined) current.phone = phone.trim();
+  if (designation !== undefined) current.designation = designation.trim();
+  if (color && color.trim()) current.color = color.trim();
+
+  users[idx] = current;
+  writeJSON('users.json', users);
+
+  const { password: _, ...safeUser } = current;
+  res.json({ ok: true, user: safeUser });
+});
+
 // ════════════════════════════════════════════════════════════════════════
 // FORGOT PASSWORD & PASSWORD RESET
 // ════════════════════════════════════════════════════════════════════════
@@ -665,10 +696,10 @@ app.delete('/api/logs/:id', requireAuth, (req, res) => {
 app.get('/api/stats', requireAdmin, (req, res) => {
   const tasks = readJSON('tasks.json');
   const logs  = readJSON('logs.json');
-  const users = readJSON('users.json').filter(u => u.id !== 'admin');
+  const allUsers = readJSON('users.json');
 
-  const totalHrs = logs.reduce((a,l) => a + (l.hours||0), 0);
-  const plannedHrs = tasks.reduce((a,t) => a + (t.planned||0), 0);
+  const totalHrs = Math.round(logs.reduce((a,l) => a + (parseFloat(l.hours)||0), 0) * 10) / 10;
+  const plannedHrs = Math.round(tasks.reduce((a,t) => a + (parseFloat(t.planned)||0), 0) * 10) / 10;
 
   const byStatus = {};
   const byType   = {};
@@ -677,19 +708,19 @@ app.get('/api/stats', requireAdmin, (req, res) => {
     byType[t.type]     = (byType[t.type]||0)     + 1;
   });
 
-  const perPerson = users.map(u => {
+  const perPerson = allUsers.map(u => {
     const ptasks = tasks.filter(t => t.assignee === u.id);
-    const phrs   = logs.filter(l => l.user === u.id).reduce((a,l) => a+(l.hours||0), 0);
-    const todayHrs = logs.filter(l => l.user === u.id && l.date === today()).reduce((a,l)=>a+(l.hours||0),0);
+    const phrs   = Math.round(logs.filter(l => l.user === u.id).reduce((a,l) => a + (parseFloat(l.hours)||0), 0) * 10) / 10;
+    const todayHrs = Math.round(logs.filter(l => l.user === u.id && l.date === today()).reduce((a,l) => a + (parseFloat(l.hours)||0), 0) * 10) / 10;
     return {
-      id: u.id, name: u.name, color: u.color,
+      id: u.id, name: u.name, color: u.color, role: u.role, designation: u.designation || '',
       total: ptasks.length,
       completed: ptasks.filter(t=>t.status==='Completed').length,
       inProgress: ptasks.filter(t=>t.status==='In Progress').length,
       pending: ptasks.filter(t=>t.status==='Pending').length,
       blocked: ptasks.filter(t=>t.status==='Blocked').length,
       hoursLogged: phrs,
-      hoursPlanned: ptasks.reduce((a,t)=>a+(t.planned||0),0),
+      hoursPlanned: Math.round(ptasks.reduce((a,t)=>a+(parseFloat(t.planned)||0),0) * 10) / 10,
       todayHours: todayHrs,
     };
   });
@@ -698,8 +729,9 @@ app.get('/api/stats', requireAdmin, (req, res) => {
   const days7 = Array.from({length:7},(_,i)=>daysAgo(6-i));
   const dailyHours = days7.map(d => {
     const entry = { date: d };
-    users.forEach(u => {
-      entry[u.id] = logs.filter(l=>l.user===u.id && l.date===d).reduce((a,l)=>a+(l.hours||0),0);
+    allUsers.forEach(u => {
+      const dhrs = logs.filter(l=>l.user===u.id && l.date===d).reduce((a,l)=>a+(parseFloat(l.hours)||0),0);
+      entry[u.id] = Math.round(dhrs * 10) / 10;
     });
     return entry;
   });
