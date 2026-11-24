@@ -26,6 +26,7 @@ function ensureFile(file, def) {
 // ── Storage Engine (Local JSON + Optional MongoDB Atlas Persistent Cloud Storage) ──
 let mongoClient = null;
 let mongoDb = null;
+let mongoConnectionError = null;
 
 function readJSON(file) {
   const fp = path.join(DATA, file);
@@ -57,13 +58,24 @@ function writeJSON(file, obj, syncMongo = true) {
 }
 
 async function initMongo() {
-  const uri = process.env.MONGODB_URI;
+  let uri = process.env.MONGODB_URI;
   if (!uri) return;
+
+  // Clean and sanitize URI (trim whitespace and remove accidental surrounding quotes)
+  uri = uri.trim();
+  if ((uri.startsWith('"') && uri.endsWith('"')) || (uri.startsWith("'") && uri.endsWith("'"))) {
+    uri = uri.slice(1, -1).trim();
+  }
+
   try {
     const { MongoClient } = require('mongodb');
-    mongoClient = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
+    mongoClient = new MongoClient(uri, {
+      serverSelectionTimeoutMS: 8000,
+      connectTimeoutMS: 10000,
+    });
     await mongoClient.connect();
     mongoDb = mongoClient.db();
+    mongoConnectionError = null;
     console.log('\n[Database] ✅ Connected to MongoDB Atlas persistent cloud storage!');
 
     // Sync all collections from MongoDB into local cache
@@ -95,7 +107,25 @@ async function initMongo() {
       }
     }
   } catch (err) {
+    mongoConnectionError = err.message;
     console.warn('\n[Database] ⚠️ MongoDB Atlas not connected, operating on local JSON storage:', err.message);
+
+    if (err.message && (err.message.includes('alert number 80') || err.message.includes('tlsv1 alert internal error'))) {
+      console.warn('\n╔═════════════════════════════════════════════════════════════════════════════════════╗');
+      console.warn('║ ⚠️  MONGODB ATLAS IP WHITELIST BLOCK DETECTED (SSL ALERT NUMBER 80)                 ║');
+      console.warn('╠═════════════════════════════════════════════════════════════════════════════════════╣');
+      console.warn('║ MongoDB Atlas rejected the connection because Render\'s dynamic IP is not whitelisted.║');
+      console.warn('║                                                                                     ║');
+      console.warn('║ 🛠️  EASY 1-MINUTE FIX IN MONGODB ATLAS:                                             ║');
+      console.warn('║  1. Go to your MongoDB Atlas dashboard (https://cloud.mongodb.com)                  ║');
+      console.warn('║  2. In the left sidebar under "Security", click "Network Access"                    ║');
+      console.warn('║  3. Click the "+ Add IP Address" button                                             ║');
+      console.warn('║  4. Click "ALLOW ACCESS FROM ANYWHERE" (adds 0.0.0.0/0)                             ║');
+      console.warn('║  5. Click "Confirm" and wait 1 minute for Atlas to apply the rule                   ║');
+      console.warn('║                                                                                     ║');
+      console.warn('║ Render uses dynamic cloud IPs on every build, so 0.0.0.0/0 allows Render to connect ║');
+      console.warn('╚═════════════════════════════════════════════════════════════════════════════════════╝\n');
+    }
   }
 }
 
@@ -951,6 +981,7 @@ app.get('/api/system-status', requireAdmin, (req, res) => {
   res.json({
     hasMongo: !!mongoDb,
     mongoUriSet: !!process.env.MONGODB_URI,
+    mongoError: mongoConnectionError,
     storageMode: mongoDb ? 'MongoDB Atlas (Persistent Cloud)' : 'Local JSON Disk (Render Ephemeral)',
     uptime: Math.round(process.uptime()),
     counts: {

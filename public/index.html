@@ -3930,6 +3930,27 @@ async function renderBackupSync() {
     ? `<span style="background:#ecfdf5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">${ICON('shield', 13, '', '#065f46')} Persistent Cloud (MongoDB Atlas Active)</span>`
     : `<span style="background:#fffbeb;color:#b45309;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">${ICON('alert-triangle', 13, '', '#b45309')} Ephemeral Disk (Render Free Tier)</span>`;
 
+  const mongoWarningBox = (!isMongo && sysStatus.mongoUriSet) ? `
+    <div style="background:#fff7ed;border:1.5px solid #fdba74;border-radius:12px;padding:16px 20px;margin-bottom:20px;box-shadow:var(--shadow-xs)">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <span style="color:#ea580c;display:flex;margin-top:2px">${ICON('alert-triangle', 20)}</span>
+        <div>
+          <div style="font-weight:800;color:#9a3412;font-size:14.5px">MongoDB Atlas Network Access Block (SSL Alert 80)</div>
+          <div style="font-size:12.5px;color:#7c2d12;margin-top:4px;line-height:1.5">
+            Render is trying to connect with your <code>MONGODB_URI</code>, but MongoDB Atlas rejected the connection because Render's dynamic IP address is not whitelisted in Atlas Network Access.
+          </div>
+          <div style="background:#ffffff;border:1px solid #fed7aa;border-radius:8px;padding:12px 14px;margin-top:10px;font-size:12px;color:#431407;line-height:1.6">
+            <b>How to fix in 1 minute:</b><br>
+            1. Open <a href="https://cloud.mongodb.com" target="_blank" style="color:#ea580c;font-weight:700;text-decoration:underline">MongoDB Atlas Dashboard</a> &rarr; click <b>Network Access</b> on the left menu under Security.<br>
+            2. Click the <b>+ Add IP Address</b> button.<br>
+            3. Click the <b>"Allow Access From Anywhere"</b> button (this inputs <code>0.0.0.0/0</code>).<br>
+            4. Click <b>Confirm</b>. Within 60 seconds, Atlas will accept Render's connections and your database will turn green!
+          </div>
+        </div>
+      </div>
+    </div>
+  ` : '';
+
   setContent(`
     <div class="section-header">
       <div>
@@ -3938,6 +3959,8 @@ async function renderBackupSync() {
       </div>
       <button class="btn btn-primary btn-sm" onclick="downloadSystemBackup()">${ICON('backup', 14)} Download Backup Now</button>
     </div>
+
+    ${mongoWarningBox}
 
     <!-- Storage Status Alert Banner -->
     <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:var(--shadow);margin-bottom:20px;border-left:5px solid ${isMongo ? '#10b981' : '#f59e0b'}">
