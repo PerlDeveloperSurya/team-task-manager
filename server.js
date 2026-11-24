@@ -72,6 +72,14 @@ async function initMongo() {
     uri = uri.slice(1, -1).trim();
   }
 
+  // Auto-remove accidental placeholder brackets around password like :<myPassword>@
+  uri = uri.replace(/:<([^>]+)>@/, (m, p) => ':' + p + '@');
+
+  // Auto-append authSource=admin if not present for Atlas
+  if (!uri.includes('authSource=')) {
+    uri += (uri.includes('?') ? '&' : '?') + 'authSource=admin';
+  }
+
   // Close previous connection if any
   if (mongoClient) {
     try { await mongoClient.close(); } catch(e) {}
@@ -135,6 +143,19 @@ async function initMongo() {
       console.warn('║  5. Click "Confirm" and wait 1 minute for Atlas to apply the rule                   ║');
       console.warn('║                                                                                     ║');
       console.warn('║ Render uses dynamic cloud IPs on every build, so 0.0.0.0/0 allows Render to connect ║');
+      console.warn('╚═════════════════════════════════════════════════════════════════════════════════════╝\n');
+    } else if (err.message && err.message.toLowerCase().includes('bad auth')) {
+      console.warn('\n╔═════════════════════════════════════════════════════════════════════════════════════╗');
+      console.warn('║ ⚠️  MONGODB ATLAS AUTHENTICATION FAILED (BAD AUTH / INVALID CREDENTIALS)            ║');
+      console.warn('╠═════════════════════════════════════════════════════════════════════════════════════╣');
+      console.warn('║ TLS network handshake succeeded! But username/password in MONGODB_URI was rejected. ║');
+      console.warn('║                                                                                     ║');
+      console.warn('║ 🛠️  30-SECOND FIX:                                                                  ║');
+      console.warn('║  1. Open MongoDB Atlas (https://cloud.mongodb.com) -> Security -> Database Access   ║');
+      console.warn('║  2. Click "Edit" on your user (or "+ Add New Database User")                        ║');
+      console.warn('║  3. Enter a simple alphanumeric password without symbols, e.g. TaskAdmin2026        ║');
+      console.warn('║  4. Make sure privileges are "Read and write to any database"                       ║');
+      console.warn('║  5. Update MONGODB_URI on Render with the new password and click Reconnect          ║');
       console.warn('╚═════════════════════════════════════════════════════════════════════════════════════╝\n');
     }
   } finally {
