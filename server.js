@@ -57,14 +57,25 @@ function writeJSON(file, obj, syncMongo = true) {
   }
 }
 
+let isMongoConnecting = false;
+
 async function initMongo() {
+  if (mongoDb) return;
+  if (isMongoConnecting) return;
   let uri = process.env.MONGODB_URI;
   if (!uri) return;
 
+  isMongoConnecting = true;
   // Clean and sanitize URI (trim whitespace and remove accidental surrounding quotes)
   uri = uri.trim();
   if ((uri.startsWith('"') && uri.endsWith('"')) || (uri.startsWith("'") && uri.endsWith("'"))) {
     uri = uri.slice(1, -1).trim();
+  }
+
+  // Close previous connection if any
+  if (mongoClient) {
+    try { await mongoClient.close(); } catch(e) {}
+    mongoClient = null;
   }
 
   try {
@@ -126,6 +137,8 @@ async function initMongo() {
       console.warn('║ Render uses dynamic cloud IPs on every build, so 0.0.0.0/0 allows Render to connect ║');
       console.warn('╚═════════════════════════════════════════════════════════════════════════════════════╝\n');
     }
+  } finally {
+    isMongoConnecting = false;
   }
 }
 
@@ -992,6 +1005,20 @@ app.get('/api/system-status', requireAdmin, (req, res) => {
   });
 });
 
+app.post('/api/retry-mongo', requireAdmin, async (req, res) => {
+  if (!process.env.MONGODB_URI) {
+    return res.status(400).json({ ok: false, error: 'MONGODB_URI environment variable is not configured.' });
+  }
+  // Reset and force re-init
+  mongoDb = null;
+  await initMongo();
+  res.json({
+    ok: !!mongoDb,
+    error: mongoConnectionError,
+    storageMode: mongoDb ? 'MongoDB Atlas (Persistent Cloud)' : 'Local JSON Disk (Render Ephemeral)'
+  });
+});
+
 app.get('/api/backup', requireAdmin, (req, res) => {
   const users   = readJSON('users.json') || [];
   const tasks   = readJSON('tasks.json') || [];
@@ -1122,6 +1149,13 @@ app.post('/api/restore', requireAdmin, (req, res) => {
 // ════════════════════════════════════════════════════════════════════════
 app.listen(PORT, '0.0.0.0', () => {
   initMongo();
+
+  // Background auto-retry: recheck every 25 seconds until connected
+  setInterval(() => {
+    if (!mongoDb && process.env.MONGODB_URI) {
+      initMongo();
+    }
+  }, 25000);
   const os = require('os');
   const ifaces = os.networkInterfaces();
   let localIP = 'localhost';
