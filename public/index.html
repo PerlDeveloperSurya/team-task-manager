@@ -2197,6 +2197,9 @@ async function enterApp(isCached = false) {
   showView(targetView);
 
   ALL_USERS = await GET('/api/users') || [];
+  if (ME.role === 'admin') {
+    autoSyncVaultIfReset();
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -3454,6 +3457,9 @@ async function saveEditUser() {
   closeModal('edit-user-modal');
 
   ALL_USERS = await GET('/api/users') || [];
+  if (ME.role === 'admin') {
+    autoSyncVaultIfReset();
+  }
 
   // If the edited user is ME, update ME object and topbar
   if (ME && ME.id === id) {
@@ -3905,6 +3911,37 @@ function getClientVault() {
   }
 }
 
+async function autoSyncVaultIfReset() {
+  const vault = getClientVault();
+  if (!vault || (!vault.tasks?.length && !vault.users?.length)) return;
+
+  try {
+    const [currentTasks, currentUsers] = await Promise.all([
+      GET('/api/tasks'),
+      GET('/api/users')
+    ]);
+    if (!currentTasks || !currentUsers) return;
+
+    const vaultTaskCount = vault.tasks?.length || 0;
+    const serverTaskCount = currentTasks.length || 0;
+    const vaultUserCount = vault.users?.length || 0;
+    const serverUserCount = currentUsers.length || 0;
+
+    // If server has fewer tasks or users than the local browser vault, a deploy wiped ephemeral disk!
+    if (vaultTaskCount > serverTaskCount || vaultUserCount > serverUserCount) {
+      console.log(`[Auto-Vault] Detected fresh server deploy. Auto-restoring ${vaultTaskCount} tasks and ${vaultUserCount} users from browser vault...`);
+      const res = await POST('/api/restore', { mode: 'merge', data: vault });
+      if (res && res.ok) {
+        showToast('🛡️ Auto-Vault: Successfully restored your tasks & users after redeployment!', '#10b981');
+        if (CURRENT_VIEW === 'dashboard') renderAdminDashboard();
+        else if (CURRENT_VIEW === 'all-tasks') renderAllTasks();
+      }
+    }
+  } catch (err) {
+    console.warn('[Auto-Vault] Check failed:', err);
+  }
+}
+
 async function triggerMongoReconnect() {
   const btn = document.getElementById('btn-reconnect-mongo');
   if (btn) {
@@ -4172,6 +4209,9 @@ async function handleRestoreFile(event) {
 
       showToast(res.message || 'Data restored successfully!', '#10b981');
       ALL_USERS = await GET('/api/users') || [];
+  if (ME.role === 'admin') {
+    autoSyncVaultIfReset();
+  }
       renderBackupSync();
     } catch (err) {
       showToast('Error parsing JSON file: ' + err.message, '#dc2626');
@@ -4221,6 +4261,9 @@ async function restoreFromBrowserVault() {
 
   showToast(`Vault synced! ${res.message || ''}`, '#10b981');
   ALL_USERS = await GET('/api/users') || [];
+  if (ME.role === 'admin') {
+    autoSyncVaultIfReset();
+  }
   renderBackupSync();
 }
 
