@@ -3991,45 +3991,40 @@ async function renderBackupSync() {
   const vaultTasksCount = vault?.tasks?.length || currentTasks.length || 0;
   const vaultSavedAt = vault?.savedAt ? new Date(vault.savedAt).toLocaleString() : 'Just now';
 
-  const isMongo = !!sysStatus.hasMongo;
-  const storageBadge = isMongo
-    ? `<span style="background:#ecfdf5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">${ICON('shield', 13, '', '#065f46')} Persistent Cloud (MongoDB Atlas Active)</span>`
-    : `<span style="background:#fffbeb;color:#b45309;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">${ICON('alert-triangle', 13, '', '#b45309')} Ephemeral Disk (Render Free Tier)</span>`;
+  const isCloud = !!(sysStatus.hasPg || sysStatus.hasMongo);
+  const storageBadge = sysStatus.hasPg
+    ? `<span style="background:#ecfdf5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">${ICON('shield', 13, '', '#065f46')} Render PostgreSQL Active</span>`
+    : (sysStatus.hasMongo
+        ? `<span style="background:#ecfdf5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">${ICON('shield', 13, '', '#065f46')} MongoDB Atlas Active</span>`
+        : `<span style="background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;font-weight:700;padding:4px 10px;border-radius:20px;font-size:12px;display:inline-flex;align-items:center;gap:6px">${ICON('shield', 13, '', '#0369a1')} Auto-Vault Active (No Database Needed)</span>`);
 
+  const hideMongo = localStorage.getItem('ttm_hide_mongo') === '1';
   const isBadAuth = sysStatus.mongoError && sysStatus.mongoError.toLowerCase().includes('bad auth');
   const warningTitle = isBadAuth
-    ? 'Network Connected! But Authentication Failed (bad auth)'
+    ? 'MongoDB Atlas Authentication Failed (bad auth)'
     : 'MongoDB Atlas Not Yet Connected';
   const warningDesc = isBadAuth
-    ? 'Great news: The network and TLS connection to MongoDB Atlas succeeded! However, Atlas rejected the database username or password in your <code>MONGODB_URI</code>.'
-    : 'Render attempted to connect with your <code>MONGODB_URI</code>, but MongoDB Atlas dropped the connection. Once you complete the checks below, click <b>"Test & Reconnect Database Now"</b>!';
+    ? 'The network connection to MongoDB Atlas succeeded, but Atlas rejected the database username or password in <code>MONGODB_URI</code>.'
+    : 'Render attempted to connect with your <code>MONGODB_URI</code>, but MongoDB Atlas dropped the connection.';
 
-  const mongoWarningBox = (!isMongo && sysStatus.mongoUriSet) ? `
+  const mongoWarningBox = (!isCloud && sysStatus.mongoUriSet && !hideMongo) ? `
     <div style="background:#fff7ed;border:1.5px solid #fdba74;border-radius:12px;padding:18px 20px;margin-bottom:20px;box-shadow:var(--shadow-xs)">
       <div style="display:flex;align-items:flex-start;gap:14px">
-        <span style="color:#ea580c;display:flex;margin-top:2px">${ICON(isBadAuth ? 'key' : 'alert-triangle', 22)}</span>
+        <span style="color:#ea580c;display:flex;margin-top:2px">${ICON('alert-triangle', 22)}</span>
         <div style="flex:1">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
             <div style="font-weight:800;color:#9a3412;font-size:15px">${warningTitle}</div>
-            <button class="btn btn-sm btn-primary" id="btn-reconnect-mongo" onclick="triggerMongoReconnect()" style="background:#ea580c;border-color:#ea580c">
-              <span style="display:inline-flex;align-items:center;gap:6px">${ICON('refresh', 13)} Test & Reconnect Database Now</span>
-            </button>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm btn-outline" onclick="localStorage.setItem('ttm_hide_mongo','1');renderBackupSync()" style="font-size:11.5px">
+                Switch to Auto-Vault (Hide MongoDB)
+              </button>
+              <button class="btn btn-sm btn-primary" id="btn-reconnect-mongo" onclick="triggerMongoReconnect()" style="background:#ea580c;border-color:#ea580c;font-size:11.5px">
+                ${ICON('refresh', 12)} Retry MongoDB
+              </button>
+            </div>
           </div>
           <div style="font-size:12.5px;color:#7c2d12;margin-top:6px;line-height:1.5">
-            ${warningDesc}
-          </div>
-          <div style="background:#ffffff;border:1px solid #fed7aa;border-radius:8px;padding:12px 16px;margin-top:12px;font-size:12.5px;color:#431407;line-height:1.7">
-            <b>${isBadAuth ? 'Quick 30-Second Fix in MongoDB Atlas:' : '3 Essential Verification Checks in MongoDB Atlas:'}</b><br>
-            ${isBadAuth ? `
-              <b>1. Open Database Access:</b> In <a href="https://cloud.mongodb.com" target="_blank" style="color:#ea580c;font-weight:700;text-decoration:underline">MongoDB Atlas</a> &rarr; <b>Security</b> &rarr; <b>Database Access</b>.<br>
-              <b>2. Check / Edit Database User:</b> Click <b>Edit</b> on your user (or click <b>+ Add New Database User</b>). Set a clean password with only letters and numbers (e.g. <code>TaskAdmin2026</code>) and ensure role is <b>"Read and write to any database"</b>.<br>
-              <b>3. Update MONGODB_URI on Render:</b> In Render Dashboard &rarr; <b>Environment</b>, update <code>MONGODB_URI</code> with your exact username and password (ensure no <code>&lt; &gt;</code> brackets are around the password!).<br>
-              <b>4. Click Reconnect:</b> Once saved, click the <b>"Test & Reconnect Database Now"</b> button above!
-            ` : `
-              <b>1. Network Access (IP Whitelist):</b> In <a href="https://cloud.mongodb.com" target="_blank" style="color:#ea580c;font-weight:700;text-decoration:underline">MongoDB Atlas</a> &rarr; <b>Security</b> &rarr; <b>Network Access</b>, ensure <code>0.0.0.0/0</code> is listed and its status badge says <span style="background:#ecfdf5;color:#065f46;padding:1px 6px;border-radius:4px;font-weight:700">Active</span>.<br>
-              <b>2. Cluster Status:</b> In Atlas &rarr; <b>Database Deployments</b>, check if your cluster is <span style="color:#dc2626;font-weight:700">PAUSED</span>. If paused, click <b>"Resume"</b>.<br>
-              <b>3. Database User:</b> In Atlas &rarr; <b>Security</b> &rarr; <b>Database Access</b>, make sure your user exists with <b>"Read and write to any database"</b> privileges.
-            `}
+            ${warningDesc} If you prefer not to use MongoDB, simply click <b>"Switch to Auto-Vault"</b> or delete <code>MONGODB_URI</code> in Render. Your tasks and users are already automatically protected!
           </div>
         </div>
       </div>
@@ -4048,18 +4043,18 @@ async function renderBackupSync() {
     ${mongoWarningBox}
 
     <!-- Storage Status Alert Banner -->
-    <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:var(--shadow);margin-bottom:20px;border-left:5px solid ${isMongo ? '#10b981' : '#f59e0b'}">
+    <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:var(--shadow);margin-bottom:20px;border-left:5px solid ${isCloud ? '#10b981' : '#0284c7'}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
         <div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-            <span style="display:flex;align-items:center;color:${isMongo ? '#10b981' : '#f59e0b'}">${ICON(isMongo ? 'shield' : 'alert-triangle', 20)}</span>
-            <span style="font-size:16px;font-weight:800;color:var(--text)">Current Storage Mode:</span>
+            <span style="display:flex;align-items:center;color:${isCloud ? '#10b981' : '#0284c7'}">${ICON('shield', 20)}</span>
+            <span style="font-size:16px;font-weight:800;color:var(--text)">Current Storage Protection:</span>
             ${storageBadge}
           </div>
           <p style="font-size:13px;color:#64748b;margin-bottom:0;line-height:1.6">
-            ${isMongo 
-              ? '<b>Zero-data-loss active:</b> MongoDB Atlas cloud storage is connected. All new users, tasks, and hour logs are permanently preserved in the cloud across every new Render build and restart!'
-              : '<b>Important Render Notice:</b> On Render\'s free tier, local disk files reset when a new build or deploy happens. Use the <b>1-Click Backup</b> or <b>Browser Vault</b> below before deploying, or connect <b>Free MongoDB Atlas</b> for 100% automated persistence.'}
+            ${isCloud 
+              ? '<b>Zero-data-loss active:</b> Cloud database is connected. All new users, tasks, and hour logs are permanently preserved across every new Render build and restart!'
+              : '<b>Self-Healing Auto-Vault Active (Zero Setup Needed):</b> Your tasks and users are automatically mirrored in your browser vault. When Render redeploys, the app automatically detects it on admin login and merges your data back seamlessly! You can also click <b>"Download Backup Now"</b> anytime.'}
           </p>
         </div>
         <div style="display:flex;gap:16px;text-align:right">

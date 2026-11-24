@@ -23,10 +23,13 @@ function ensureFile(file, def) {
   if (!fs.existsSync(fp)) fs.writeFileSync(fp, JSON.stringify(def, null, 2));
 }
 
-// ── Storage Engine (Local JSON + Optional MongoDB Atlas Persistent Cloud Storage) ──
+// ── Storage Engine (Local JSON + Optional Render PostgreSQL / MongoDB Atlas) ──
 let mongoClient = null;
 let mongoDb = null;
 let mongoConnectionError = null;
+
+let pgPool = null;
+let pgConnectionError = null;
 
 function readJSON(file) {
   const fp = path.join(DATA, file);
@@ -34,10 +37,28 @@ function readJSON(file) {
   return JSON.parse(fs.readFileSync(fp, 'utf8'));
 }
 
-function writeJSON(file, obj, syncMongo = true) {
+function writeJSON(file, obj, syncCloud = true) {
   fs.writeFileSync(path.join(DATA, file), JSON.stringify(obj, null, 2));
-  if (syncMongo && mongoDb) {
-    const col = file.replace('.json', '');
+  if (!syncCloud) return;
+
+  const col = file.replace('.json', '');
+
+  // 1. Sync to Render PostgreSQL if connected
+  if (pgPool) {
+    (async () => {
+      try {
+        await pgPool.query(
+          'INSERT INTO app_storage (key, data, updated_at) VALUES ($1, $2, NOW()) ON CONFLICT (key) DO UPDATE SET data = $2, updated_at = NOW()',
+          [col, JSON.stringify(obj)]
+        );
+      } catch (err) {
+        console.error(`[Database] PostgreSQL sync error for ${col}:`, err.message);
+      }
+    })();
+  }
+
+  // 2. Sync to MongoDB Atlas if connected
+  if (mongoDb) {
     (async () => {
       try {
         if (Array.isArray(obj)) {
@@ -54,6 +75,53 @@ function writeJSON(file, obj, syncMongo = true) {
         console.error(`[Database] MongoDB sync error for ${col}:`, err.message);
       }
     })();
+  }
+}
+
+async function initPg() {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return;
+  try {
+    const { Pool } = require('pg');
+    const config = { connectionString: dbUrl.trim() };
+    if (!dbUrl.includes('localhost') && !dbUrl.includes('127.0.0.1')) {
+      config.ssl = { rejectUnauthorized: false };
+    }
+    pgPool = new Pool(config);
+    const client = await pgPool.connect();
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS app_storage (
+        key VARCHAR(64) PRIMARY KEY,
+        data JSONB NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    const res = await client.query('SELECT key, data FROM app_storage');
+    client.release();
+
+    const collections = ['users', 'tasks', 'logs', 'audit', 'sessions', 'resets', 'auth_activity', 'active_timers'];
+    if (res.rows && res.rows.length > 0) {
+      for (const row of res.rows) {
+        writeJSON(row.key + '.json', row.data, false);
+      }
+      console.log(`\n[Database] ✅ Connected to PostgreSQL! Restored ${res.rows.length} collections.`);
+    } else {
+      // First-time seed into PostgreSQL
+      for (const col of collections) {
+        const localData = readJSON(col + '.json');
+        if (localData) {
+          await pgPool.query(
+            'INSERT INTO app_storage (key, data, updated_at) VALUES ($1, $2, NOW()) ON CONFLICT (key) DO UPDATE SET data = $2, updated_at = NOW()',
+            [col, JSON.stringify(localData)]
+          );
+        }
+      }
+      console.log('\n[Database] ✅ Connected to PostgreSQL! Seeded initial collections.');
+    }
+    pgConnectionError = null;
+  } catch (err) {
+    pgConnectionError = err.message;
+    console.warn('\n[Database] ⚠️ PostgreSQL connection notice:', err.message);
   }
 }
 
@@ -1012,11 +1080,21 @@ app.get('/api/system-status', requireAdmin, (req, res) => {
   const users = readJSON('users.json') || [];
   const tasks = readJSON('tasks.json') || [];
   const logs  = readJSON('logs.json') || [];
+  const hasPg = !!pgPool;
+  const hasMongo = !!mongoDb;
+  let storageMode = 'Local JSON Disk + Browser Auto-Vault';
+  if (hasPg) storageMode = 'Render PostgreSQL (Persistent Cloud)';
+  else if (hasMongo) storageMode = 'MongoDB Atlas (Persistent Cloud)';
+
   res.json({
-    hasMongo: !!mongoDb,
+    hasPg,
+    hasMongo,
+    hasCloud: hasPg || hasMongo,
+    pgUriSet: !!process.env.DATABASE_URL,
     mongoUriSet: !!process.env.MONGODB_URI,
+    pgError: pgConnectionError,
     mongoError: mongoConnectionError,
-    storageMode: mongoDb ? 'MongoDB Atlas (Persistent Cloud)' : 'Local JSON Disk (Render Ephemeral)',
+    storageMode,
     uptime: Math.round(process.uptime()),
     counts: {
       users: users.length,
@@ -1169,10 +1247,14 @@ app.post('/api/restore', requireAdmin, (req, res) => {
 // START
 // ════════════════════════════════════════════════════════════════════════
 app.listen(PORT, '0.0.0.0', () => {
+  initPg();
   initMongo();
 
   // Background auto-retry: recheck every 25 seconds until connected
   setInterval(() => {
+    if (!pgPool && process.env.DATABASE_URL) {
+      initPg();
+    }
     if (!mongoDb && process.env.MONGODB_URI) {
       initMongo();
     }
