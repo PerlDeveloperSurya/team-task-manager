@@ -15,7 +15,10 @@ const { v4: uuidv4 } = require('uuid');
 const app  = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
-const DATA = path.join(__dirname, 'data');
+const DATA = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(__dirname, 'data');
+if (!fs.existsSync(DATA)) fs.mkdirSync(DATA, { recursive: true });
 
 // ── Ensure data directory and files exist ────────────────────────────────────
 function ensureFile(file, def) {
