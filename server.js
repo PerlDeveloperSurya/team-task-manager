@@ -79,12 +79,21 @@ function writeJSON(file, obj, syncCloud = true) {
 }
 
 async function initPg() {
-  const dbUrl = process.env.DATABASE_URL;
-  if (!dbUrl) return;
+  const rawDbUrl = process.env.DATABASE_URL;
+  if (!rawDbUrl) return;
   try {
     const { Pool } = require('pg');
-    const config = { connectionString: dbUrl.trim() };
-    if (!dbUrl.includes('localhost') && !dbUrl.includes('127.0.0.1')) {
+    let connStr = rawDbUrl.trim();
+    const isLocal = connStr.includes('localhost') || connStr.includes('127.0.0.1');
+    const config = { connectionString: connStr };
+    if (!isLocal) {
+      // Strip sslmode param so config.ssl.rejectUnauthorized=false works cleanly with Neon, Supabase, Aiven
+      try {
+        const u = new URL(connStr);
+        u.searchParams.delete('sslmode');
+        u.searchParams.delete('channel_binding');
+        config.connectionString = u.toString();
+      } catch (e) {}
       config.ssl = { rejectUnauthorized: false };
     }
     pgPool = new Pool(config);
@@ -103,6 +112,9 @@ async function initPg() {
     if (res.rows && res.rows.length > 0) {
       for (const row of res.rows) {
         writeJSON(row.key + '.json', row.data, false);
+        if (row.key === 'active_timers' && row.data && typeof row.data === 'object') {
+          LIVE_TIMERS = row.data;
+        }
       }
       console.log(`\n[Database] ✅ Connected to PostgreSQL! Restored ${res.rows.length} collections.`);
     } else {
@@ -120,6 +132,7 @@ async function initPg() {
     }
     pgConnectionError = null;
   } catch (err) {
+    pgPool = null;
     pgConnectionError = err.message;
     console.warn('\n[Database] ⚠️ PostgreSQL connection notice:', err.message);
   }
@@ -1464,6 +1477,10 @@ app.post('/api/restore', requireAdmin, (req, res) => {
       mode: isMerge ? 'merge' : 'replace'
     }
   });
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, status: 'healthy', db: pgPool ? 'postgresql' : (mongoDb ? 'mongodb' : 'local') });
 });
 
 // ════════════════════════════════════════════════════════════════════════
