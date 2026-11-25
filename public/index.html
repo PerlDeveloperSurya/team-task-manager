@@ -2091,7 +2091,25 @@ async function doLogin() {
   const pass = document.getElementById('login-pass').value;
   if (!user) { showToast('Please enter your username', '#d97706'); return; }
   if (!pass) { showToast('Please enter your password', '#d97706'); return; }
-  const data = await POST('/api/login', { username: user, password: pass });
+
+  let data = await POST('/api/login', { username: user, password: pass });
+
+  // Self-Healing Auto-Login: If user was created in browser before Render restart
+  if (!data || data.error) {
+    const vault = getClientVault();
+    const vaultUser = (vault?.users || []).find(u => 
+      (u.id && u.id.toLowerCase() === user.toLowerCase()) || 
+      (u.name && u.name.toLowerCase() === user.toLowerCase())
+    );
+    if (vaultUser && (vaultUser.password === pass || !vaultUser.password)) {
+      showToast('🛡️ Restoring account from browser vault...', '#2563eb');
+      const syncRes = await POST('/api/auth/vault-restore-user', { user: vaultUser });
+      if (syncRes && syncRes.ok) {
+        data = await POST('/api/login', { username: user, password: pass });
+      }
+    }
+  }
+
   if (!data || data.error) {
     const errEl = document.getElementById('login-err');
     errEl.textContent = 'Invalid username or password. Please try again.';
@@ -2313,6 +2331,15 @@ async function enterApp(isCached = false) {
     updateSidebarCollapseUI(true);
   }
 
+  // 1. Fetch current users first
+  ALL_USERS = await GET('/api/users') || [];
+
+  // 2. If admin, check and restore missing tasks & users from browser vault BEFORE view renders!
+  if (ME.role === 'admin') {
+    await autoSyncVaultIfReset();
+  }
+
+  // 3. Now that data is fully restored and synchronized, render the view!
   const savedView = localStorage.getItem('ttm_last_view');
   const adminViews = ['dashboard', 'all-tasks', 'hours', 'pending', 'activity', 'users', 'deleted', 'backup', 'profile'];
   const memberViews = ['my-dashboard', 'my-tasks', 'log-hours', 'my-history', 'profile'];
@@ -2320,11 +2347,6 @@ async function enterApp(isCached = false) {
 
   const targetView = (savedView && allowed.includes(savedView)) ? savedView : (ME.role === 'admin' ? 'dashboard' : 'my-dashboard');
   showView(targetView);
-
-  ALL_USERS = await GET('/api/users') || [];
-  if (ME.role === 'admin') {
-    autoSyncVaultIfReset();
-  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -2519,6 +2541,31 @@ async function renderAdminDashboard() {
       </div>
     </div>` : '';
 
+  const vault = getClientVault();
+  const deletedTaskIds = JSON.parse(localStorage.getItem('ttm_deleted_tasks') || '[]');
+  const deletedUserIds = JSON.parse(localStorage.getItem('ttm_deleted_users') || '[]');
+  const unSyncedTasks = (vault?.tasks || []).filter(vt => !allTasks.some(at => at.id === vt.id) && !deletedTaskIds.includes(vt.id));
+  const unSyncedUsers = (vault?.users || []).filter(vu => !ALL_USERS.some(au => au.id === vu.id) && !deletedUserIds.includes(vu.id));
+
+  const vaultAlertBanner = (unSyncedTasks.length > 0 || unSyncedUsers.length > 0) ? `
+    <div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:var(--shadow-xs)">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="color:#2563eb;display:flex;align-items:center">${ICON('shield', 24)}</div>
+        <div>
+          <div style="font-weight:700;color:#1e40af;font-size:14px">
+            🛡️ ${unSyncedTasks.length} task(s) & ${unSyncedUsers.length} member(s) detected in your browser Auto-Vault!
+          </div>
+          <div style="font-size:12px;color:#1e3a8a;margin-top:2px">
+            Render spun down or restarted. Click to restore your previous workspace items into the database.
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-weight:700;white-space:nowrap" onclick="autoSyncVaultIfReset().then(renderAdminDashboard)">
+        ${ICON('refresh', 13)} Restore Items Now
+      </button>
+    </div>
+  ` : '';
+
   // Filter bar with Member Selector
   const filterBarHtml = `
     <div class="dash-filter-bar">
@@ -2583,6 +2630,7 @@ async function renderAdminDashboard() {
         </div>
       </div>
       ${resetBanner}
+      ${vaultAlertBanner}
       ${filterBarHtml}
       ${liveSessionsHtml}
 
@@ -2703,6 +2751,7 @@ async function renderAdminDashboard() {
       </div>
     </div>
     ${resetBanner}
+    ${vaultAlertBanner}
     ${filterBarHtml}
     ${liveSessionsHtml}
 
@@ -3591,6 +3640,21 @@ async function saveEditUser() {
   showToast('User details updated!', '#10b981');
   closeModal('edit-user-modal');
 
+  // Immediately update in browser vault so Render restarts never lose this change
+  try {
+    const vault = getClientVault();
+    if (vault && Array.isArray(vault.users)) {
+      const idx = vault.users.findIndex(u => u.id === id);
+      if (idx >= 0) {
+        vault.users[idx] = { ...vault.users[idx], ...r.user };
+        if (body.password) vault.users[idx].password = body.password;
+        vault.savedAt = new Date().toISOString();
+        localStorage.setItem('ttm_client_vault', JSON.stringify(vault));
+        localStorage.setItem('ttm_vault_master', JSON.stringify(vault));
+      }
+    }
+  } catch(e) {}
+
   ALL_USERS = await GET('/api/users') || [];
   if (ME.role === 'admin') {
     autoSyncVaultIfReset();
@@ -3617,11 +3681,34 @@ async function saveUser() {
   const pass  = document.getElementById('u-pass').value;
   const role  = document.getElementById('u-role').value;
   const color = document.getElementById('u-color').value;
+  const designation = document.getElementById('u-designation')?.value?.trim() || 'Team Member';
   if (!name||!pass) { showToast('Name and password required','#d97706'); return; }
-  const result = await POST('/api/users', { name, password:pass, role, color });
+  const result = await POST('/api/users', { name, password:pass, role, color, designation });
   if (!result||result.error) { showToast('Error: '+(result?.error||'Failed to create user'),'#dc2626'); return; }
   showToast('User added!','#10b981');
   closeModal('user-modal');
+
+  // Immediately store in browser vault so Render restarts never lose this account
+  try {
+    const vault = getClientVault() || { users: [], tasks: [], logs: [] };
+    if (!Array.isArray(vault.users)) vault.users = [];
+    const newUser = {
+      id: result.user?.id || name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+      name: result.user?.name || name,
+      role: role || 'member',
+      color: color || '#2563eb',
+      designation: result.user?.designation || designation,
+      password: pass,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    const uIdx = vault.users.findIndex(u => u.id === newUser.id);
+    if (uIdx >= 0) vault.users[uIdx] = newUser;
+    else vault.users.push(newUser);
+    vault.savedAt = new Date().toISOString();
+    localStorage.setItem('ttm_client_vault', JSON.stringify(vault));
+    localStorage.setItem('ttm_vault_master', JSON.stringify(vault));
+  } catch(e) {}
+
   ALL_USERS = await GET('/api/users')||[];
   renderUsers();
 }
@@ -4263,13 +4350,57 @@ async function clearAuditLog() {
 function saveClientVault(users, tasks, logs) {
   try {
     if (!users && !tasks) return;
-    const existingRaw = localStorage.getItem('ttm_client_vault');
+    const existingRaw = localStorage.getItem('ttm_client_vault') || localStorage.getItem('ttm_vault_master');
     let vault = existingRaw ? JSON.parse(existingRaw) : {};
-    if (users && users.length) vault.users = users;
-    if (tasks && tasks.length) vault.tasks = tasks;
-    if (logs && logs.length) vault.logs = logs;
+    if (!Array.isArray(vault.users)) vault.users = [];
+    if (!Array.isArray(vault.tasks)) vault.tasks = [];
+    if (!Array.isArray(vault.logs)) vault.logs = [];
+
+    const deletedTaskIds = JSON.parse(localStorage.getItem('ttm_deleted_tasks') || '[]');
+    const deletedUserIds = JSON.parse(localStorage.getItem('ttm_deleted_users') || '[]');
+
+    // Safe Merge Users: Update existing, append new, NEVER wipe custom accounts
+    if (Array.isArray(users) && users.length > 0) {
+      users.forEach(u => {
+        if (deletedUserIds.includes(u.id)) return;
+        const idx = vault.users.findIndex(vu => vu.id === u.id);
+        if (idx >= 0) {
+          vault.users[idx] = { ...vault.users[idx], ...u, password: u.password || vault.users[idx].password };
+        } else {
+          vault.users.push(u);
+        }
+      });
+    }
+
+    // Safe Merge Tasks: Update existing, append new, NEVER wipe custom tasks
+    if (Array.isArray(tasks) && tasks.length > 0) {
+      tasks.forEach(t => {
+        if (deletedTaskIds.includes(t.id)) return;
+        const idx = vault.tasks.findIndex(vt => vt.id === t.id);
+        if (idx >= 0) {
+          vault.tasks[idx] = { ...vault.tasks[idx], ...t };
+        } else {
+          vault.tasks.push(t);
+        }
+      });
+    }
+
+    // Safe Merge Logs
+    if (Array.isArray(logs) && logs.length > 0) {
+      logs.forEach(l => {
+        const idx = vault.logs.findIndex(vl => vl.id === l.id);
+        if (idx >= 0) vault.logs[idx] = { ...vault.logs[idx], ...l };
+        else vault.logs.push(l);
+      });
+    }
+
+    // Strip out blacklisted deleted items
+    vault.users = vault.users.filter(u => !deletedUserIds.includes(u.id));
+    vault.tasks = vault.tasks.filter(t => !deletedTaskIds.includes(t.id));
+
     vault.savedAt = new Date().toISOString();
     localStorage.setItem('ttm_client_vault', JSON.stringify(vault));
+    localStorage.setItem('ttm_vault_master', JSON.stringify(vault));
   } catch(e) {
     console.warn('Could not save client vault:', e);
   }
@@ -4277,7 +4408,7 @@ function saveClientVault(users, tasks, logs) {
 
 function getClientVault() {
   try {
-    const raw = localStorage.getItem('ttm_client_vault');
+    const raw = localStorage.getItem('ttm_client_vault') || localStorage.getItem('ttm_vault_master');
     return raw ? JSON.parse(raw) : null;
   } catch(e) {
     return null;
@@ -4303,7 +4434,7 @@ async function autoSyncVaultIfReset() {
     if (!currentTasks || !currentUsers) return;
 
     // 2. Identify custom tasks/users that exist in vault but are missing from server
-    // (Happens only when Render ephemeral container restarts with default demo seed)
+    // (Happens when Render container restarts or spins down with default seed)
     const missingTasks = vaultTasks.filter(vt => !currentTasks.some(ct => ct.id === vt.id));
     const missingUsers = vaultUsers.filter(vu => !currentUsers.some(cu => cu.id === vu.id));
 
@@ -4317,9 +4448,8 @@ async function autoSyncVaultIfReset() {
       };
       const res = await POST('/api/restore', { mode: 'merge', data: restorePayload });
       if (res && res.ok) {
-        showToast('🛡️ Auto-Vault: Successfully restored missing workspace data!', '#10b981');
-        if (CURRENT_VIEW === 'dashboard') renderAdminDashboard();
-        else if (CURRENT_VIEW === 'all-tasks') renderAllTasks();
+        showToast(`🛡️ Auto-Vault: Successfully restored ${missingTasks.length} task(s) & ${missingUsers.length} user(s) from your browser!`, '#10b981');
+        ALL_USERS = await GET('/api/users') || [];
       }
     }
   } catch (err) {
@@ -4405,26 +4535,6 @@ async function renderBackupSync() {
             ${isCloud 
               ? '<b>Cloud persistence active:</b> Connected to external cloud database. All users, tasks, and hour logs are permanently preserved across every new Render build and restart!'
               : '<b>Full Free Lifetime Edition (Zero Database Setup Required):</b> Your tasks, users, and hours are automatically protected in your browser\'s local vault. When Render restarts or redeploys, the app automatically detects it and seamlessly merges your workspace back! Zero subscriptions, never expires, and 100% free forever.'}
-          </p>
-        </div>
-        <div style="display:flex;gap:16px;text-align:right">
-          <div><div style="font-size:22px;font-weight:800;color:var(--primary)">${ALL_USERS.length}</div><div style="font-size:11px;color:var(--muted)">Active Users</div></div>
-          <div><div style="font-size:22px;font-weight:800;color:#10b981">${currentTasks.length}</div><div style="font-size:11px;color:var(--muted)">Total Tasks</div></div>
-          <div><div style="font-size:22px;font-weight:800;color:#8b5cf6">${stats?.totalHrs || 0}h</div><div style="font-size:11px;color:var(--muted)">Hours Logged</div></div>
-        </div>
-      </div>
-    </div>
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
-        <div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-            <span style="display:flex;align-items:center;color:${isCloud ? '#10b981' : '#0284c7'}">${ICON('shield', 20)}</span>
-            <span style="font-size:16px;font-weight:800;color:var(--text)">Current Storage Protection:</span>
-            ${storageBadge}
-          </div>
-          <p style="font-size:13px;color:#64748b;margin-bottom:0;line-height:1.6">
-            ${isCloud 
-              ? '<b>Zero-data-loss active:</b> Cloud database is connected. All new users, tasks, and hour logs are permanently preserved across every new Render build and restart!'
-              : '<b>Self-Healing Auto-Vault Active (Zero Setup Needed):</b> Your tasks and users are automatically mirrored in your browser vault. When Render redeploys, the app automatically detects it on admin login and merges your data back seamlessly! You can also click <b>"Download Backup Now"</b> anytime.'}
           </p>
         </div>
         <div style="display:flex;gap:16px;text-align:right">
@@ -4728,6 +4838,19 @@ async function saveTask() {
 
   closeModal('task-modal');
 
+  // Immediately store in browser vault so Render restarts never lose this task
+  try {
+    const vault = getClientVault() || { users: [], tasks: [], logs: [] };
+    if (!Array.isArray(vault.tasks)) vault.tasks = [];
+    const savedTask = { ...r };
+    const tIdx = vault.tasks.findIndex(t => t.id === savedTask.id);
+    if (tIdx >= 0) vault.tasks[tIdx] = savedTask;
+    else vault.tasks.push(savedTask);
+    vault.savedAt = new Date().toISOString();
+    localStorage.setItem('ttm_client_vault', JSON.stringify(vault));
+    localStorage.setItem('ttm_vault_master', JSON.stringify(vault));
+  } catch(e) {}
+
   if(startTimerChecked && r.id) {
     startTaskTimer(r.id, r.title);
     showToast(`Task created and timer started!`, '#2563eb');
@@ -4800,6 +4923,25 @@ async function saveLog() {
   if(!r||r.error){showToast('Failed to log hours: '+(r?.error||'Error'),'#dc2626');return;}
   showToast(`${hours}h work session logged!`,'#10b981');
   closeModal('log-modal');
+
+  // Immediately store in browser vault so Render restarts never lose this log
+  try {
+    const vault = getClientVault() || { users: [], tasks: [], logs: [] };
+    if (!Array.isArray(vault.logs)) vault.logs = [];
+    vault.logs.push({
+      id: r.id || 'L-' + Date.now(),
+      taskId,
+      user: ME.id,
+      hours,
+      date: document.getElementById('log-date').value,
+      desc: document.getElementById('log-desc').value,
+      blocker: document.getElementById('log-blocker').value,
+      createdAt: new Date().toISOString()
+    });
+    vault.savedAt = new Date().toISOString();
+    localStorage.setItem('ttm_client_vault', JSON.stringify(vault));
+    localStorage.setItem('ttm_vault_master', JSON.stringify(vault));
+  } catch(e) {}
 
   // If active timer was running for this task, clean it up
   if(TIMER_STATE && TIMER_STATE.taskId === taskId) {

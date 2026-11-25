@@ -395,6 +395,52 @@ app.post('/api/login', (req, res) => {
   });
 });
 
+// Self-Healing Login: If Render container restarted and user was in browser vault, auto-restore them
+app.post('/api/auth/vault-restore-user', (req, res) => {
+  const { user } = req.body;
+  if (!user || (!user.id && !user.name)) {
+    return res.status(400).json({ error: 'Invalid user payload' });
+  }
+
+  // Prevent restoring permanently deleted users
+  const audit = readJSON('audit.json') || [];
+  const deletedUserIds = new Set(
+    audit.filter(a => a.action === 'DELETE_USER' && a.userId).map(a => a.userId)
+  );
+  if (user.id && deletedUserIds.has(user.id)) {
+    return res.status(400).json({ error: 'This user account was permanently deleted.' });
+  }
+
+  let users = readJSON('users.json') || [];
+  const targetId = (user.id || user.name.toLowerCase().replace(/[^a-z0-9]/g, '')).trim();
+  const existingIdx = users.findIndex(u => u.id.toLowerCase() === targetId.toLowerCase() || u.name.toLowerCase() === (user.name || '').toLowerCase());
+
+  if (existingIdx >= 0) {
+    users[existingIdx] = {
+      ...users[existingIdx],
+      ...user,
+      password: user.password || users[existingIdx].password
+    };
+  } else {
+    users.push({
+      id: targetId,
+      name: user.name || targetId,
+      role: user.role || 'member',
+      password: user.password || 'password123',
+      color: user.color || '#2563eb',
+      emoji: user.emoji || '👤',
+      designation: user.designation || 'Team Member',
+      createdAt: user.createdAt || new Date().toISOString().split('T')[0],
+      status: 'Active',
+      email: user.email || '',
+      phone: user.phone || ''
+    });
+  }
+  writeJSON('users.json', users);
+  console.log(`[Database] 🛡️ Auto-restored user account ${targetId} from browser vault.`);
+  res.json({ ok: true, message: 'Account restored successfully' });
+});
+
 app.post('/api/logout', (req, res) => {
   const token = req.headers['x-auth-token'] || 
     (req.headers['authorization'] ? req.headers['authorization'].replace(/^Bearer\s+/i, '') : null);
